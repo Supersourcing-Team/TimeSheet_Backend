@@ -16,3 +16,4 @@ class Client(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     projects: Mapped[List["Project"]] = relationship("Project", back_populates="client")
+ 
