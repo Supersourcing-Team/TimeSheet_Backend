@@ -6,6 +6,9 @@ from app.core.database import get_db
 
 api_router = APIRouter()
 
+from app.modules.auth.router import router as auth_router
+api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+
 
 @api_router.get("/health", tags=["Health"])
 async def health_check(db: AsyncSession = Depends(get_db)):
