@@ -1,346 +1,686 @@
-# Timesheet Management System - Backend Context
+# Timesheet Management System Backend AI Context
 
-## What We're Building
-FastAPI backend for employee timesheet tracking with PostgreSQL (Neon DB). Employees log daily hours (max 8/day, 40/week) across multiple projects with billable/non-billable flags. Google SSO only authentication. Admin onboards users, no self-registration.
+> This file defines the permanent development context for every AI coding session.
+> Always follow these instructions unless explicitly overridden.
 
-## Tech Stack
-FastAPI | PostgreSQL | SQLAlchemy 2.0 (async) | asyncpg | Alembic | Google SSO + JWT | APScheduler | SMTP Email
+---
 
-## User Roles
-- **Admin:** Full system access, user onboarding, role assignment
-- **Project Manager:** Create projects, assign employees, review team timesheets, approve leaves
-- **Account Manager:** View project financials (cost, revenue, profit)
-- **Employee:** Submit daily timesheets, apply leaves, view own data
+# Project
 
-## Critical Business Rules (NEVER BREAK)
-1. Daily timesheet hours ≤ 8 across all projects
-2. Weekly target = 40 hours
-3. Every entry needs: project, hours, billable flag, work summary
-4. Only Google SSO login (users created by admin first)
-5. Profit = Revenue - (Tools Cost + Billable Hours Cost)
-6. Soft delete only (status field), never hard delete users
-7. Server-side validation on every endpoint
+Timesheet Management System
 
-## Folder Structure (Don't Modify Without Discussion)
+Backend Framework:
+FastAPI
 
-The project structure is finalized for the current phase and will be updated as required during the development lifecycle.
-│
-├──Timesheet_backend/
-│   │
-│   ├── app/
-│   │   │
-│   │   ├── api/
-│   │   │   ├── router.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── core/
-│   │   │   ├── config.py
-│   │   │   ├── database.py
-│   │   │   ├── security.py
-│   │   │   ├── permissions.py
-│   │   │   ├── constants.py
-│   │   │   ├── exceptions.py
-│   │   │   ├── logger.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── common/
-│   │   │   ├── responses.py
-│   │   │   ├── pagination.py
-│   │   │   ├── helpers.py
-│   │   │   ├── utils.py
-│   │   │   ├── file_handler.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── dependencies/
-│   │   │   ├── auth.py
-│   │   │   ├── permissions.py
-│   │   │   ├── pagination.py
-│   │   │   ├── database.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── services/
-│   │   │   ├── email_service.py
-│   │   │   ├── notification_service.py
-│   │   │   ├── excel_service.py
-│   │   │   ├── pdf_service.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── models/
-│   │   │   ├── role.py
-│   │   │   ├── user.py
-│   │   │   ├── holiday.py
-│   │   │   ├── leave_type.py
-│   │   │   ├── leave_balance.py
-│   │   │   ├── leave_request.py
-│   │   │   ├── client.py
-│   │   │   ├── project.py
-│   │   │   ├── project_assignment.py
-│   │   │   ├── tool.py
-│   │   │   ├── tool_allocation.py
-│   │   │   ├── timesheet.py
-│   │   │   ├── weekend_work.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── modules/
-│   │   │
-│   │   │   ├── auth/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   ├── jwt.py
-│   │   │   │   ├── oauth.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── users/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   ├── validator.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── roles/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── clients/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── projects/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   ├── validator.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── project_assignments/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── tools/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── tool_allocations/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── holidays/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── leave_types/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── leave_balances/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── leave_requests/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   ├── validator.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── timesheets/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   ├── validator.py
-│   │   │   │   ├── helper.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── weekend_work/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   ├── dashboard/
-│   │   │   │   ├── router.py
-│   │   │   │   ├── service.py
-│   │   │   │   ├── repository.py
-│   │   │   │   ├── schema.py
-│   │   │   │   └── __init__.py
-│   │   │   │
-│   │   │   └── reports/
-│   │   │       ├── router.py
-│   │   │       ├── service.py
-│   │   │       ├── repository.py
-│   │   │       ├── schema.py
-│   │   │       ├── exporter.py
-│   │   │       └── __init__.py
-│   │   │
-│   │   ├── scheduler/
-│   │   │   ├── scheduler.py
-│   │   │   ├── weekly_timesheet_reminder.py
-│   │   │   ├── weekly_timesheet_lock.py
-│   │   │   └── __init__.py
-│   │   │
-│   │   ├── templates/
-│   │   │   └── emails/
-│   │   │       ├── welcome.html
-│   │   │       ├── leave_approved.html
-│   │   │       ├── leave_rejected.html
-│   │   │       └── weekly_timesheet_reminder.html
-│   │   │
-│   │   ├── main.py
-│   │   └── __init__.py
-│   │
-│   ├── alembic/
-│   │   └── versions/
-│   │
-│   ├── tests/
-│   │
-│   ├── requirements.txt
-│   ├── .env
-│   ├── .gitignore
-│   ├── alembic.ini
-      └── README.md
+Architecture:
+Modular Monolith
 
-      
-## Module Pattern (Every Feature Module Must Follow)
-modules/{feature_name}/
-├── init.py
-├── router.py # FastAPI APIRouter with endpoint definitions
-├── service.py # Business logic, validation orchestration, transaction management
-├── repository.py # Async SQLAlchemy database queries (CRUD operations)
-├── schema.py # Pydantic v2 request/response models
-└── validator.py # Custom validation functions (optional, if complex logic needed)
+Current Stage:
+MVP
 
+---
 
-## Database Schema (14 Tables)
+# Tech Stack
 
-### Core Tables
-- **roles:** id, name(unique: Admin/Project_Manager/Account_Manager/Employee), description, created_at
-- **users:** id, role_id(FK→roles), employee_id(unique), first_name, last_name, email(unique), joining_date, status(default:Active), created_at, updated_at
+Backend
+- FastAPI
+- Python 3.13+
+- SQLAlchemy 2.x (Async)
+- AsyncPG
+- PostgreSQL (Neon)
 
-### HR Tables
-- **holidays:** id, date, name, created_at
-- **leave_types:** id, name(unique), description, is_active(default:true), created_at, updated_at
-- **leave_balances:** id, user_id(FK), leave_type_id(FK), year, allocated_days(default:0), used_days(default:0), updated_at | UNIQUE(user_id, leave_type_id, year)
-- **leave_requests:** id, user_id(FK), leave_type_id(FK), start_date, end_date, reason, status(default:Pending), managers_user_id(FK→users), rejection_reason, created_at, updated_at
+Authentication
+- Google OAuth
+- JWT Access Token
+- JWT Refresh Token
 
-### Project Tables
-- **clients:** id, name, email, phone, created_at
-- **projects:** id, client_id(FK), project_manager_id(FK→users), project_name(unique), description, budget, start_date, end_date, status(default:Planning), created_at, updated_at
-- **project_assignments:** id, project_id(FK), user_id(FK), created_at | UNIQUE(project_id, user_id)
+Migration
+- Alembic
 
-### Tools Tables
-- **tools:** id, name, category(AI/API/Testing/Cloud), cost_per_month, status(default:Active), created_at
-- **tool_allocations:** id, project_id(FK), tool_id(FK), allocation_date, deallocation_date(nullable), status(default:Active), created_at
+Background Jobs
+- APScheduler
 
-### Timesheet Tables
-- **timesheets:** id, user_id(FK), project_assignment_id(FK), timesheet_date, hours(decimal), is_billable(boolean), task_description, work_summary, created_at, updated_at
-- **weekend_work_requests:** id, project_assignment_id(FK), work_date, reason, status(default:Pending), approved_by(FK→users), approved_at, created_at
+Email
+- SMTP
 
-## API Endpoints Quick Reference
+Validation
+- Pydantic v2
 
-### Auth (Public)
-- POST `/api/v1/auth/google/login` - Google ID token → JWT pair
-- POST `/api/v1/auth/refresh` - Refresh expired token
-- POST `/api/v1/auth/logout` - Invalidate token
+---
 
-### Users (Admin mostly)
-- GET/POST `/api/v1/users/` - List/Create users
-- GET/PATCH `/api/v1/users/me/` - Own profile
-- GET/PATCH/DELETE `/api/v1/users/{id}` - User operations
-- GET `/api/v1/roles/` - List roles
+# Folder Structure
 
-### Clients
-- GET/POST `/api/v1/clients/`
-- GET/PATCH `/api/v1/clients/{id}`
-- GET `/api/v1/clients/{id}/projects`
+Every feature follows exactly this structure.
 
-### Projects
-- GET/POST `/api/v1/projects/`
-- GET/PATCH `/api/v1/projects/{id}`
-- GET `/api/v1/projects/{id}/assignments`
-- POST `/api/v1/projects/{id}/assign` - Assign employees
-- DELETE `/api/v1/projects/{id}/assign/{user_id}`
+modules/
 
-### Timesheets (Core)
-- POST `/api/v1/timesheets/` - Submit daily entries (validates ≤8hrs)
-- GET `/api/v1/timesheets/` - List with filters
-- GET/PATCH `/api/v1/timesheets/{id}`
-- GET `/api/v1/timesheets/weekly-summary` - Hours breakdown
-- GET `/api/v1/timesheets/daily/{user_id}/{date}`
-- GET `/api/v1/my-timesheets/`
+feature/
 
-### Leaves
-- GET `/api/v1/leave-types/`
-- GET `/api/v1/leave-balances` - Own balance
-- POST `/api/v1/leave-requests/` - Apply
-- GET `/api/v1/leave-requests/`
-- PATCH `/api/v1/leave-requests/{id}/approve|reject`
+router.py
+service.py
+repository.py
+schema.py
+validator.py (optional)
 
-### Others
-- GET/POST `/api/v1/holidays/`
-- GET/POST/PATCH `/api/v1/tools/`
-- POST `/api/v1/tools/allocate` | PATCH `/api/v1/tools/deallocate/{id}`
-- POST `/api/v1/weekend-work/` | GET `/api/v1/weekend-work/`
-- PATCH `/api/v1/weekend-work/{id}/approve|reject`
+Responsibilities
 
-### Dashboard (Account Manager)
-- GET `/api/v1/dashboard/overview`
-- GET `/api/v1/dashboard/project/{id}/financials`
-- GET `/api/v1/dashboard/project/{id}/hours`
+Router
 
-## API Conventions
-- **Response wrapper:** `{success: bool, message: str, data: {}, errors: null}`
-- **Pagination:** `?page=1&limit=20` returns `{total, page, limit, total_pages, items: []}`
-- **Auth header:** `Authorization: Bearer <access_token>`
-- **URLs:** kebab-case (`/leave-requests`, `/weekend-work`)
-- **Fields:** snake_case (`project_manager_id`, `leave_type_id`)
-- **Error codes:** 400 (validation), 401 (auth), 403 (forbidden), 404, 422, 500
+- HTTP endpoints only
+- Validation
+- Dependency Injection
+- Calls service
 
-## Authentication Flow
-1. Admin creates user via `POST /users/` with company email
-2. User visits frontend, clicks "Login with Google"
-3. Frontend gets Google ID token via Google Identity Services
-4. Sends to `POST /auth/google/login` with `{credential: "google_id_token"}`
-5. Backend verifies token with Google APIs
-6. Checks user exists in DB with status=Active
-7. Returns JWT access_token (30min) + refresh_token (7days)
-8. JWT payload: `{sub: user_id, email, role, employee_id, exp, iat}`
+Service
 
-## Permission Dependencies (FastAPI)
-```python
-get_current_user           # Extract JWT, return user from DB
-get_current_active_user    # Above + check status==Active
-require_admin              # Role==Admin
-require_project_manager    # Role==Project_Manager
-require_account_manager    # Role==Account_Manager
-require_roles([...])       # Check if role in list
+- Business Logic
+- Transactions
+- Rules
+- Calls repositories
+
+Repository
+
+- SQLAlchemy Queries only
+- CRUD
+- Never business logic
+
+Schema
+
+- Request Models
+- Response Models
+
+Validator
+
+- Complex validation
+
+Never mix responsibilities.
+
+---
+
+# Architecture Rules
+
+Always keep
+
+API
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Database
+
+Never
+
+Router → Database
+
+Never
+
+Router → SQLAlchemy
+
+Never
+
+Repository → Business Logic
+
+Never
+
+Repository calling another Repository
+
+Keep repositories independent.
+
+---
+
+# Authentication
+
+Only Google Login.
+
+No email/password.
+
+Flow
+
+Frontend
+
+↓
+
+Google Identity
+
+↓
+
+ID Token
+
+↓
+
+Backend
+
+↓
+
+Verify Token
+
+↓
+
+Generate JWT
+
+↓
+
+Return Access + Refresh
+
+Access Token
+
+30 Minutes
+
+Refresh Token
+
+7 Days
+
+---
+
+# Roles
+
+Admin
+
+Responsible for
+
+- User Management
+- Roles
+- Holidays
+- Leave Approval
+- Settings
+
+Project Manager
+
+Responsible for
+
+- Clients
+- Projects
+- Assignments
+- Weekend Approval
+- Reports
+
+Account Manager
+
+Responsible for
+
+- Financial Dashboard
+- Reports
+
+Employee
+
+Responsible for
+
+- Timesheets
+- Leave Requests
+- Weekend Requests
+
+---
+
+# Core Business Rules
+
+These rules are absolute.
+
+1.
+
+Daily Hours <= 8
+
+2.
+
+Weekly Target = 40 Hours
+
+3.
+
+Every Timesheet requires
+
+- Project
+- Hours
+- Billable
+- Task Description
+- Work Summary
+
+4.
+
+Users cannot self register.
+
+Admin creates users first.
+
+5.
+
+Soft Delete only.
+
+Never hard delete users.
+
+6.
+
+Server validation is mandatory.
+
+Never trust frontend.
+
+7.
+
+Timesheets DO NOT require approval.
+
+8.
+
+Leave Requests are approved only by Admin.
+
+9.
+
+Weekend Work is approved only by Project Manager.
+
+---
+
+# Database
+
+Database
+
+PostgreSQL
+
+ORM
+
+SQLAlchemy Async
+
+Migration
+
+Alembic
+
+Never write raw SQL unless absolutely necessary.
+
+Always use AsyncSession.
+
+---
+
+# API Rules
+
+Base URL
+
+/api/v1
+
+Response
+
+{
+  "success": true,
+  "message": "...",
+  "data": {},
+  "errors": null
+}
+
+Pagination
+
+?page=1&limit=20
+
+Authentication
+
+Authorization: Bearer <token>
+
+URL Style
+
+kebab-case
+
+Examples
+
+leave-requests
+
+weekend-work
+
+Fields
+
+snake_case
+
+Example
+
+project_manager_id
+
+leave_type_id
+
+---
+
+# Modules
+
+Current modules
+
+- Auth
+- Users
+- Roles
+- Clients
+- Projects
+- Project Assignments
+- Timesheets
+- Leave Types
+- Leave Balances
+- Leave Requests
+- Holidays
+- Tools
+- Tool Allocations
+- Weekend Work
+- Dashboard
+- Reports
+- Settings
+- System
+
+Implement one module completely before starting another.
+
+---
+
+# API Development Rules
+
+For every endpoint implement
+
+Router
+
+↓
+
+Schema
+
+↓
+
+Validator
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Tests
+
+No shortcuts.
+
+---
+
+# Repository Rules
+
+Repository contains
+
+- Create
+- Update
+- Delete
+- List
+- Get By Id
+- Exists
+- Filters
+
+Nothing else.
+
+---
+
+# Service Rules
+
+Business logic belongs here.
+
+Examples
+
+Validate daily hours
+
+Calculate weekly hours
+
+Permission checks
+
+Conflict detection
+
+Leave balance checks
+
+Duplicate validation
+
+Project assignment validation
+
+Never place these in repository.
+
+---
+
+# Error Handling
+
+Use custom exceptions.
+
+Always return meaningful messages.
+
+Use proper status codes.
+
+400
+
+Validation
+
+401
+
+Unauthorized
+
+403
+
+Forbidden
+
+404
+
+Not Found
+
+409
+
+Conflict
+
+422
+
+Validation Error
+
+500
+
+Unexpected Error
+
+---
+
+# Coding Style
+
+Use
+
+Type Hints
+
+Docstrings
+
+Async functions
+
+Dependency Injection
+
+Clean architecture
+
+Readable variable names
+
+Never
+
+Magic Numbers
+
+Duplicate Logic
+
+Long Functions
+
+Large Routers
+
+Business Logic inside Routers
+
+---
+
+# Security
+
+Validate every request.
+
+Check permissions before business logic.
+
+Use JWT dependencies.
+
+Never expose internal errors.
+
+Never expose stack traces.
+
+---
+
+# Performance
+
+Prefer joins over repeated queries.
+
+Avoid N+1 queries.
+
+Use pagination.
+
+Select only required columns.
+
+Batch operations where possible.
+
+---
+
+# Testing
+
+Every module should contain
+
+- Happy Path
+- Permission Tests
+- Validation Tests
+- Edge Cases
+
+---
+
+# Git Workflow
+
+Main
+
+Production
+
+Dev
+
+Integration
+
+Feature Branch
+
+feature/<module>
+
+Example
+
+feature/auth
+
+feature/users
+
+feature/timesheets
+
+Never commit directly to main.
+
+Never commit directly to dev.
+
+Always use Pull Requests.
+
+---
+
+# AI Development Workflow
+
+Whenever implementing a feature
+
+Step 1
+
+Read business rules.
+
+Step 2
+
+Read schema.
+
+Step 3
+
+Implement repository.
+
+Step 4
+
+Implement service.
+
+Step 5
+
+Implement router.
+
+Step 6
+
+Add validation.
+
+Step 7
+
+Test manually.
+
+Step 8
+
+Write migration if required.
+
+Step 9
+
+Update API documentation.
+
+Never skip steps.
+
+---
+
+# Current API Contract
+
+The backend exposes approximately 63 REST endpoints across 17 modules.
+
+Modules include
+
+- Authentication
+- Users
+- Roles
+- Clients
+- Projects
+- Project Assignments
+- Timesheets
+- Leave Types
+- Leave Balances
+- Leave Requests
+- Holidays
+- Tools
+- Weekend Work
+- Dashboard
+- Reports
+- Settings
+- System
+
+This API contract is the single source of truth.
+
+Any backend implementation must remain compatible with the frontend contract unless explicitly changed.
+
+---
+
+# AI Rules
+
+Always
+
+✔ Follow Modular Monolith
+
+✔ Use async SQLAlchemy
+
+✔ Use Pydantic v2
+
+✔ Follow Service → Repository pattern
+
+✔ Keep business logic inside services
+
+✔ Use Alembic for schema changes
+
+✔ Write production-ready code
+
+✔ Keep code simple and maintainable
+
+Never
+
+✘ Invent endpoints
+
+✘ Change API contracts
+
+✘ Break folder structure
+
+✘ Ignore business rules
+
+✘ Mix architecture layers
+
+✘ Write temporary hacks
+
+✘ Add unnecessary abstractions
+
+✘ Over-engineer the MVP
+
+The priority is maintainability, readability, consistency, and production readiness.
