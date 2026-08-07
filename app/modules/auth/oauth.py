@@ -12,11 +12,13 @@ def verify_google_token(token: str) -> Optional[Dict[str, Any]]:
     Verifies a Google ID token and returns the payload if valid.
     """
     try:
-        client_id = settings.GOOGLE_CLIENT_ID
+        client_id = settings.GOOGLE_CLIENT_ID or None
         if not client_id:
-            logger.warning("GOOGLE_CLIENT_ID is not set. Google token verification might fail or be bypassed for testing.")
-            
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), client_id)
+            logger.warning(
+                "GOOGLE_CLIENT_ID is not configured. Token audience verification is unconstrained."
+            )
+
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), audience=client_id)
         return idinfo
     except ValueError as e:
         logger.error(f"Invalid Google token: {e}")
@@ -24,3 +26,4 @@ def verify_google_token(token: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error verifying Google token: {e}")
         return None
+
