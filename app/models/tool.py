@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
+
 from sqlalchemy import DateTime, Float, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,4 +17,6 @@ class Tool(Base):
     status: Mapped[str] = mapped_column(String(20), default="Active", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    allocations: Mapped[List["ToolAllocation"]] = relationship("ToolAllocation", back_populates="tool")
+    allocations: Mapped[List["ToolAllocation"]] = relationship(
+        "ToolAllocation", back_populates="tool"
+    )

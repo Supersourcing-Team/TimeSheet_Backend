@@ -1,14 +1,14 @@
 # Timesheet Management System - Backend Context
 
 ## What We're Building
-FastAPI backend for employee timesheet tracking with PostgreSQL (Neon DB). Employees log daily hours (max 8/day, 40/week) across multiple projects with billable/non-billable flags. Google SSO only authentication. Admin onboards users, no self-registration.
+FastAPI backend for employee timesheet tracking with PostgreSQL . Employees log daily hours (max 8/day, 40/week) across multiple projects with billable/non-billable flags. Google SSO only authentication. Admin onboards users, no self-registration.
 
 ## Tech Stack
 FastAPI | PostgreSQL | SQLAlchemy 2.0 (async) | asyncpg | Alembic | Google SSO + JWT | APScheduler | SMTP Email
 
 ## User Roles
-- **Admin:** Full system access, user onboarding, role assignment
-- **Project Manager:** Create projects, assign employees, review team timesheets, approve leaves
+- **Admin:** Full system access, user onboarding, role assignment ,leave approval
+- **Project Manager:** Create projects, assign employees, review team timesheets, approve weekend wors
 - **Account Manager:** View project financials (cost, revenue, profit)
 - **Employee:** Submit daily timesheets, apply leaves, view own data
 
@@ -230,7 +230,7 @@ The project structure is finalized for the current phase and will be updated as 
 │   ├── alembic.ini
       └── README.md
 
-      
+
 ## Module Pattern (Every Feature Module Must Follow)
 modules/{feature_name}/
 ├── init.py

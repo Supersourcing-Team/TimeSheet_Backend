@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import List, Optional
+
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -25,5 +26,9 @@ class Project(Base):
 
     client: Mapped["Client"] = relationship("Client", back_populates="projects")
     project_manager: Mapped["User"] = relationship("User", back_populates="managed_projects")
-    assignments: Mapped[List["ProjectAssignment"]] = relationship("ProjectAssignment", back_populates="project")
-    tool_allocations: Mapped[List["ToolAllocation"]] = relationship("ToolAllocation", back_populates="project")
+    assignments: Mapped[List["ProjectAssignment"]] = relationship(
+        "ProjectAssignment", back_populates="project"
+    )
+    tool_allocations: Mapped[List["ToolAllocation"]] = relationship(
+        "ToolAllocation", back_populates="project"
+    )

@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Optional
+
 from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,7 +12,9 @@ class Timesheet(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
-    project_assignment_id: Mapped[int] = mapped_column(ForeignKey("project_assignments.id"), nullable=False)
+    project_assignment_id: Mapped[int] = mapped_column(
+        ForeignKey("project_assignments.id"), nullable=False
+    )
     timesheet_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     hours: Mapped[float] = mapped_column(Float, nullable=False)
     is_billable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
