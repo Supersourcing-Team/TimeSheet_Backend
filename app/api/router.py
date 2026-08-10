@@ -7,7 +7,12 @@ from app.core.database import get_db
 api_router = APIRouter()
 
 from app.modules.auth.router import router as auth_router
+from app.modules.users.router import router as users_router
+from app.modules.roles.router import router as roles_router
+
 api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(users_router, prefix="/users", tags=["Users"])
+api_router.include_router(roles_router, prefix="/roles", tags=["Roles"])
 
 
 @api_router.get("/health", tags=["Health"])
