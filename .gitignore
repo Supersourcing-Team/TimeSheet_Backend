@@ -32,6 +32,9 @@ TimeSheet_Rules/
 TimeSheet_Rules/rules.md
 # Temporary / Scratch Test Scripts
 test_db.py
+test_holidays.py
+test_leave_balances.py
+test_leave_types.py
 
 # Testing & Code Quality Caches
 .pytest_cache/
