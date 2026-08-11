@@ -19,31 +19,45 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_
     )
 
     payload = verify_token(token)
-    if payload is None:
-        raise credentials_exception
-
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     user_id_str = payload.get("sub")
-    if user_id_str is None:
-        raise credentials_exception
-
+    if not user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     try:
         user_id = int(user_id_str)
     except ValueError:
-        raise credentials_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token subject",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     user = await AuthRepository.get_user_by_id(db, user_id)
 
-    if user is None:
-        raise credentials_exception
 
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
     return user
 
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
     if current_user.status != "Active":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your account is currently deactivated. Please contact the administrator for assistance.",
         )
     return current_user
-
