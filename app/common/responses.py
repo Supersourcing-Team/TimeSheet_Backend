@@ -1,4 +1,5 @@
 from typing import Any, Generic, Optional, TypeVar
+
 from fastapi import status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -8,6 +9,7 @@ T = TypeVar("T")
 
 class APIResponse(BaseModel, Generic[T]):
     """Standardized API Response wrapper structure."""
+
     success: bool = True
     message: str = "Operation completed successfully"
     data: Optional[T] = None

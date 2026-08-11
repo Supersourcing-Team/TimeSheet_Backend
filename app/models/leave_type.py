@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
+
 from sqlalchemy import Boolean, DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,5 +19,9 @@ class LeaveType(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    leave_balances: Mapped[List["LeaveBalance"]] = relationship("LeaveBalance", back_populates="leave_type")
-    leave_requests: Mapped[List["LeaveRequest"]] = relationship("LeaveRequest", back_populates="leave_type")
+    leave_balances: Mapped[List["LeaveBalance"]] = relationship(
+        "LeaveBalance", back_populates="leave_type"
+    )
+    leave_requests: Mapped[List["LeaveRequest"]] = relationship(
+        "LeaveRequest", back_populates="leave_type"
+    )

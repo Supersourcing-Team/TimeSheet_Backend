@@ -2,6 +2,7 @@ from app.models.leave_balance import LeaveBalance
 from app.models.role import Role
 from datetime import date, datetime
 from typing import List, Optional
+
 from sqlalchemy import Date, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -25,13 +26,21 @@ class User(Base):
     )
 
     role: Mapped["Role"] = relationship("Role", back_populates="users")
-    leave_balances: Mapped[List["LeaveBalance"]] = relationship("LeaveBalance", back_populates="user")
+    leave_balances: Mapped[List["LeaveBalance"]] = relationship(
+        "LeaveBalance", back_populates="user"
+    )
     leave_requests: Mapped[List["LeaveRequest"]] = relationship(
         "LeaveRequest", foreign_keys="[LeaveRequest.user_id]", back_populates="user"
     )
     managed_leave_requests: Mapped[List["LeaveRequest"]] = relationship(
-        "LeaveRequest", foreign_keys="[LeaveRequest.managers_user_id]", back_populates="manager"
+        "LeaveRequest",
+        foreign_keys="[LeaveRequest.managers_user_id]",
+        back_populates="manager",
     )
-    managed_projects: Mapped[List["Project"]] = relationship("Project", back_populates="project_manager")
-    project_assignments: Mapped[List["ProjectAssignment"]] = relationship("ProjectAssignment", back_populates="user")
+    managed_projects: Mapped[List["Project"]] = relationship(
+        "Project", back_populates="project_manager"
+    )
+    project_assignments: Mapped[List["ProjectAssignment"]] = relationship(
+        "ProjectAssignment", back_populates="user"
+    )
     timesheets: Mapped[List["Timesheet"]] = relationship("Timesheet", back_populates="user")

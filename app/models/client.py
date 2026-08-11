@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List, Optional
+
 from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,4 +17,3 @@ class Client(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     projects: Mapped[List["Project"]] = relationship("Project", back_populates="client")
- 

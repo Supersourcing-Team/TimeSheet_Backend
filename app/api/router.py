@@ -1,17 +1,21 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 
 api_router = APIRouter()
 
 from app.modules.auth.router import router as auth_router
+from app.modules.users.router import router as users_router
+from app.modules.roles.router import router as roles_router
 from app.modules.holidays.router import router as holidays_router
 from app.modules.leave_types.router import router as leave_types_router
 from app.modules.leave_balances.router import router as leave_balances_router
 
 api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+api_router.include_router(users_router, prefix="/users", tags=["Users"])
+api_router.include_router(roles_router, prefix="/roles", tags=["Roles"])
 api_router.include_router(holidays_router, prefix="/holidays", tags=["Holidays"])
 api_router.include_router(leave_types_router, prefix="/leave-types", tags=["Leave Types"])
 api_router.include_router(leave_balances_router, prefix="/leave-balances", tags=["Leave Balances"])

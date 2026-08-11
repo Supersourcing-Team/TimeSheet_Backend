@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from sqlalchemy import DateTime, Float, ForeignKey, Integer, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -7,7 +8,9 @@ from app.core.database import Base
 
 class LeaveBalance(Base):
     __tablename__ = "leave_balances"
-    __table_args__ = (UniqueConstraint("user_id", "leave_type_id", "year", name="uq_user_leave_type_year"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "leave_type_id", "year", name="uq_user_leave_type_year"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)

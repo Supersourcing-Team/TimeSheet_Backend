@@ -1,686 +1,305 @@
-# Timesheet Management System Backend AI Context
+# Timesheet Management System - Backend AI Context & Rules
 
-> This file defines the permanent development context for every AI coding session.
-> Always follow these instructions unless explicitly overridden.
+> This file defines the permanent development context and coding rules for every AI coding session and developer working on the Timesheet Management System.
+> Always follow these instructions to maintain consistency across the codebase.
 
 ---
 
-# Project
+# Project Overview
 
-Timesheet Management System
-
-Backend Framework:
-FastAPI
-
-Architecture:
-Modular Monolith
-
-Current Stage:
-MVP
+- **Project Name:** Timesheet Management System
+- **Backend Framework:** FastAPI (Python 3.13+)
+- **Architecture Pattern:** Modular Monolith
+- **Current Stage:** MVP / Production Active
 
 ---
 
 # Tech Stack
 
-Backend
-- FastAPI
-- Python 3.13+
-- SQLAlchemy 2.x (Async)
-- AsyncPG
-- PostgreSQL (Neon)
+### Backend Infrastructure
+- **Framework:** FastAPI
+- **Language:** Python 3.13+
+- **ORM:** SQLAlchemy 2.x (Async)
+- **Database Driver:** AsyncPG
+- **Database Engine:** PostgreSQL (Neon Cloud / Local PostgreSQL)
+- **Schema Migrations:** Alembic
+- **Validation & Serialization:** Pydantic v2 & `pydantic-settings`
 
-Authentication
-- Google OAuth
-- JWT Access Token
-- JWT Refresh Token
+### Authentication & Security
+- **Identity Provider:** Google OAuth SSO (ID Token Verification)
+- **Session Strategy:** Stateless JWT Tokens
+  - **Access Token Expiry:** 30 Minutes
+  - **Refresh Token Expiry:** 7 Days
 
-Migration
-- Alembic
+### Background Tasks & Services
+- **Job Scheduler:** APScheduler (Weekly locks & reminder tasks in `app/scheduler/`)
+- **Email Dispatch:** SMTP Service (`app/services/email_service.py`)
+- **Reporting & Documents:** Excel Generation (`excel_service.py`), PDF Generation (`pdf_service.py`)
 
-Background Jobs
-- APScheduler
-
-Email
-- SMTP
-
-Validation
-- Pydantic v2
+### Frontend Reference Stack
+- **Framework:** React 18 + Vite + TypeScript
+- **Styling:** Tailwind CSS + Lucide React Icons
+- **API Base Route:** `/api/v1`
 
 ---
 
-# Folder Structure
+# Repository Directory & Folder Structure
 
-Every feature follows exactly this structure.
+The project follows a structured **Modular Monolith** architecture where domain entities have centralized models in `app/models/` and feature logic inside `app/modules/`.
 
-modules/
+```
+timesheet-management-Backend/
+├── alembic/                      # Database migrations & revision scripts
+├── app/
+│   ├── api/                      # Main API Routing layer
+│   │   └── router.py             # Aggregates module routers under `/api/v1` & `/health`
+│   ├── common/                   # Global helpers, response wrappers, file processing
+│   │   ├── file_handler.py       # File upload & storage handlers
+│   │   ├── helpers.py            # Utility helper methods
+│   │   ├── pagination.py         # Reusable pagination calculation utilities
+│   │   ├── responses.py          # Standardized API response formatters (`success_response`, `error_response`)
+│   │   └── utils.py              # Miscellaneous shared utilities
+│   ├── core/                     # System configuration & core singletons
+│   │   ├── config.py             # Environment configuration (`Settings` class)
+│   │   ├── constants.py          # App constants & defaults
+│   │   ├── database.py           # Async SQLAlchemy engine & AsyncSession provider
+│   │   ├── exceptions.py         # Custom application exceptions
+│   │   ├── logger.py             # Centralized logging setup
+│   │   ├── permissions.py        # Permission definitions
+│   │   └── security.py           # Encryption, hashing, token generation
+│   ├── dependencies/             # FastAPI request-scoped dependency providers
+│   │   ├── auth.py               # Token verification (`get_current_user`, `get_current_active_user`)
+│   │   ├── database.py           # Database session dependency (`get_db`)
+│   │   ├── pagination.py         # Page/limit query parameters parser
+│   │   └── permissions.py        # Role guards (`require_roles`, `require_admin`, `require_project_manager`, `require_account_manager`)
+│   ├── models/                   # Centralized SQLAlchemy ORM Models
+│   │   ├── client.py             # Client entity model
+│   │   ├── holiday.py            # Company holiday model
+│   │   ├── leave_balance.py      # User leave quota balance model
+│   │   ├── leave_request.py      # Employee leave application model
+│   │   ├── leave_type.py         # Leave categorization model
+│   │   ├── project.py            # Project entity model
+│   │   ├── project_assignment.py # User-to-Project allocation model
+│   │   ├── role.py               # User role definitions model
+│   │   ├── timesheet.py          # Work hours log entry model
+│   │   ├── tool.py               # Hardware/Software tool asset model
+│   │   ├── tool_allocation.py    # User tool assignment model
+│   │   ├── user.py               # User profile & auth account model
+│   │   └── weekend_work.py       # Overtime weekend work request model
+│   ├── modules/                  # Modular Monolith Domain Feature Modules
+│   │   ├── auth/                 # Google SSO, JWT refresh, logout, profile (`/me`)
+│   │   ├── clients/              # Client catalog management
+│   │   ├── dashboard/            # Executive & manager metrics summaries
+│   │   ├── holidays/             # Calendar holidays management
+│   │   ├── leave_balances/       # Employee leave balance tracking
+│   │   ├── leave_requests/       # Leave application submit & approval workflows
+│   │   ├── leave_types/          # Admin leave types definition
+│   │   ├── project_assignments/  # Project user allocation management
+│   │   ├── projects/             # Project creation, billing, rates
+│   │   ├── reports/              # Analytics aggregation & file exports
+│   │   ├── roles/                # System role management
+│   │   ├── timesheets/           # Timesheet logging, weekly locks & calculations
+│   │   ├── tool_allocations/     # Asset tool allocation tracking
+│   │   ├── tools/                # Company tool inventory catalog
+│   │   ├── users/                # User accounts & employee profiles
+│   │   └── weekend_work/         # Overtime weekend work request workflows
+│   ├── scheduler/                # APScheduler Background Job Services
+│   │   ├── scheduler.py          # Scheduler initialization and startup lifecycle
+│   │   ├── weekly_timesheet_lock.py  # Automated weekly timesheet locking task
+│   │   └── weekly_timesheet_reminder.py # Email notification task for timesheet submission
+│   ├── services/                 # Shared Business Utility Services
+│   │   ├── email_service.py      # SMTP Email sender
+│   │   ├── excel_service.py      # OpenPyXL report generator
+│   │   ├── notification_service.py # In-app notification dispatcher
+│   │   └── pdf_service.py        # PDF document renderer
+│   ├── templates/                # HTML/Text templates for emails and reports
+│   └── main.py                   # FastAPI Application Entry Point (Middlewares, Router, Exception Handlers)
+├── tests/                        # Automated Pytest suite
+├── seed_users.py                 # Initial database seeding script
+├── alembic.ini                   # Alembic configuration
+└── TimeSheet_Rules/
+    └── rules.md                  # Development context & AI guidelines (this file)
+```
 
-feature/
+---
 
-router.py
-service.py
-repository.py
-schema.py
-validator.py (optional)
+# Modular Architecture & Responsibilities
 
-Responsibilities
+Every domain module in `app/modules/<module_name>/` follows strict layer isolation:
 
-Router
+```
+FastAPI Router (app/modules/*/router.py)
+       │
+       ▼
+Service Layer (app/modules/*/service.py)
+       │
+       ▼
+Repository Layer (app/modules/*/repository.py)
+       │
+       ▼
+SQLAlchemy Async ORM (app/models/*.py)
+```
 
-- HTTP endpoints only
-- Validation
-- Dependency Injection
-- Calls service
+### Component Responsibilities
 
-Service
+1. **Router (`router.py`)**
+   - Pure HTTP endpoints (`APIRouter`).
+   - Request parameter parsing & Pydantic schema validation.
+   - Dependency Injection (`get_db`, `get_current_active_user`, `require_roles`).
+   - Delegates business execution to the Service Layer.
+   - Returns responses using standardized response helpers from `app.common.responses`.
+   - **NEVER** write database queries or business logic in routers.
 
-- Business Logic
-- Transactions
-- Rules
-- Calls repositories
+2. **Service (`service.py`)**
+   - Implements core business logic, policies, and domain calculations.
+   - Handles transactions and multi-step workflows.
+   - Validates business rules (e.g. leave balances, max daily hours, project assignment checks).
+   - Invokes Repositories for DB persistence.
+   - Triggers secondary services (`email_service`, `notification_service`).
 
-Repository
+3. **Repository (`repository.py`)**
+   - Performs SQLAlchemy Async queries (`AsyncSession`).
+   - Provides CRUD, search filters, pagination, and lookup operations.
+   - Performs **NO** business logic, validation, or cross-repository calls.
 
-- SQLAlchemy Queries only
-- CRUD
-- Never business logic
+4. **Schema (`schema.py`)**
+   - Defines request payload models and response models using Pydantic v2.
 
-Schema
+5. **Centralized Models (`app/models/`)**
+   - Single source of truth for database table definitions and SQLAlchemy relationships.
+   - Keeps models centralized to avoid circular imports across feature modules.
 
-- Request Models
-- Response Models
-
-Validator
-
-- Complex validation
-
-Never mix responsibilities.
+6. **Validator (`validator.py` - Optional)**
+   - Complex data structure or business logic validation routines.
 
 ---
 
 # Architecture Rules
 
-Always keep
-
-API
-
-↓
-
-Service
-
-↓
-
-Repository
-
-↓
-
-Database
-
-Never
-
-Router → Database
-
-Never
-
-Router → SQLAlchemy
-
-Never
-
-Repository → Business Logic
-
-Never
-
-Repository calling another Repository
-
-Keep repositories independent.
+- **Strict Downward Flow:** `Router` -> `Service` -> `Repository` -> `Database`.
+- **Forbidden Patterns:**
+  - ❌ `Router` executing raw SQLAlchemy queries or importing DB models directly for queries.
+  - ❌ `Repository` executing business validation logic or invoking another `Repository`.
+  - ❌ `Service` returning raw SQLAlchemy ORM entities directly to the client without Pydantic serialization.
+  - ❌ Bypassing role-based access dependencies on protected routes.
 
 ---
 
-# Authentication
+# Authentication & Frontend Integration
 
-Only Google Login.
+### Auth Architecture Flow
+1. **Frontend Google Login:** Client signs in with Google Identity and obtains a Google Credential ID Token.
+2. **Backend Auth Verification (`POST /api/v1/auth/google/login`):**
+   - Validates Google ID token via `GOOGLE_CLIENT_ID`.
+   - Checks if user email exists in database (User must be pre-created by Admin).
+   - Generates JWT Access Token (30 min) and Refresh Token (7 days).
+3. **Session Maintenance:**
+   - Client sends token in header: `Authorization: Bearer <access_token>`.
+   - Endpoint `GET /api/v1/auth/me` retrieves active user profile.
+   - Endpoint `POST /api/v1/auth/refresh` refreshes access tokens using refresh tokens.
 
-No email/password.
-
-Flow
-
-Frontend
-
-↓
-
-Google Identity
-
-↓
-
-ID Token
-
-↓
-
-Backend
-
-↓
-
-Verify Token
-
-↓
-
-Generate JWT
-
-↓
-
-Return Access + Refresh
-
-Access Token
-
-30 Minutes
-
-Refresh Token
-
-7 Days
-
----
-
-# Roles
-
-Admin
-
-Responsible for
-
-- User Management
-- Roles
-- Holidays
-- Leave Approval
-- Settings
-
-Project Manager
-
-Responsible for
-
-- Clients
-- Projects
-- Assignments
-- Weekend Approval
-- Reports
-
-Account Manager
-
-Responsible for
-
-- Financial Dashboard
-- Reports
-
-Employee
-
-Responsible for
-
-- Timesheets
-- Leave Requests
-- Weekend Requests
+### Role Mapping Strategy
+Backend system roles map cleanly to frontend user interfaces:
+- `Admin` ➔ Admin Dashboard (User creation, system roles, leave approvals, holidays, settings)
+- `Project_Manager` ➔ PM View (Client management, project creation, weekend work approvals, team allocation)
+- `Account_Manager` ➔ Account Manager View (Financial analytics, billing, project report exports)
+- `Employee` ➔ Employee View (Timesheet logging, leave requests, weekend work requests)
 
 ---
 
 # Core Business Rules
 
-These rules are absolute.
-
-1.
-
-Daily Hours <= 8
-
-2.
-
-Weekly Target = 40 Hours
-
-3.
-
-Every Timesheet requires
-
-- Project
-- Hours
-- Billable
-- Task Description
-- Work Summary
-
-4.
-
-Users cannot self register.
-
-Admin creates users first.
-
-5.
-
-Soft Delete only.
-
-Never hard delete users.
-
-6.
-
-Server validation is mandatory.
-
-Never trust frontend.
-
-7.
-
-Timesheets DO NOT require approval.
-
-8.
-
-Leave Requests are approved only by Admin.
-
-9.
-
-Weekend Work is approved only by Project Manager.
+1. **Daily Hours Limit:** Maximum 8 standard hours per day per employee.
+2. **Weekly Target:** Standard full-time target is 40 hours per week.
+3. **No Self-Registration:** Users cannot register accounts publicly. Accounts must be created by an Admin.
+4. **Account Soft Deletion:** Users and key entities are soft-deleted (`is_active = False` or `deleted_at`) rather than hard deleted from the database.
+5. **Approval Matrix:**
+   - **Leave Requests:** Approved exclusively by `Admin` role.
+   - **Weekend Work Overtime:** Approved by `Project_Manager` assigned to the project.
+6. **Automated Weekly Lock:** Timesheets are automatically locked after the submission deadline via APScheduler background tasks (`weekly_timesheet_lock.py`).
+7. **Timesheet Entry Requirements:** Each log entry must link to a valid Project, include specified hours, indicate billable status, and provide a clear work summary.
 
 ---
 
-# Database
+# Standard API Contract & Format
 
-Database
+- **Base URL:** `/api/v1`
+- **URL Naming Convention:** `kebab-case` (e.g. `/leave-requests`, `/weekend-work`, `/tool-allocations`)
+- **Field Naming Convention:** `snake_case` (e.g. `user_id`, `project_manager_id`, `leave_type_id`)
 
-PostgreSQL
-
-ORM
-
-SQLAlchemy Async
-
-Migration
-
-Alembic
-
-Never write raw SQL unless absolutely necessary.
-
-Always use AsyncSession.
-
----
-
-# API Rules
-
-Base URL
-
-/api/v1
-
-Response
-
+### Standard Success Response Wrapper
+```json
 {
   "success": true,
-  "message": "...",
+  "message": "Resource fetched successfully",
   "data": {},
   "errors": null
 }
+```
 
-Pagination
+### Standard Error Response Wrapper
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "data": null,
+  "errors": [
+    {
+      "field": "hours",
+      "message": "Daily total hours cannot exceed 8"
+    }
+  ]
+}
+```
 
-?page=1&limit=20
-
-Authentication
-
-Authorization: Bearer <token>
-
-URL Style
-
-kebab-case
-
-Examples
-
-leave-requests
-
-weekend-work
-
-Fields
-
-snake_case
-
-Example
-
-project_manager_id
-
-leave_type_id
+### Standard Status Codes
+- `200 OK`: Successful fetch/update.
+- `201 Created`: Successful creation.
+- `400 Bad Request`: Invalid request input / business rule violation.
+- `401 Unauthorized`: Missing or invalid authentication token.
+- `403 Forbidden`: Insufficient role permissions.
+- `404 Not Found`: Requested resource does not exist.
+- `422 Unprocessable Entity`: Schema validation error.
+- `500 Internal Server Error`: Unhandled server error.
 
 ---
 
-# Modules
+# Branching Strategy & Workflow (2 Developers)
 
-Current modules
+Given the team size (2 developers) and multiple deployment environments (`dev`, `staging`, `uat`, `main`), we follow a **Lightweight Environment-Branching Model (Modified GitHub Flow)**. 
 
-- Auth
-- Users
-- Roles
-- Clients
-- Projects
-- Project Assignments
-- Timesheets
-- Leave Types
-- Leave Balances
-- Leave Requests
-- Holidays
-- Tools
-- Tool Allocations
-- Weekend Work
-- Dashboard
-- Reports
-- Settings
-- System
+### Core Branches
+- `main` (Production): Stable code deployed to production. Should only accept merges from `staging`/`uat`.
+- `staging` / `uat` (Pre-production): Used for final QA or client demo before production. Accepts merges from `dev`.
+- `dev` (Integration): The default branch where developers merge all new features and fixes. 
 
-Implement one module completely before starting another.
+### Workflow Steps
+1. **Create a Feature Branch:** Always branch off `dev`.
+   - Naming convention: `feature/<short-desc>` (e.g. `feature/user-role`, `feature/leave-approval`)
+   - Bugfix convention: `bugfix/<short-desc>` (e.g. `bugfix/auth-token-refresh`)
+2. **Commit Often:** Write clear, descriptive commit messages. Avoid stashing dirty working states and pushing them to remote branches.
+3. **Pull Request (PR) to `dev`:** 
+   - Before opening a PR, always rebase or merge `origin/dev` into your feature branch to resolve conflicts locally.
+   - The other developer **must** review and approve the PR before it gets merged.
+4. **Deploy to Dev/Staging:** Once merged into `dev`, code is tested in the dev environment. When a release is ready, a PR is opened from `dev` to `staging`/`uat`, and eventually to `main`.
 
----
-
-# API Development Rules
-
-For every endpoint implement
-
-Router
-
-↓
-
-Schema
-
-↓
-
-Validator
-
-↓
-
-Service
-
-↓
-
-Repository
-
-↓
-
-Tests
-
-No shortcuts.
+### Rules for Commits
+- ❌ **NO direct commits to `main`, `staging`, or `dev`.** All changes must go through a feature/bugfix branch and a PR.
+- ❌ **Avoid pushing WIP Stashes:** E.g., avoid creating stash commits on remote branches. Use standard commits and squash them later if needed.
+- ✅ **Keep branches short-lived:** Merge your features back to `dev` within a few days to avoid massive merge conflicts.
 
 ---
 
-# Repository Rules
-
-Repository contains
-
-- Create
-- Update
-- Delete
-- List
-- Get By Id
-- Exists
-- Filters
-
-Nothing else.
-
----
-
-# Service Rules
-
-Business logic belongs here.
-
-Examples
-
-Validate daily hours
-
-Calculate weekly hours
-
-Permission checks
-
-Conflict detection
-
-Leave balance checks
-
-Duplicate validation
-
-Project assignment validation
-
-Never place these in repository.
-
----
-
-# Error Handling
-
-Use custom exceptions.
-
-Always return meaningful messages.
-
-Use proper status codes.
-
-400
-
-Validation
-
-401
-
-Unauthorized
-
-403
-
-Forbidden
-
-404
-
-Not Found
-
-409
-
-Conflict
-
-422
-
-Validation Error
-
-500
-
-Unexpected Error
-
----
-
-# Coding Style
-
-Use
-
-Type Hints
-
-Docstrings
-
-Async functions
-
-Dependency Injection
-
-Clean architecture
-
-Readable variable names
-
-Never
-
-Magic Numbers
-
-Duplicate Logic
-
-Long Functions
-
-Large Routers
-
-Business Logic inside Routers
-
----
-
-# Security
-
-Validate every request.
-
-Check permissions before business logic.
-
-Use JWT dependencies.
-
-Never expose internal errors.
-
-Never expose stack traces.
-
----
-
-# Performance
-
-Prefer joins over repeated queries.
-
-Avoid N+1 queries.
-
-Use pagination.
-
-Select only required columns.
-
-Batch operations where possible.
-
----
-
-# Testing
-
-Every module should contain
-
-- Happy Path
-- Permission Tests
-- Validation Tests
-- Edge Cases
-
----
-
-# Git Workflow
-
-Main
-
-Production
-
-Dev
-
-Integration
-
-Feature Branch
-
-feature/<module>
-
-Example
-
-feature/auth
-
-feature/users
-
-feature/timesheets
-
-Never commit directly to main.
-
-Never commit directly to dev.
-
-Always use Pull Requests.
-
----
-
-# AI Development Workflow
-
-Whenever implementing a feature
-
-Step 1
-
-Read business rules.
-
-Step 2
-
-Read schema.
-
-Step 3
-
-Implement repository.
-
-Step 4
-
-Implement service.
-
-Step 5
-
-Implement router.
-
-Step 6
-
-Add validation.
-
-Step 7
-
-Test manually.
-
-Step 8
-
-Write migration if required.
-
-Step 9
-
-Update API documentation.
-
-Never skip steps.
-
----
-
-# Current API Contract
-
-The backend exposes approximately 63 REST endpoints across 17 modules.
-
-Modules include
-
-- Authentication
-- Users
-- Roles
-- Clients
-- Projects
-- Project Assignments
-- Timesheets
-- Leave Types
-- Leave Balances
-- Leave Requests
-- Holidays
-- Tools
-- Weekend Work
-- Dashboard
-- Reports
-- Settings
-- System
-
-This API contract is the single source of truth.
-
-Any backend implementation must remain compatible with the frontend contract unless explicitly changed.
-
----
-
-# AI Rules
-
-Always
-
-✔ Follow Modular Monolith
-
-✔ Use async SQLAlchemy
-
-✔ Use Pydantic v2
-
-✔ Follow Service → Repository pattern
-
-✔ Keep business logic inside services
-
-✔ Use Alembic for schema changes
-
-✔ Write production-ready code
-
-✔ Keep code simple and maintainable
-
-Never
-
-✘ Invent endpoints
-
-✘ Change API contracts
-
-✘ Break folder structure
-
-✘ Ignore business rules
-
-✘ Mix architecture layers
-
-✘ Write temporary hacks
-
-✘ Add unnecessary abstractions
-
-✘ Over-engineer the MVP
-
-The priority is maintainability, readability, consistency, and production readiness.
+# AI Development Workflow & Step Checklist
+
+When creating or extending any feature module:
+
+1. **Review Business Rules:** Confirm permissions, role capabilities, and validation parameters.
+2. **Define/Update Model:** Add or verify SQLAlchemy model in `app/models/`.
+3. **Create Migration:** Generate and apply Alembic migration (`alembic revision --autogenerate -m "..."`).
+4. **Create Schemas:** Define Pydantic request & response schemas in `app/modules/<module>/schema.py`.
+5. **Implement Repository:** Build query methods in `app/modules/<module>/repository.py`.
+6. **Implement Service:** Build business logic & rule validation in `app/modules/<module>/service.py`.
+7. **Implement Router:** Add HTTP endpoints in `app/modules/<module>/router.py` using `app.common.responses`.
+8. **Register Router:** Include module router in `app/api/router.py`.
+9. **Test & Verify:** Run manual or automated tests to confirm end-to-end functionality.
