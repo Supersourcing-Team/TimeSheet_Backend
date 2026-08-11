@@ -24,8 +24,10 @@ from app.modules.clients.router import router as clients_router
 from app.modules.projects.router import router as projects_router
 from app.modules.leave_requests.router import router as leave_requests_router
 from app.modules.timesheets.router import router as timesheets_router
-from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.project_assignments.router import router as project_assignments_router
+from app.modules.tools.router import router as tools_router
+from app.modules.tool_allocations.router import router as tool_allocations_router
+
 from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.reports.router import router as reports_router
 
@@ -34,6 +36,8 @@ api_router.include_router(projects_router, prefix="/projects", tags=["Projects"]
 api_router.include_router(project_assignments_router, prefix="/project-assignments", tags=["Project Assignments"])
 api_router.include_router(leave_requests_router, prefix="/leave-requests", tags=["Leave Requests"])
 api_router.include_router(timesheets_router, prefix="/timesheets", tags=["Timesheets"])
+api_router.include_router(tools_router, prefix="/tools", tags=["Tools"])
+api_router.include_router(tool_allocations_router, prefix="/tool-allocations", tags=["Tool Allocations"])
 api_router.include_router(weekend_work_router, prefix="/weekend-work", tags=["Weekend Work Overtime"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
 
