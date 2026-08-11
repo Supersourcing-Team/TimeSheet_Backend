@@ -44,6 +44,19 @@ class PaginatedAPIResponse(BaseModel, Generic[T]):
     errors: Optional[Any] = None
 
 
+def create_pagination_data(items: List[Any], total: int, page: int, limit: int) -> dict:
+    """Builds a dictionary of paginated metadata and items."""
+    limit = max(1, limit)
+    total_pages = math.ceil(total / limit) if total > 0 else 0
+    return {
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages,
+        "items": items,
+    }
+
+
 def create_paginated_response(
     items: List[Any],
     total: int,
@@ -53,16 +66,7 @@ def create_paginated_response(
     status_code: int = status.HTTP_200_OK,
 ) -> JSONResponse:
     """Builds a standardized paginated JSONResponse."""
-    limit = max(1, limit)
-    total_pages = math.ceil(total / limit) if total > 0 else 0
-
-    paginated_data = {
-        "total": total,
-        "page": page,
-        "limit": limit,
-        "total_pages": total_pages,
-        "items": items,
-    }
+    paginated_data = create_pagination_data(items, total, page, limit)
 
     payload = {
         "success": True,
@@ -72,3 +76,4 @@ def create_paginated_response(
     }
 
     return JSONResponse(status_code=status_code, content=payload)
+

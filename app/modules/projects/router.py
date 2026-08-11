@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.common.responses import success_response
+from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.permissions import require_roles
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse
@@ -17,7 +17,7 @@ pm_only = require_roles("Project_Manager")
 async def create_project(project_in: ProjectCreate, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     project = await service.create_project(project_in)
-    return success_response(data=project.model_dump(mode="json"), message="Project created successfully")
+    return created_response(data=project.model_dump(mode="json"), message="Project created successfully")
 
 
 @router.get("/", response_model=dict, dependencies=[Depends(pm_only)])

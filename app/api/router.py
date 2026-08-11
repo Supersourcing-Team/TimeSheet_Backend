@@ -22,9 +22,14 @@ api_router.include_router(leave_balances_router, prefix="/leave-balances", tags=
 
 from app.modules.clients.router import router as clients_router
 from app.modules.projects.router import router as projects_router
+from app.modules.leave_requests.router import router as leave_requests_router
+from app.modules.timesheets.router import router as timesheets_router
 
 api_router.include_router(clients_router, prefix="/clients", tags=["Clients"])
 api_router.include_router(projects_router, prefix="/projects", tags=["Projects"])
+api_router.include_router(leave_requests_router, prefix="/leave-requests", tags=["Leave Requests"])
+api_router.include_router(timesheets_router, prefix="/timesheets", tags=["Timesheets"])
+
 
 
 @api_router.get("/health", tags=["Health"])

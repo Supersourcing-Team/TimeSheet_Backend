@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.common.responses import success_response
+from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.permissions import require_roles
 from app.modules.clients.schema import ClientCreate, ClientUpdate, ClientResponse
@@ -17,7 +17,7 @@ pm_only = require_roles("Project_Manager")
 async def create_client(client_in: ClientCreate, db: AsyncSession = Depends(get_db)):
     service = ClientService(db)
     client = await service.create_client(client_in)
-    return success_response(data=client.model_dump(mode="json"), message="Client created successfully")
+    return created_response(data=client.model_dump(mode="json"), message="Client created successfully")
 
 
 @router.get("/", response_model=dict, dependencies=[Depends(pm_only)])
