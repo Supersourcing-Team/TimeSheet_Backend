@@ -24,6 +24,7 @@ from app.modules.clients.router import router as clients_router
 from app.modules.projects.router import router as projects_router
 from app.modules.leave_requests.router import router as leave_requests_router
 from app.modules.timesheets.router import router as timesheets_router
+from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.project_assignments.router import router as project_assignments_router
 from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.reports.router import router as reports_router
