@@ -20,6 +20,12 @@ api_router.include_router(holidays_router, prefix="/holidays", tags=["Holidays"]
 api_router.include_router(leave_types_router, prefix="/leave-types", tags=["Leave Types"])
 api_router.include_router(leave_balances_router, prefix="/leave-balances", tags=["Leave Balances"])
 
+from app.modules.clients.router import router as clients_router
+from app.modules.projects.router import router as projects_router
+
+api_router.include_router(clients_router, prefix="/clients", tags=["Clients"])
+api_router.include_router(projects_router, prefix="/projects", tags=["Projects"])
+
 
 @api_router.get("/health", tags=["Health"])
 async def health_check(db: AsyncSession = Depends(get_db)):
