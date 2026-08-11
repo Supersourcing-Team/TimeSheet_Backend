@@ -1,8 +1,10 @@
 import os
 import uuid
 from pathlib import Path
-from typing import List, Union
+from typing import Union
+
 from fastapi import HTTPException, UploadFile, status
+
 from app.common.utils import sanitize_filename
 
 ALLOWED_REPORT_EXTENSIONS = {".pdf", ".xlsx", ".csv"}

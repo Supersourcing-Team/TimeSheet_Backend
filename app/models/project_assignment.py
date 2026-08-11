@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import List
+
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,7 +18,9 @@ class ProjectAssignment(Base):
 
     project: Mapped["Project"] = relationship("Project", back_populates="assignments")
     user: Mapped["User"] = relationship("User", back_populates="project_assignments")
-    timesheets: Mapped[List["Timesheet"]] = relationship("Timesheet", back_populates="project_assignment")
+    timesheets: Mapped[List["Timesheet"]] = relationship(
+        "Timesheet", back_populates="project_assignment"
+    )
     weekend_work_requests: Mapped[List["WeekendWorkRequest"]] = relationship(
         "WeekendWorkRequest", back_populates="project_assignment"
     )
