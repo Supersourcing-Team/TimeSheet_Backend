@@ -28,8 +28,9 @@ __pycache__/
 .claude/
 .agents/
 .gemini/
-TimeSheet_Rules/
-TimeSheet_Rules/rules.md
+
+
+
 # Temporary / Scratch Test Scripts
 test_db.py
 test_holidays.py

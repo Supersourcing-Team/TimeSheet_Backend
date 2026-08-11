@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Optional
+
 from sqlalchemy import Date, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,7 +24,9 @@ class LeaveRequest(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    user: Mapped["User"] = relationship("User", foreign_keys=[user_id], back_populates="leave_requests")
+    user: Mapped["User"] = relationship(
+        "User", foreign_keys=[user_id], back_populates="leave_requests"
+    )
     leave_type: Mapped["LeaveType"] = relationship("LeaveType", back_populates="leave_requests")
     manager: Mapped[Optional["User"]] = relationship(
         "User", foreign_keys=[managers_user_id], back_populates="managed_leave_requests"

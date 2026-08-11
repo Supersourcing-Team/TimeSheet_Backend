@@ -1,5 +1,6 @@
 import math
 from typing import Any, Generic, List, Optional, TypeVar
+
 from fastapi import Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -9,6 +10,7 @@ T = TypeVar("T")
 
 class PaginationParams:
     """Dependency model for standard query pagination parameters."""
+
     def __init__(
         self,
         page: int = Query(1, ge=1, description="Page number starting from 1"),
@@ -25,6 +27,7 @@ class PaginationParams:
 
 class PaginatedData(BaseModel, Generic[T]):
     """Structure for paginated data content."""
+
     total: int = Field(..., description="Total number of items available")
     page: int = Field(..., description="Current page number")
     limit: int = Field(..., description="Items per page")
@@ -34,6 +37,7 @@ class PaginatedData(BaseModel, Generic[T]):
 
 class PaginatedAPIResponse(BaseModel, Generic[T]):
     """Standardized API response structure for paginated endpoints."""
+
     success: bool = True
     message: str = "Data retrieved successfully"
     data: PaginatedData[T]
