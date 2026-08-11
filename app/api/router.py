@@ -22,6 +22,12 @@ api_router.include_router(auth_router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(users_router, prefix="/users", tags=["Users"])
 api_router.include_router(roles_router, prefix="/roles", tags=["Roles"])
 
+from app.modules.clients.router import router as clients_router
+from app.modules.projects.router import router as projects_router
+
+api_router.include_router(clients_router, prefix="/clients", tags=["Clients"])
+api_router.include_router(projects_router, prefix="/projects", tags=["Projects"])
+
 
 @api_router.get("/health", tags=["Health"])
 async def health_check(db: AsyncSession = Depends(get_db)):
