@@ -10,9 +10,9 @@ from app.modules.users.repository import UserRepository
 
 class ProjectService:
     def __init__(self, db: AsyncSession):
+        self.db = db
         self.repository = ProjectRepository(db)
         self.client_repo = ClientRepository(db)
-        self.user_repo = UserRepository(db)
 
     async def _validate_client_and_pm(self, client_id: int = None, pm_id: int = None):
         if client_id is not None:
@@ -21,11 +21,12 @@ class ProjectService:
                 raise BadRequestException(detail="Invalid client_id: Client does not exist or is inactive.")
         
         if pm_id is not None:
-            pm = await self.user_repo.get_by_id(pm_id)
+            pm = await UserRepository.get_by_id(self.db, pm_id)
             if not pm:
                 raise BadRequestException(detail="Invalid project_manager_id: User does not exist or is inactive.")
             if not pm.role or pm.role.name != "Project_Manager":
                 raise BadRequestException(detail="Invalid project_manager_id: User must have the 'Project_Manager' role.")
+
 
     async def get_project_by_id(self, project_id: int) -> ProjectResponse:
         project = await self.repository.get_by_id(project_id)

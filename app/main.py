@@ -26,11 +26,21 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    formatted_errors = []
+    for err in exc.errors():
+        err_copy = dict(err)
+        if "ctx" in err_copy:
+            ctx_copy = dict(err_copy["ctx"])
+            if "error" in ctx_copy:
+                ctx_copy["error"] = str(ctx_copy["error"])
+            err_copy["ctx"] = ctx_copy
+        formatted_errors.append(err_copy)
     return error_response(
         message="Validation Error",
-        errors=exc.errors(),
+        errors=formatted_errors,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
     )
+
 
 
 # Set up CORS middleware

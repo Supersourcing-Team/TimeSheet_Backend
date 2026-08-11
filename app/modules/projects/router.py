@@ -17,28 +17,29 @@ pm_only = require_roles("Project_Manager")
 async def create_project(project_in: ProjectCreate, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     project = await service.create_project(project_in)
-    return success_response(data=project.model_dump(), message="Project created successfully")
+    return success_response(data=project.model_dump(mode="json"), message="Project created successfully")
 
 
 @router.get("/", response_model=dict, dependencies=[Depends(pm_only)])
 async def get_projects(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     projects = await service.get_all_projects(skip=skip, limit=limit)
-    return success_response(data=[p.model_dump() for p in projects], message="Projects retrieved successfully")
+    return success_response(data=[p.model_dump(mode="json") for p in projects], message="Projects retrieved successfully")
 
 
 @router.get("/{project_id}", response_model=dict, dependencies=[Depends(pm_only)])
 async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     project = await service.get_project_by_id(project_id)
-    return success_response(data=project.model_dump(), message="Project retrieved successfully")
+    return success_response(data=project.model_dump(mode="json"), message="Project retrieved successfully")
 
 
 @router.put("/{project_id}", response_model=dict, dependencies=[Depends(pm_only)])
 async def update_project(project_id: int, project_in: ProjectUpdate, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     project = await service.update_project(project_id, project_in)
-    return success_response(data=project.model_dump(), message="Project updated successfully")
+    return success_response(data=project.model_dump(mode="json"), message="Project updated successfully")
+
 
 
 @router.delete("/{project_id}", response_model=dict, dependencies=[Depends(pm_only)])

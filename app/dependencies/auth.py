@@ -55,10 +55,12 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_
 async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    if current_user.status != "Active":
+    user_status = getattr(current_user, "status", "Active")
+    if user_status != "Active":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your account is currently deactivated. Please contact the administrator for assistance.",
         )
     return current_user
+
 
