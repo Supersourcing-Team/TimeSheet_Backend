@@ -18,7 +18,7 @@ from app.modules.timesheets.service import TimesheetService
 router = APIRouter()
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Create a daily timesheet entry")
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Create a daily timesheet entry")
 async def create_timesheet(
     timesheet_in: TimesheetCreate,
     current_user: User = Depends(get_current_active_user),

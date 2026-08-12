@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.pagination import PaginationParams, create_paginated_response
@@ -95,6 +95,18 @@ async def update_user(
     Updates user details and role.
     Only accessible by Admin.
     """
+    if user_id == admin_user.id:
+        if data.status and data.status.lower() == "inactive":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot deactivate your own account.",
+            )
+        if data.role_id and data.role_id != admin_user.role_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot change your own role.",
+            )
+
     updated_user = await UserService.update_user(db, user_id, data)
     user_response = UserResponse.model_validate(updated_user).model_dump(mode='json')
     return success_response(
@@ -114,6 +126,12 @@ async def toggle_user_status(
     Updates user status to 'Active' or 'Inactive' (Soft Delete).
     Only accessible by Admin.
     """
+    if user_id == admin_user.id and data.status.lower() == "inactive":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot deactivate your own account.",
+        )
+
     updated_user = await UserService.toggle_user_status(db, user_id, data.status)
     user_response = UserResponse.model_validate(updated_user).model_dump(mode='json')
     return success_response(

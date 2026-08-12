@@ -12,7 +12,7 @@ pm_only = require_roles("Project_Manager")
 pm_and_am = require_roles(["Project_Manager", "Account_Manager"])
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
 async def allocate_tool(allocation_in: ToolAllocationCreate, db: AsyncSession = Depends(get_db)):
     service = ToolAllocationService(db)
     allocation = await service.allocate_tool(allocation_in)

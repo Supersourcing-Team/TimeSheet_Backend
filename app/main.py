@@ -46,7 +46,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Set up CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.FRONTEND_URLS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

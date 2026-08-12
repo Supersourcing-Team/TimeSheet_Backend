@@ -33,8 +33,8 @@ class HolidayRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def create(db: AsyncSession, name: str, holiday_date: date) -> Holiday:
-        holiday = Holiday(name=name, date=holiday_date)
+    async def create(db: AsyncSession, **data) -> Holiday:
+        holiday = Holiday(**data)
         db.add(holiday)
         await db.commit()
         await db.refresh(holiday)

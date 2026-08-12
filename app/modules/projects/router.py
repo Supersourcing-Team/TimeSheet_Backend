@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.responses import created_response, success_response
 from app.core.database import get_db
+from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_roles
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse
 from app.modules.projects.service import ProjectService
@@ -13,14 +14,14 @@ router = APIRouter()
 pm_only = require_roles("Project_Manager")
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
 async def create_project(project_in: ProjectCreate, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     project = await service.create_project(project_in)
     return created_response(data=project.model_dump(mode="json"), message="Project created successfully")
 
 
-@router.get("/", response_model=dict, dependencies=[Depends(pm_only)])
+@router.get("", response_model=dict, dependencies=[Depends(get_current_active_user)])
 async def get_projects(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     projects = await service.get_all_projects(skip=skip, limit=limit)
