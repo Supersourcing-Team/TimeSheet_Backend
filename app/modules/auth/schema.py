@@ -6,8 +6,8 @@ class GoogleLoginRequest(BaseModel):
     credential: str
 
 
-class RefreshTokenRequest(BaseModel):
-    refresh_token: str
+class EmptyRequest(BaseModel):
+    pass
 
 
 class UserAuthResponse(BaseModel):

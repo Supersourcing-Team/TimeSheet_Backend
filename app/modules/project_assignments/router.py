@@ -14,7 +14,7 @@ router = APIRouter()
 pm_only = require_roles("Project_Manager")
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
 async def assign_user(assignment_in: ProjectAssignmentCreate, db: AsyncSession = Depends(get_db)):
     service = ProjectAssignmentService(db)
     assignment = await service.assign_user_to_project(assignment_in)

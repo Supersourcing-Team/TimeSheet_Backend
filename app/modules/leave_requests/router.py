@@ -18,7 +18,7 @@ from app.modules.leave_requests.service import LeaveRequestService
 router = APIRouter()
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Submit a leave application")
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Submit a leave application")
 async def submit_leave_request(
     request_in: LeaveRequestSubmit,
     current_user: User = Depends(get_current_active_user),
@@ -51,7 +51,7 @@ async def get_my_leave_requests(
     )
 
 
-@router.get("/", response_model=dict, dependencies=[Depends(require_admin)], summary="List all leave requests (Admin)")
+@router.get("", response_model=dict, dependencies=[Depends(require_admin)], summary="List all leave requests (Admin)")
 async def list_all_leave_requests(
     status_filter: Optional[str] = Query(None, alias="status"),
     user_id: Optional[int] = Query(None),

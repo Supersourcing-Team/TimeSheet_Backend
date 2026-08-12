@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.responses import success_response
@@ -7,12 +7,38 @@ from app.dependencies.auth import get_current_active_user
 from app.models.user import User
 from app.modules.auth.schema import (
     GoogleLoginRequest,
-    RefreshTokenRequest,
     UserAuthResponse,
 )
 from app.modules.auth.service import login_with_google, refresh_access_token
+from app.core.config import settings
 
 router = APIRouter()
+
+
+def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/",
+    )
+
+
+def clear_auth_cookies(response: Response):
+    response.delete_cookie(key="access_token", httponly=True, samesite="lax", path="/")
+    response.delete_cookie(key="refresh_token", httponly=True, samesite="lax", path="/")
 
 
 @router.post("/google/login", summary="Login using Google SSO")
@@ -22,22 +48,32 @@ async def google_login(request: GoogleLoginRequest, db: AsyncSession = Depends(g
     User must already be registered in the database by an Admin.
     """
     auth_data = await login_with_google(request.credential, db)
-    return success_response(
-        data=auth_data.model_dump(),
+    resp = success_response(
+        data={"user": auth_data.user.model_dump()},
         message="Login successful",
     )
+    set_auth_cookies(resp, auth_data.access_token, auth_data.refresh_token)
+    return resp
 
 
 @router.post("/refresh", summary="Refresh access token")
-async def refresh_token(request: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+async def refresh_token(request: Request, db: AsyncSession = Depends(get_db)):
     """
     Exchanges a valid refresh token for a new access token and refresh token.
     """
-    auth_data = await refresh_access_token(request.refresh_token, db)
-    return success_response(
-        data=auth_data.model_dump(),
+    token = request.cookies.get("refresh_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token missing",
+        )
+    auth_data = await refresh_access_token(token, db)
+    resp = success_response(
+        data={"user": auth_data.user.model_dump()},
         message="Token refreshed successfully",
     )
+    set_auth_cookies(resp, auth_data.access_token, auth_data.refresh_token)
+    return resp
 
 
 @router.post("/logout", summary="Logout user")
@@ -45,10 +81,12 @@ async def logout():
     """
     Stateless logout: Instructs the client to discard their tokens.
     """
-    return success_response(
+    resp = success_response(
         data=None,
-        message="Successfully logged out. Please discard your tokens locally.",
+        message="Successfully logged out.",
     )
+    clear_auth_cookies(resp)
+    return resp
 
 
 @router.get("/me", summary="Get authenticated user profile")

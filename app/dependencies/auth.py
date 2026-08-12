@@ -1,23 +1,25 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.database import get_db
 from app.models.user import User
 from app.modules.auth.jwt import verify_token
 from app.modules.auth.repository import AuthRepository
 
-oauth2_scheme = HTTPBearer()
 
+async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
+    token = request.cookies.get("access_token")
+    if not token:
+        # Fallback to authorization header if we want to support both
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
 
-async def get_current_user(token: HTTPAuthorizationCredentials = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
-    token = token.credentials
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Not authorized. Please log in to access this resource.",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authorized. Please log in to access this resource.",
+        )
 
     payload = verify_token(token)
     if not payload:
