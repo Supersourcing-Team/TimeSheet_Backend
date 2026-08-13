@@ -23,7 +23,14 @@ class Settings(BaseSettings):
     # Google SSO
     GOOGLE_CLIENT_ID: str = ""
 
+    # SMTP Email Settings
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
 
 settings = Settings()
 
