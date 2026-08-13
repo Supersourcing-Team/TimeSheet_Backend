@@ -33,7 +33,7 @@ class HolidayService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Holiday already exists for date {data.date}",
             )
-        return await HolidayRepository.create(db, name=data.name, holiday_date=data.date)
+        return await HolidayRepository.create(db, **data.model_dump())
 
     @staticmethod
     async def update_holiday(db: AsyncSession, holiday_id: int, data: HolidayUpdate) -> Holiday:

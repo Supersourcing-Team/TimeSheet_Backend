@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     GOOGLE_CLIENT_ID: str = ""
+    FRONTEND_URLS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
 
     # Authentication Settings
     SECRET_KEY: str = "your-super-secret-key-change-this-in-production"

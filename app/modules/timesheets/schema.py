@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -7,8 +7,7 @@ class ProjectAssignmentMinimal(BaseModel):
     id: int
     project_id: int
     user_id: int
-    role: str
-    assignment_status: str
+    is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -16,19 +15,19 @@ class ProjectAssignmentMinimal(BaseModel):
 class TimesheetCreate(BaseModel):
     project_assignment_id: int
     timesheet_date: date
-    hours: float = Field(..., gt=0, le=8.0, description="Hours worked (0 < hours <= 8.0)")
-    is_billable: bool = True
-    task_description: Optional[str] = None
-    work_summary: str = Field(..., min_length=3, description="Summary of work performed")
+    billable_hours: float = Field(0.0, ge=0, le=24.0, description="Billable hours worked")
+    billable_work_summary: Optional[str] = Field(None, description="Summary of billable work")
+    non_billable_hours: float = Field(0.0, ge=0, le=24.0, description="Non-billable hours worked")
+    non_billable_work_summary: Optional[str] = Field(None, description="Summary of non-billable work")
 
 
 class TimesheetUpdate(BaseModel):
     project_assignment_id: Optional[int] = None
     timesheet_date: Optional[date] = None
-    hours: Optional[float] = Field(None, gt=0, le=8.0)
-    is_billable: Optional[bool] = None
-    task_description: Optional[str] = None
-    work_summary: Optional[str] = Field(None, min_length=3)
+    billable_hours: Optional[float] = Field(None, ge=0, le=24.0)
+    billable_work_summary: Optional[str] = None
+    non_billable_hours: Optional[float] = Field(None, ge=0, le=24.0)
+    non_billable_work_summary: Optional[str] = None
 
 
 class TimesheetResponse(BaseModel):
@@ -36,10 +35,11 @@ class TimesheetResponse(BaseModel):
     user_id: int
     project_assignment_id: int
     timesheet_date: date
-    hours: float
-    is_billable: bool
-    task_description: Optional[str] = None
-    work_summary: str
+    billable_hours: float
+    billable_work_summary: Optional[str] = None
+    non_billable_hours: float
+    non_billable_work_summary: Optional[str] = None
+    status: str = "submitted"
     created_at: datetime
     updated_at: datetime
 
@@ -59,3 +59,4 @@ class WeeklyTimesheetSummary(BaseModel):
     end_date: date
     total_weekly_hours: float
     daily_breakdowns: List[DailyTimesheetBreakdown]
+

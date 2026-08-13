@@ -12,14 +12,14 @@ pm_only = require_roles("Project_Manager")
 pm_and_am = require_roles(["Project_Manager", "Account_Manager"])
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
 async def create_tool(tool_in: ToolCreate, db: AsyncSession = Depends(get_db)):
     service = ToolService(db)
     tool = await service.create_tool(tool_in)
     return created_response(data=tool.model_dump(mode="json"), message="Tool created successfully")
 
 
-@router.get("/", response_model=dict, dependencies=[Depends(pm_and_am)])
+@router.get("", response_model=dict, dependencies=[Depends(pm_and_am)])
 async def get_tools(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     service = ToolService(db)
     tools = await service.get_all_tools(skip=skip, limit=limit)

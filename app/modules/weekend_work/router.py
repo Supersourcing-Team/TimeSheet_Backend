@@ -19,7 +19,7 @@ router = APIRouter()
 pm_or_admin = require_roles("Project_Manager", "Admin")
 
 
-@router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Submit weekend work overtime request")
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Submit weekend work overtime request")
 async def submit_weekend_work(
     request_in: WeekendWorkSubmit,
     current_user: User = Depends(get_current_active_user),
