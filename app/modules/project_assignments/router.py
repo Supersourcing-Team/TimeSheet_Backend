@@ -28,6 +28,22 @@ async def get_project_assignments(project_id: int, skip: int = 0, limit: int = 1
     return success_response(data=[a.model_dump(mode="json") for a in assignments], message="Project assignments retrieved successfully")
 
 
+@router.get("/user/me", response_model=dict)
+async def get_my_assignments(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Returns all active project assignments for the currently logged-in user."""
+    service = ProjectAssignmentService(db)
+    assignments = await service.get_user_assignments(current_user.id, skip=skip, limit=limit)
+    return success_response(
+        data=[a.model_dump(mode="json") for a in assignments],
+        message="My project assignments retrieved successfully",
+    )
+
+
 @router.get("/user/{user_id}", response_model=dict)
 async def get_user_assignments(
     user_id: int, 
@@ -50,3 +66,4 @@ async def remove_assignment(assignment_id: int, db: AsyncSession = Depends(get_d
     service = ProjectAssignmentService(db)
     await service.remove_assignment(assignment_id)
     return success_response(message="Project assignment removed successfully")
+

@@ -33,7 +33,9 @@ class TimesheetRepository:
         timesheet_date: date,
         exclude_id: Optional[int] = None,
     ) -> float:
-        query = select(func.coalesce(func.sum(Timesheet.hours), 0.0)).filter(
+        query = select(
+            func.coalesce(func.sum(Timesheet.billable_hours + Timesheet.non_billable_hours), 0.0)
+        ).filter(
             Timesheet.user_id == user_id,
             Timesheet.timesheet_date == timesheet_date,
         )
@@ -80,6 +82,21 @@ class TimesheetRepository:
         result = await db.execute(query)
         entries = list(result.scalars().all())
         return entries, total
+
+    @staticmethod
+    async def get_by_user_project_date(
+        db: AsyncSession,
+        user_id: int,
+        project_assignment_id: int,
+        timesheet_date: date,
+    ) -> Optional[Timesheet]:
+        query = select(Timesheet).filter(
+            Timesheet.user_id == user_id,
+            Timesheet.project_assignment_id == project_assignment_id,
+            Timesheet.timesheet_date == timesheet_date,
+        )
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
 
     @staticmethod
     async def get_entries_in_range(

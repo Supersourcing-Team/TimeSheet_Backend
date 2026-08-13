@@ -13,6 +13,7 @@ from app.modules.timesheets.schema import (
     TimesheetResponse,
     TimesheetUpdate,
 )
+from app.dependencies.permissions import require_roles
 from app.modules.timesheets.service import TimesheetService
 
 router = APIRouter()
@@ -21,7 +22,7 @@ router = APIRouter()
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Create a daily timesheet entry")
 async def create_timesheet(
     timesheet_in: TimesheetCreate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles("Employee", "Admin")),
     db: AsyncSession = Depends(get_db),
 ):
     timesheet = await TimesheetService.create_timesheet(db, current_user, timesheet_in)
@@ -90,7 +91,7 @@ async def get_timesheet_by_id(
 async def update_timesheet(
     timesheet_id: int,
     timesheet_in: TimesheetUpdate,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles("Employee", "Admin")),
     db: AsyncSession = Depends(get_db),
 ):
     updated_entry = await TimesheetService.update_timesheet(db, timesheet_id, current_user, timesheet_in)
@@ -101,10 +102,11 @@ async def update_timesheet(
     )
 
 
+
 @router.delete("/{timesheet_id}", response_model=dict, summary="Delete a timesheet entry")
 async def delete_timesheet(
     timesheet_id: int,
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles("Employee", "Admin")),
     db: AsyncSession = Depends(get_db),
 ):
     await TimesheetService.delete_timesheet(db, timesheet_id, current_user)

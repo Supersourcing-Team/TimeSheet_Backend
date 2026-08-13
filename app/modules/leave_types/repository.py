@@ -28,8 +28,14 @@ class LeaveTypeRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def create(db: AsyncSession, name: str, description: Optional[str], is_active: bool) -> LeaveType:
-        leave_type = LeaveType(name=name, description=description, is_active=is_active)
+    async def get_by_code(db: AsyncSession, code: str) -> Optional[LeaveType]:
+        query = select(LeaveType).where(LeaveType.code == code)
+        result = await db.execute(query)
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def create(db: AsyncSession, **data) -> LeaveType:
+        leave_type = LeaveType(**data)
         db.add(leave_type)
         await db.commit()
         await db.refresh(leave_type)
