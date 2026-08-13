@@ -32,9 +32,10 @@ class ReportRepository:
             select(
                 Timesheet.id.label("timesheet_id"),
                 Timesheet.timesheet_date,
-                Timesheet.hours,
-                Timesheet.is_billable,
-                Timesheet.work_summary,
+                Timesheet.billable_hours,
+                Timesheet.billable_work_summary,
+                Timesheet.non_billable_hours,
+                Timesheet.non_billable_work_summary,
                 User.id.label("user_id"),
                 (User.first_name + " " + User.last_name).label("user_name"),
                 Project.id.label("project_id"),
@@ -58,8 +59,12 @@ class ReportRepository:
             query = query.filter(Client.id == client_id)
         if user_id:
             query = query.filter(User.id == user_id)
-        if is_billable is not None:
-            query = query.filter(Timesheet.is_billable == is_billable)
+        # Filter by billable status is no longer a simple boolean since a row can have both.
+        # If needed, we'd add logic here to filter where billable_hours > 0 or non_billable_hours > 0.
+        if is_billable is True:
+            query = query.filter(Timesheet.billable_hours > 0)
+        elif is_billable is False:
+            query = query.filter(Timesheet.non_billable_hours > 0)
         if pm_user_id:
             query = query.filter(Project.project_manager_id == pm_user_id)
 
@@ -71,9 +76,10 @@ class ReportRepository:
             TimesheetReportItem(
                 timesheet_id=row.timesheet_id,
                 timesheet_date=row.timesheet_date,
-                hours=row.hours,
-                is_billable=row.is_billable,
-                work_summary=row.work_summary,
+                billable_hours=row.billable_hours,
+                billable_work_summary=row.billable_work_summary,
+                non_billable_hours=row.non_billable_hours,
+                non_billable_work_summary=row.non_billable_work_summary,
                 user_id=row.user_id,
                 user_name=row.user_name,
                 project_id=row.project_id,

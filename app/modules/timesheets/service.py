@@ -30,20 +30,39 @@ class TimesheetService:
             db, current_user.id, timesheet_in.project_assignment_id
         )
 
-        # 2. Validate max 8h/day limit
-        await TimesheetValidator.validate_daily_hours(
-            db, current_user.id, timesheet_in.timesheet_date, timesheet_in.hours
+        existing = await TimesheetRepository.get_by_user_project_date(
+            db, current_user.id, timesheet_in.project_assignment_id, timesheet_in.timesheet_date
         )
+
+        # 2. Validate max 24h/day limit (excluding existing if upsert)
+        target_total_hours = timesheet_in.billable_hours + timesheet_in.non_billable_hours
+        await TimesheetValidator.validate_daily_hours(
+            db, 
+            current_user.id, 
+            timesheet_in.timesheet_date, 
+            target_total_hours,
+            exclude_id=existing.id if existing else None
+        )
+
+        if existing:
+            # Upsert: Update completely the existing row
+            update_data = {
+                "billable_hours": timesheet_in.billable_hours,
+                "billable_work_summary": timesheet_in.billable_work_summary,
+                "non_billable_hours": timesheet_in.non_billable_hours,
+                "non_billable_work_summary": timesheet_in.non_billable_work_summary,
+            }
+            return await TimesheetRepository.update(db, existing, update_data)
 
         # 3. Create timesheet entry
         timesheet = Timesheet(
             user_id=current_user.id,
             project_assignment_id=timesheet_in.project_assignment_id,
             timesheet_date=timesheet_in.timesheet_date,
-            hours=timesheet_in.hours,
-            is_billable=timesheet_in.is_billable,
-            task_description=timesheet_in.task_description,
-            work_summary=timesheet_in.work_summary,
+            billable_hours=timesheet_in.billable_hours,
+            billable_work_summary=timesheet_in.billable_work_summary,
+            non_billable_hours=timesheet_in.non_billable_hours,
+            non_billable_work_summary=timesheet_in.non_billable_work_summary,
         )
         return await TimesheetRepository.create(db, timesheet)
 
@@ -100,7 +119,6 @@ class TimesheetService:
         update_data = timesheet_in.model_dump(exclude_unset=True)
 
         target_date = update_data.get("timesheet_date", entry.timesheet_date)
-        target_hours = update_data.get("hours", entry.hours)
         target_assignment = update_data.get("project_assignment_id", entry.project_assignment_id)
 
         if "project_assignment_id" in update_data:
@@ -108,7 +126,10 @@ class TimesheetService:
                 db, current_user.id, target_assignment
             )
 
-        if "hours" in update_data or "timesheet_date" in update_data:
+        if any(k in update_data for k in ["billable_hours", "non_billable_hours", "timesheet_date"]):
+            b_hours = update_data.get("billable_hours", entry.billable_hours)
+            nb_hours = update_data.get("non_billable_hours", entry.non_billable_hours)
+            target_hours = b_hours + nb_hours
             await TimesheetValidator.validate_daily_hours(
                 db,
                 user_id=current_user.id,
@@ -157,13 +178,13 @@ class TimesheetService:
             if d not in entries_by_date:
                 entries_by_date[d] = []
             entries_by_date[d].append(entry)
-            total_weekly_hours += entry.hours
+            total_weekly_hours += (entry.billable_hours + entry.non_billable_hours)
 
         daily_breakdowns = []
         for i in range(7):
             curr_d = monday + timedelta(days=i)
             day_entries = entries_by_date.get(curr_d, [])
-            day_total = sum(e.hours for e in day_entries)
+            day_total = sum((e.billable_hours + e.non_billable_hours) for e in day_entries)
             resp_entries = [TimesheetResponse.model_validate(e) for e in day_entries]
             daily_breakdowns.append(
                 DailyTimesheetBreakdown(

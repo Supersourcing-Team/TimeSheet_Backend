@@ -6,9 +6,10 @@ from pydantic import BaseModel, ConfigDict
 class TimesheetReportItem(BaseModel):
     timesheet_id: int
     timesheet_date: date
-    hours: float
-    is_billable: bool
-    work_summary: str
+    billable_hours: float
+    billable_work_summary: Optional[str]
+    non_billable_hours: float
+    non_billable_work_summary: Optional[str]
     user_id: int
     user_name: str
     project_id: int

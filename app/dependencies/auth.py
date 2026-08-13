@@ -1,14 +1,25 @@
 from typing import Optional
 from fastapi import Depends, HTTPException, status, Request
+from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.user import User
 from app.modules.auth.jwt import verify_token
 from app.modules.auth.repository import AuthRepository
 
+oauth2_scheme = HTTPBearer(auto_error=False)
 
-async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
-    token = request.cookies.get("access_token")
+async def get_current_user(
+    request: Request, 
+    token: Optional[str] = Depends(oauth2_scheme), 
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    # If using HTTPBearer, token is an HTTPAuthorizationCredentials object
+    if token and hasattr(token, "credentials"):
+        token = token.credentials
+
+    if not token:
+        token = request.cookies.get("access_token")
     if not token:
         # Fallback to authorization header if we want to support both
         auth_header = request.headers.get("Authorization")

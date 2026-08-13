@@ -9,7 +9,7 @@ from app.modules.timesheets.repository import TimesheetRepository
 
 
 class TimesheetValidator:
-    """Validates timesheet hour limits (max 8h/day) and project assignment ownership."""
+    """Validates timesheet hour limits (max 24h/day) and project assignment ownership."""
 
     @staticmethod
     async def validate_project_assignment(
@@ -46,15 +46,15 @@ class TimesheetValidator:
     ) -> None:
         if new_hours <= 0:
             raise BadRequestException(detail="Logged hours must be greater than 0.")
-        if new_hours > 8.0:
-            raise BadRequestException(detail="Single entry cannot exceed 8.0 hours.")
+        if new_hours > 24.0:
+            raise BadRequestException(detail="Single entry cannot exceed 24.0 hours.")
 
         existing_total = await TimesheetRepository.get_daily_total_hours(
             db, user_id, timesheet_date, exclude_id=exclude_id
         )
 
         total_after_add = existing_total + new_hours
-        if total_after_add > 8.0:
+        if total_after_add > 24.0:
             raise BadRequestException(
-                detail=f"Exceeds daily 8-hour max limit. Logged: {existing_total}h, Trying to add: {new_hours}h (Total: {total_after_add}h)."
+                detail=f"Exceeds daily 24-hour max limit. Logged: {existing_total}h, Trying to add: {new_hours}h (Total: {total_after_add}h)."
             )

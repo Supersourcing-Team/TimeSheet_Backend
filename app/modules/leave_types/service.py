@@ -30,9 +30,13 @@ class LeaveTypeService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Leave type with name '{data.name}' already exists",
             )
-        return await LeaveTypeRepository.create(
-            db, name=data.name, description=data.description, is_active=data.is_active
-        )
+        existing_code = await LeaveTypeRepository.get_by_code(db, data.code)
+        if existing_code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Leave type with code '{data.code}' already exists",
+            )
+        return await LeaveTypeRepository.create(db, **data.model_dump())
 
     @staticmethod
     async def update_leave_type(
@@ -45,6 +49,13 @@ class LeaveTypeService:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Leave type with name '{data.name}' already exists",
+                )
+        if data.code and data.code != leave_type.code:
+            existing_code = await LeaveTypeRepository.get_by_code(db, data.code)
+            if existing_code and existing_code.id != leave_type_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Leave type with code '{data.code}' already exists",
                 )
         return await LeaveTypeRepository.update(db, leave_type, **data.model_dump(exclude_unset=True))
 
