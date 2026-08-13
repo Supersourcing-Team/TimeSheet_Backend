@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi import HTTPException, status
 from app.modules.projects.repository import ProjectRepository
-from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectDetailResponse
 from app.modules.clients.repository import ClientRepository
 from app.modules.users.repository import UserRepository
 
@@ -28,22 +28,42 @@ class ProjectService:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project_manager_id: User must have the 'Project_Manager' role.")
 
 
-    async def get_project_by_id(self, project_id: int) -> ProjectResponse:
+    def _to_detail_response(self, project) -> ProjectDetailResponse:
+        return ProjectDetailResponse(
+            id=project.id,
+            client_id=project.client_id,
+            project_manager_id=project.project_manager_id,
+            project_name=project.project_name,
+            description=project.description,
+            budget=project.budget,
+            start_date=project.start_date,
+            end_date=project.end_date,
+            status=project.status,
+            is_active=project.is_active,
+            created_at=project.created_at,
+            updated_at=project.updated_at,
+            client_name=project.client.name if project.client else None,
+            project_manager_name=f"{project.project_manager.first_name} {project.project_manager.last_name}".strip() if project.project_manager else None,
+            assigned_user_ids=[a.user_id for a in project.assignments] if hasattr(project, "assignments") else [],
+            tools=[{"id": t.tool_id, "allocated_hours": t.allocated_hours} for t in project.tool_allocations] if hasattr(project, "tool_allocations") else []
+        )
+
+    async def get_project_by_id(self, project_id: int) -> ProjectDetailResponse:
         project = await self.repository.get_by_id(project_id)
         if not project:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-        return ProjectResponse.model_validate(project)
+        return self._to_detail_response(project)
 
-    async def get_all_projects(self, skip: int = 0, limit: int = 100) -> List[ProjectResponse]:
+    async def get_all_projects(self, skip: int = 0, limit: int = 100) -> List[ProjectDetailResponse]:
         projects = await self.repository.get_all(skip=skip, limit=limit)
-        return [ProjectResponse.model_validate(p) for p in projects]
+        return [self._to_detail_response(p) for p in projects]
 
-    async def create_project(self, project_in: ProjectCreate) -> ProjectResponse:
+    async def create_project(self, project_in: ProjectCreate) -> ProjectDetailResponse:
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         project = await self.repository.create(project_in)
-        return ProjectResponse.model_validate(project)
+        return await self.get_project_by_id(project.id)
 
-    async def update_project(self, project_id: int, project_in: ProjectUpdate) -> ProjectResponse:
+    async def update_project(self, project_id: int, project_in: ProjectUpdate) -> ProjectDetailResponse:
         project = await self.repository.get_by_id(project_id)
         if not project:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
@@ -51,7 +71,7 @@ class ProjectService:
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         
         updated_project = await self.repository.update(project, project_in)
-        return ProjectResponse.model_validate(updated_project)
+        return await self.get_project_by_id(updated_project.id)
 
     async def delete_project(self, project_id: int) -> None:
         project = await self.repository.get_by_id(project_id)

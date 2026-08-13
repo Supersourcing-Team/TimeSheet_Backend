@@ -51,3 +51,9 @@ class ProjectResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class ProjectDetailResponse(ProjectResponse):
+    client_name: Optional[str] = None
+    project_manager_name: Optional[str] = None
+    assigned_user_ids: list[int] = []
+    tools: list[dict] = []

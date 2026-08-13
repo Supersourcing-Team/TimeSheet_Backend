@@ -14,7 +14,12 @@ class ProjectRepository:
     async def get_by_id(self, project_id: int) -> Optional[Project]:
         result = await self.db.execute(
             select(Project)
-            .options(selectinload(Project.client), selectinload(Project.project_manager))
+            .options(
+                selectinload(Project.client),
+                selectinload(Project.project_manager),
+                selectinload(Project.assignments),
+                selectinload(Project.tool_allocations)
+            )
             .where(Project.id == project_id, Project.is_active == True)
         )
         return result.scalars().first()
@@ -22,7 +27,12 @@ class ProjectRepository:
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[Project]:
         result = await self.db.execute(
             select(Project)
-            .options(selectinload(Project.client), selectinload(Project.project_manager))
+            .options(
+                selectinload(Project.client),
+                selectinload(Project.project_manager),
+                selectinload(Project.assignments),
+                selectinload(Project.tool_allocations)
+            )
             .where(Project.is_active == True)
             .offset(skip).limit(limit)
         )
