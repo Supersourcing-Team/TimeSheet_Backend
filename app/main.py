@@ -7,12 +7,25 @@ from app.api.router import api_router
 from app.common.responses import error_response
 from app.core.config import settings
 
+from contextlib import asynccontextmanager
+from app.scheduler.scheduler import start_scheduler, shutdown_scheduler
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
+    shutdown_scheduler()
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
+
 
 # Exception handlers for standardized API response contract
 @app.exception_handler(HTTPException)
