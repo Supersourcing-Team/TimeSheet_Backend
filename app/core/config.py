@@ -13,15 +13,6 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     GOOGLE_CLIENT_ID: str = ""
 
-    # Authentication Settings
-    SECRET_KEY: str = "your-super-secret-key-change-this-in-production"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
-    # Google SSO
-    GOOGLE_CLIENT_ID: str = ""
-
     # SMTP Email Settings
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
@@ -32,4 +23,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
