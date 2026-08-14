@@ -14,16 +14,13 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str = ""
     FRONTEND_URLS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
 
-    # Authentication Settings
-    SECRET_KEY: str = "your-super-secret-key-change-this-in-production"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
-    # Google SSO
-    GOOGLE_CLIENT_ID: str = ""
+    # SMTP Email Settings
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-settings = Settings()
 
+settings = Settings()
