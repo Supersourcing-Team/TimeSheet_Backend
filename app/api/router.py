@@ -22,6 +22,9 @@ api_router.include_router(leave_types_router, prefix="/leave-types", tags=["Leav
 api_router.include_router(leave_balances_router, prefix="/leave-balances", tags=["Leave Balances"])
 api_router.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboard"])
 
+from app.modules.working_calendar.router import router as working_calendar_router
+api_router.include_router(working_calendar_router, prefix="/working-calendar", tags=["Working Calendar"])
+
 from app.modules.clients.router import router as clients_router
 from app.modules.projects.router import router as projects_router
 from app.modules.leave_requests.router import router as leave_requests_router

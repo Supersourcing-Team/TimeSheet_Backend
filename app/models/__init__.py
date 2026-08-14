@@ -29,3 +29,4 @@ __all__ = [
     "Timesheet",
     "WeekendWorkRequest",
 ]
+from .working_calendar import WorkingCalendar
