@@ -7,6 +7,8 @@ from app.modules.roles.repository import RoleRepository
 from app.modules.users.repository import UserRepository
 from app.modules.users.schema import UserCreate, UserUpdate
 from app.modules.users.validator import UserValidator
+from app.services.email_service import send_welcome_email
+
 
 
 class UserService:
@@ -51,7 +53,21 @@ class UserService:
             status=user_status,
         )
 
-        return await UserRepository.create(db, new_user)
+        created_user = await UserRepository.create(db, new_user)
+
+        # Dispatch Welcome Email Notification
+        if created_user.email:
+            user_full_name = f"{created_user.first_name} {created_user.last_name}".strip()
+            role_name = role.name if role else "Employee"
+            await send_welcome_email(
+                to_email=created_user.email,
+                user_name=user_full_name,
+                role_name=role_name,
+                employee_id=created_user.employee_id,
+            )
+
+        return created_user
+
 
     @staticmethod
     async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
