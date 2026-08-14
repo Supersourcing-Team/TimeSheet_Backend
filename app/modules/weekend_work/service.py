@@ -39,6 +39,7 @@ class WeekendWorkService:
         weekend_request = WeekendWorkRequest(
             project_assignment_id=request_in.project_assignment_id,
             work_date=request_in.work_date,
+            planned_hours=request_in.planned_hours,
             reason=request_in.reason,
             status="Pending",
         )
@@ -65,7 +66,7 @@ class WeekendWorkService:
     ) -> Tuple[List[WeekendWorkRequest], int]:
         is_admin = getattr(pm_user.role, "name", None) == "Admin"
         if is_admin:
-            return await WeekendWorkRepository.list_all(db, status="Pending", page=page, limit=limit)
+            return await WeekendWorkRepository.list_all(db, status=None, page=page, limit=limit)
 
         return await WeekendWorkRepository.list_pending_for_pm(
             db, pm_user.id, page=page, limit=limit

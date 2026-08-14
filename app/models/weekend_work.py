@@ -15,6 +15,7 @@ class WeekendWorkRequest(Base):
         ForeignKey("project_assignments.id"), nullable=False
     )
     work_date: Mapped[date] = mapped_column(Date, nullable=False)
+    planned_hours: Mapped[float] = mapped_column(default=0.0, nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="Pending", nullable=False)
     approved_by: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)

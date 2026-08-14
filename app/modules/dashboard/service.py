@@ -132,7 +132,9 @@ class DashboardService:
             
         # 6. Role Overview (Manager/Admin stats)
         role_overview = None
+        admin_overview = None
         role_name = current_user.role.name if current_user.role else ""
+        
         if role_name in ["Admin", "Project_Manager", "Account_Manager"]:
             role_overview = {
                 "role": role_name,
@@ -149,6 +151,25 @@ class DashboardService:
                 select(func.count(Project.id)).where(Project.status == 'Active')
             )
             role_overview["active_org_projects"] = active_proj_res.scalar() or 0
+            
+        if role_name == "Admin":
+            active_users_res = await db.execute(
+                select(func.count(User.id)).where(User.status == 'active')
+            )
+            active_users_count = active_users_res.scalar() or 0
+            
+            on_leave_users_res = await db.execute(
+                select(func.count(User.id)).where(User.status == 'on_leave')
+            )
+            on_leave_users_count = on_leave_users_res.scalar() or 0
+            
+            from app.modules.dashboard.schema import AdminOverviewWidget
+            admin_overview = AdminOverviewWidget(
+                active_users_count=active_users_count,
+                on_leave_users_count=on_leave_users_count,
+                pending_leaves_count=role_overview.get("team_pending_leaves", 0) if role_overview else 0,
+                active_projects_count=role_overview.get("active_org_projects", 0) if role_overview else 0,
+            )
 
         return DashboardSummaryResponse(
             timesheet_summary=timesheet_widget,
@@ -156,5 +177,6 @@ class DashboardService:
             leave_balance=leave_balance_widget,
             recent_leaves=recent_leaves,
             upcoming_holiday=upcoming_holiday_widget,
-            role_overview=role_overview
+            role_overview=role_overview,
+            admin_overview=admin_overview
         )

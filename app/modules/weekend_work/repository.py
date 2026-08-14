@@ -25,6 +25,7 @@ class WeekendWorkRepository:
             select(WeekendWorkRequest)
             .options(
                 selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
                 selectinload(WeekendWorkRequest.approver),
             )
             .filter(WeekendWorkRequest.id == request_id)
@@ -57,6 +58,7 @@ class WeekendWorkRepository:
             .join(WeekendWorkRequest.project_assignment)
             .options(
                 selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
                 selectinload(WeekendWorkRequest.approver),
             )
             .filter(ProjectAssignment.user_id == user_id)
@@ -94,11 +96,11 @@ class WeekendWorkRepository:
             .join(ProjectAssignment.project)
             .options(
                 selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
                 selectinload(WeekendWorkRequest.approver),
             )
             .filter(
                 Project.project_manager_id == pm_user_id,
-                WeekendWorkRequest.status == "Pending",
             )
         )
         count_query = (
@@ -107,7 +109,6 @@ class WeekendWorkRepository:
             .join(ProjectAssignment.project)
             .filter(
                 Project.project_manager_id == pm_user_id,
-                WeekendWorkRequest.status == "Pending",
             )
         )
 
@@ -130,6 +131,7 @@ class WeekendWorkRepository:
     ) -> Tuple[List[WeekendWorkRequest], int]:
         query = select(WeekendWorkRequest).options(
             selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+            selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
             selectinload(WeekendWorkRequest.approver),
         )
         count_query = select(func.count(WeekendWorkRequest.id))

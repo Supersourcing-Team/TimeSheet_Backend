@@ -36,6 +36,8 @@ from app.modules.tool_allocations.router import router as tool_allocations_route
 from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.reports.router import router as reports_router
 
+from app.modules.analytics.router import router as analytics_router
+
 api_router.include_router(clients_router, prefix="/clients", tags=["Clients"])
 api_router.include_router(projects_router, prefix="/projects", tags=["Projects"])
 api_router.include_router(project_assignments_router, prefix="/project-assignments", tags=["Project Assignments"])
@@ -45,6 +47,7 @@ api_router.include_router(tools_router, prefix="/tools", tags=["Tools"])
 api_router.include_router(tool_allocations_router, prefix="/tool-allocations", tags=["Tool Allocations"])
 api_router.include_router(weekend_work_router, prefix="/weekend-work", tags=["Weekend Work Overtime"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
+api_router.include_router(analytics_router, prefix="/analytics", tags=["Advanced Analytics"])
 
 
 

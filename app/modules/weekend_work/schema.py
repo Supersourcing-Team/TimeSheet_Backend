@@ -13,10 +13,20 @@ class UserMinimal(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProjectMinimal(BaseModel):
+    id: int
+    project_name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ProjectAssignmentMinimal(BaseModel):
     id: int
     project_id: int
     user_id: int
+    user_id: int
+    user: Optional[UserMinimal] = None
+    project: Optional[ProjectMinimal] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -24,6 +34,7 @@ class ProjectAssignmentMinimal(BaseModel):
 class WeekendWorkSubmit(BaseModel):
     project_assignment_id: int
     work_date: date
+    planned_hours: float = Field(..., gt=0, description="Number of planned hours for weekend work")
     reason: str = Field(..., min_length=3, description="Reason for weekend work request")
 
 
@@ -35,6 +46,7 @@ class WeekendWorkResponse(BaseModel):
     id: int
     project_assignment_id: int
     work_date: date
+    planned_hours: float
     reason: str
     status: str
     approved_by: Optional[int] = None

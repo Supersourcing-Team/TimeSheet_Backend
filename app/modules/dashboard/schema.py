@@ -34,6 +34,12 @@ class UpcomingHolidayWidget(BaseModel):
     date: date
     days_remaining: int
 
+class AdminOverviewWidget(BaseModel):
+    active_users_count: int
+    on_leave_users_count: int
+    pending_leaves_count: int
+    active_projects_count: int
+
 class DashboardSummaryResponse(BaseModel):
     timesheet_summary: TimesheetSummaryWidget
     project_summary: ProjectSummaryWidget
@@ -41,3 +47,4 @@ class DashboardSummaryResponse(BaseModel):
     recent_leaves: List[RecentLeaveRequestWidget]
     upcoming_holiday: Optional[UpcomingHolidayWidget] = None
     role_overview: Optional[dict] = None
+    admin_overview: Optional[AdminOverviewWidget] = None
