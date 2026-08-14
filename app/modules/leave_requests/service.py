@@ -9,6 +9,8 @@ from app.modules.leave_requests.repository import LeaveRequestRepository
 from app.modules.leave_requests.schema import LeaveRequestReview, LeaveRequestSubmit
 from app.modules.leave_requests.validator import LeaveRequestValidator
 from app.modules.leave_types.repository import LeaveTypeRepository
+from app.services.email_service import send_leave_approved_email, send_leave_rejected_email
+
 
 
 class LeaveRequestService:
@@ -119,9 +121,26 @@ class LeaveRequestService:
         await db.commit()
 
         # Update leave request status to Approved
-        return await LeaveRequestRepository.update_status(
+        updated_request = await LeaveRequestRepository.update_status(
             db, leave_request, status="Approved", manager_id=admin_user.id
         )
+
+        # Dispatch Leave Approved Email Notification
+        if updated_request.user and updated_request.user.email:
+            user_full_name = f"{updated_request.user.first_name} {updated_request.user.last_name}".strip()
+            approver_full_name = f"{admin_user.first_name} {admin_user.last_name}".strip()
+            leave_type_name = updated_request.leave_type.name if updated_request.leave_type else "Leave"
+            await send_leave_approved_email(
+                to_email=updated_request.user.email,
+                user_name=user_full_name,
+                leave_type=leave_type_name,
+                start_date=str(updated_request.start_date),
+                end_date=str(updated_request.end_date),
+                working_days=working_days,
+                approver_name=approver_full_name,
+            )
+
+        return updated_request
 
     @staticmethod
     async def reject_leave_request(
@@ -139,13 +158,31 @@ class LeaveRequestService:
                 detail=f"Cannot reject leave request with status '{leave_request.status}'."
             )
 
-        return await LeaveRequestRepository.update_status(
+        updated_request = await LeaveRequestRepository.update_status(
             db,
             leave_request,
             status="Rejected",
             manager_id=admin_user.id,
             rejection_reason=review_in.rejection_reason,
         )
+
+        # Dispatch Leave Rejected Email Notification
+        if updated_request.user and updated_request.user.email:
+            user_full_name = f"{updated_request.user.first_name} {updated_request.user.last_name}".strip()
+            reviewer_full_name = f"{admin_user.first_name} {admin_user.last_name}".strip()
+            leave_type_name = updated_request.leave_type.name if updated_request.leave_type else "Leave"
+            await send_leave_rejected_email(
+                to_email=updated_request.user.email,
+                user_name=user_full_name,
+                leave_type=leave_type_name,
+                start_date=str(updated_request.start_date),
+                end_date=str(updated_request.end_date),
+                rejection_reason=review_in.rejection_reason,
+                reviewer_name=reviewer_full_name,
+            )
+
+        return updated_request
+
 
     @staticmethod
     async def cancel_leave_request(

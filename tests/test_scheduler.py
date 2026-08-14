@@ -4,7 +4,13 @@ from datetime import date
 
 from app.scheduler.weekly_timesheet_lock import lock_past_weekly_timesheets
 from app.scheduler.weekly_timesheet_reminder import send_weekly_timesheet_reminders, get_user_logged_hours_for_range
-from app.services.email_service import send_timesheet_reminder_email, send_email
+from app.services.email_service import (
+    send_email,
+    send_leave_approved_email,
+    send_leave_rejected_email,
+    send_timesheet_reminder_email,
+    send_welcome_email,
+)
 
 
 class MockUser:
@@ -35,6 +41,46 @@ async def test_send_timesheet_reminder_email():
         missing_hours=8.0,
     )
     assert result is True
+
+
+@pytest.mark.asyncio
+async def test_send_leave_approved_email():
+    result = await send_leave_approved_email(
+        to_email="employee@test.com",
+        user_name="John Doe",
+        leave_type="Paid Leave",
+        start_date="2026-08-20",
+        end_date="2026-08-22",
+        working_days=3,
+        approver_name="Admin Manager",
+    )
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_send_leave_rejected_email():
+    result = await send_leave_rejected_email(
+        to_email="employee@test.com",
+        user_name="John Doe",
+        leave_type="Paid Leave",
+        start_date="2026-08-20",
+        end_date="2026-08-22",
+        rejection_reason="Project delivery deadline conflicts",
+        reviewer_name="Admin Manager",
+    )
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_send_welcome_email():
+    result = await send_welcome_email(
+        to_email="new_employee@test.com",
+        user_name="Jane Doe",
+        role_name="Software Engineer",
+        employee_id="EMP-102",
+    )
+    assert result is True
+
 
 
 @pytest.mark.asyncio
