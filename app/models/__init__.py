@@ -33,3 +33,4 @@ __all__ = [
     "WorkingCalendar",
     "SystemSettings",
 ]
+from .working_calendar import WorkingCalendar
