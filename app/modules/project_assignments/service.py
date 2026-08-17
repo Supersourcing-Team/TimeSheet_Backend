@@ -57,3 +57,10 @@ class ProjectAssignmentService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project assignment not found")
         
         await self.repository.soft_delete(assignment)
+
+    async def remove_assignment_by_project_user(self, project_id: int, user_id: int) -> None:
+        assignment = await self.repository.get_assignment(project_id, user_id)
+        if not assignment:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project assignment not found")
+        
+        await self.repository.soft_delete(assignment)

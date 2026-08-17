@@ -67,3 +67,10 @@ async def remove_assignment(assignment_id: int, db: AsyncSession = Depends(get_d
     await service.remove_assignment(assignment_id)
     return success_response(message="Project assignment removed successfully")
 
+
+@router.delete("/project/{project_id}/user/{user_id}", response_model=dict, dependencies=[Depends(pm_only)])
+async def remove_assignment_by_project_user(project_id: int, user_id: int, db: AsyncSession = Depends(get_db)):
+    service = ProjectAssignmentService(db)
+    await service.remove_assignment_by_project_user(project_id, user_id)
+    return success_response(message="Project assignment removed successfully")
+

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.timesheet import Timesheet
+from app.models.project_assignment import ProjectAssignment
 
 
 class TimesheetRepository:
@@ -56,7 +57,8 @@ class TimesheetRepository:
         limit: int = 20,
     ) -> Tuple[List[Timesheet], int]:
         query = select(Timesheet).options(
-            selectinload(Timesheet.project_assignment)
+            selectinload(Timesheet.user),
+            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project)
         ).filter(Timesheet.user_id == user_id)
 
         count_query = select(func.count(Timesheet.id)).filter(Timesheet.user_id == user_id)
@@ -72,6 +74,54 @@ class TimesheetRepository:
         if project_assignment_id:
             query = query.filter(Timesheet.project_assignment_id == project_assignment_id)
             count_query = count_query.filter(Timesheet.project_assignment_id == project_assignment_id)
+
+        total_res = await db.execute(count_query)
+        total = total_res.scalar() or 0
+
+        offset = (page - 1) * limit
+        query = query.order_by(Timesheet.timesheet_date.desc(), Timesheet.id.desc()).offset(offset).limit(limit)
+
+        result = await db.execute(query)
+        entries = list(result.scalars().all())
+        return entries, total
+
+    @staticmethod
+    async def list_managed_by_pm(
+        db: AsyncSession,
+        pm_user_id: int,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        project_assignment_id: Optional[int] = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> Tuple[List[Timesheet], int]:
+        from app.models.project_assignment import ProjectAssignment
+        from app.models.project import Project
+
+        base_query = (
+            select(Timesheet)
+            .join(ProjectAssignment, Timesheet.project_assignment_id == ProjectAssignment.id)
+            .join(Project, ProjectAssignment.project_id == Project.id)
+            .filter(Project.project_manager_id == pm_user_id)
+        )
+
+        query = base_query.options(
+            selectinload(Timesheet.user),
+            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project)
+        )
+        count_query = select(func.count(Timesheet.id)).select_from(base_query.subquery())
+
+        if start_date:
+            query = query.filter(Timesheet.timesheet_date >= start_date)
+            count_query = select(func.count(Timesheet.id)).select_from(base_query.filter(Timesheet.timesheet_date >= start_date).subquery())
+
+        if end_date:
+            query = query.filter(Timesheet.timesheet_date <= end_date)
+            count_query = select(func.count(Timesheet.id)).select_from(base_query.filter(Timesheet.timesheet_date <= end_date).subquery())
+
+        if project_assignment_id:
+            query = query.filter(Timesheet.project_assignment_id == project_assignment_id)
+            count_query = select(func.count(Timesheet.id)).select_from(base_query.filter(Timesheet.project_assignment_id == project_assignment_id).subquery())
 
         total_res = await db.execute(count_query)
         total = total_res.scalar() or 0

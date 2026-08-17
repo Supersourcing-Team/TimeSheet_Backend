@@ -36,3 +36,17 @@ class Timesheet(Base):
     __table_args__ = (
         UniqueConstraint("user_id", "project_assignment_id", "timesheet_date", name="uq_user_project_date"),
     )
+
+    @property
+    def user_name(self) -> str:
+        return f"{self.user.first_name} {self.user.last_name}" if self.user else "Unknown"
+
+    @property
+    def user_avatar(self) -> str:
+        return getattr(self.user, "avatar_url", "") if self.user else ""
+
+    @property
+    def project_name(self) -> str:
+        if self.project_assignment and getattr(self.project_assignment, "project", None):
+            return self.project_assignment.project.project_name
+        return "Unknown"

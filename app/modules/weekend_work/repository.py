@@ -25,6 +25,7 @@ class WeekendWorkRepository:
             select(WeekendWorkRequest)
             .options(
                 selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
                 selectinload(WeekendWorkRequest.approver),
             )
             .filter(WeekendWorkRequest.id == request_id)
@@ -57,6 +58,7 @@ class WeekendWorkRepository:
             .join(WeekendWorkRequest.project_assignment)
             .options(
                 selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
                 selectinload(WeekendWorkRequest.approver),
             )
             .filter(ProjectAssignment.user_id == user_id)
@@ -82,9 +84,10 @@ class WeekendWorkRepository:
         return requests, total
 
     @staticmethod
-    async def list_pending_for_pm(
+    async def list_for_pm(
         db: AsyncSession,
         pm_user_id: int,
+        status: Optional[str] = None,
         page: int = 1,
         limit: int = 20,
     ) -> Tuple[List[WeekendWorkRequest], int]:
@@ -94,11 +97,11 @@ class WeekendWorkRepository:
             .join(ProjectAssignment.project)
             .options(
                 selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
                 selectinload(WeekendWorkRequest.approver),
             )
             .filter(
                 Project.project_manager_id == pm_user_id,
-                WeekendWorkRequest.status == "Pending",
             )
         )
         count_query = (
@@ -107,9 +110,12 @@ class WeekendWorkRepository:
             .join(ProjectAssignment.project)
             .filter(
                 Project.project_manager_id == pm_user_id,
-                WeekendWorkRequest.status == "Pending",
             )
         )
+
+        if status:
+            query = query.filter(WeekendWorkRequest.status == status)
+            count_query = count_query.filter(WeekendWorkRequest.status == status)
 
         total_res = await db.execute(count_query)
         total = total_res.scalar() or 0
@@ -130,6 +136,7 @@ class WeekendWorkRepository:
     ) -> Tuple[List[WeekendWorkRequest], int]:
         query = select(WeekendWorkRequest).options(
             selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.project),
+            selectinload(WeekendWorkRequest.project_assignment).selectinload(ProjectAssignment.user),
             selectinload(WeekendWorkRequest.approver),
         )
         count_query = select(func.count(WeekendWorkRequest.id))
