@@ -33,3 +33,31 @@ class Project(Base):
     tool_allocations: Mapped[List["ToolAllocation"]] = relationship(
         "ToolAllocation", back_populates="project"
     )
+
+    @property
+    def client_name(self) -> str:
+        return self.client.name if self.client else "Unknown"
+
+    @property
+    def project_manager_name(self) -> str:
+        if self.project_manager:
+            return f"{self.project_manager.first_name} {self.project_manager.last_name}"
+        return "Unknown"
+
+    @property
+    def assigned_user_ids(self) -> List[int]:
+        return [a.user_id for a in self.assignments if a.is_active]
+
+    @property
+    def tools(self) -> List[dict]:
+        return [
+            {
+                "id": ta.tool_id,
+                "allocation_id": ta.id,
+                "name": getattr(ta, "tool", None).name if getattr(ta, "tool", None) else "Unknown",
+                "category": getattr(ta, "tool", None).category if getattr(ta, "tool", None) else "Unknown",
+                "monthly_cost": getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0,
+                "allocated_hours": 0
+            } 
+            for ta in self.tool_allocations if ta.status.lower() == "active"
+        ]

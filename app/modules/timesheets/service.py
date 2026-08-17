@@ -83,6 +83,25 @@ class TimesheetService:
             end_date=end_date,
             project_assignment_id=project_assignment_id,
             page=page,
+        )
+
+    @staticmethod
+    async def get_managed_timesheets(
+        db: AsyncSession,
+        current_user: User,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        project_assignment_id: Optional[int] = None,
+        page: int = 1,
+        limit: int = 20,
+    ) -> Tuple[List[Timesheet], int]:
+        return await TimesheetRepository.list_managed_by_pm(
+            db,
+            pm_user_id=current_user.id,
+            start_date=start_date,
+            end_date=end_date,
+            project_assignment_id=project_assignment_id,
+            page=page,
             limit=limit,
         )
 

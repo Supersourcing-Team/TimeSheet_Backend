@@ -49,5 +49,10 @@ class ProjectResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    
+    client_name: Optional[str] = None
+    project_manager_name: Optional[str] = None
+    assigned_user_ids: list[int] = Field(default_factory=list)
+    tools: list[dict] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

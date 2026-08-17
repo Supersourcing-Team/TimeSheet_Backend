@@ -43,6 +43,10 @@ class TimesheetResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    user_name: Optional[str] = None
+    user_avatar: Optional[str] = None
+    project_name: Optional[str] = None
+
     project_assignment: Optional[ProjectAssignmentMinimal] = None
 
     model_config = ConfigDict(from_attributes=True)

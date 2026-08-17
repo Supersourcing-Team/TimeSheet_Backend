@@ -24,6 +24,7 @@ class ProjectAssignmentMinimal(BaseModel):
 class WeekendWorkSubmit(BaseModel):
     project_assignment_id: int
     work_date: date
+    planned_hours: float = Field(..., gt=0, description="Planned hours for the weekend work")
     reason: str = Field(..., min_length=3, description="Reason for weekend work request")
 
 
@@ -35,6 +36,7 @@ class WeekendWorkResponse(BaseModel):
     id: int
     project_assignment_id: int
     work_date: date
+    planned_hours: float
     reason: str
     status: str
     approved_by: Optional[int] = None

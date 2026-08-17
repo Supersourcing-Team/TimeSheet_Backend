@@ -41,6 +41,17 @@ class ProjectService:
     async def create_project(self, project_in: ProjectCreate) -> ProjectResponse:
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         project = await self.repository.create(project_in)
+        
+        from app.modules.project_assignments.schema import ProjectAssignmentCreate
+        from app.modules.project_assignments.repository import ProjectAssignmentRepository
+        
+        assignment_repo = ProjectAssignmentRepository(self.db)
+        await assignment_repo.create(ProjectAssignmentCreate(
+            project_id=project.id,
+            user_id=project.project_manager_id
+        ))
+        
+        project = await self.repository.get_by_id(project.id)
         return ProjectResponse.model_validate(project)
 
     async def update_project(self, project_id: int, project_in: ProjectUpdate) -> ProjectResponse:
