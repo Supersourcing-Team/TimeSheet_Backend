@@ -12,6 +12,8 @@ from app.models.tool import Tool
 from app.models.tool_allocation import ToolAllocation
 from app.models.user import User
 from app.models.weekend_work import WeekendWorkRequest
+from app.models.working_calendar import WorkingCalendar
+from app.models.system_settings import SystemSettings
 
 __all__ = [
     "Base",
@@ -28,4 +30,6 @@ __all__ = [
     "ToolAllocation",
     "Timesheet",
     "WeekendWorkRequest",
+    "WorkingCalendar",
+    "SystemSettings",
 ]
