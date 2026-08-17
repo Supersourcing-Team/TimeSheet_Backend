@@ -52,11 +52,50 @@ async def get_my_timesheets(
         page=page,
         limit=limit,
     )
-    items = [TimesheetResponse.model_validate(e).model_dump(mode="json") for e in entries]
+    items = []
+    for e in entries:
+        dump = TimesheetResponse.model_validate(e).model_dump(mode="json")
+        dump["user_name"] = e.user_name
+        dump["user_avatar"] = e.user_avatar
+        dump["project_name"] = e.project_name
+        items.append(dump)
     paginated_data = create_pagination_data(items=items, total=total, page=page, limit=limit)
     return success_response(
         data=paginated_data,
         message="My timesheet entries retrieved successfully",
+    )
+
+
+@router.get("/managed", response_model=dict, summary="Get timesheets for projects managed by current PM")
+async def get_managed_timesheets(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    project_assignment_id: Optional[int] = Query(None),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(require_roles("Project_Manager")),
+    db: AsyncSession = Depends(get_db),
+):
+    entries, total = await TimesheetService.get_managed_timesheets(
+        db,
+        current_user,
+        start_date=start_date,
+        end_date=end_date,
+        project_assignment_id=project_assignment_id,
+        page=page,
+        limit=limit,
+    )
+    items = []
+    for e in entries:
+        dump = TimesheetResponse.model_validate(e).model_dump(mode="json")
+        dump["user_name"] = e.user_name
+        dump["user_avatar"] = e.user_avatar
+        dump["project_name"] = e.project_name
+        items.append(dump)
+    paginated_data = create_pagination_data(items=items, total=total, page=page, limit=limit)
+    return success_response(
+        data=paginated_data,
+        message="Managed timesheet entries retrieved successfully",
     )
 
 

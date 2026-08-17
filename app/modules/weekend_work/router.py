@@ -44,7 +44,13 @@ async def get_my_weekend_work_requests(
     requests, total = await WeekendWorkService.get_my_weekend_work_requests(
         db, current_user, status=status_filter, page=page, limit=limit
     )
-    items = [WeekendWorkResponse.model_validate(r).model_dump(mode="json") for r in requests]
+    items = []
+    for r in requests:
+        dump = WeekendWorkResponse.model_validate(r).model_dump(mode="json")
+        dump["user_name"] = r.user_name
+        dump["user_avatar"] = r.user_avatar
+        dump["project_name"] = r.project_name
+        items.append(dump)
     paginated_data = create_pagination_data(items=items, total=total, page=page, limit=limit)
     return success_response(
         data=paginated_data,
@@ -52,21 +58,28 @@ async def get_my_weekend_work_requests(
     )
 
 
-@router.get("/pending", response_model=dict, dependencies=[Depends(pm_or_admin)], summary="Get pending weekend work requests for PM's projects")
-async def get_pending_requests(
+@router.get("/managed", response_model=dict, dependencies=[Depends(pm_or_admin)], summary="Get managed weekend work requests for PM's projects")
+async def get_managed_requests(
+    status_filter: Optional[str] = Query(None, alias="status"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    requests, total = await WeekendWorkService.get_pending_requests_for_pm(
-        db, current_user, page=page, limit=limit
+    requests, total = await WeekendWorkService.get_requests_for_pm(
+        db, current_user, status=status_filter, page=page, limit=limit
     )
-    items = [WeekendWorkResponse.model_validate(r).model_dump(mode="json") for r in requests]
+    items = []
+    for r in requests:
+        dump = WeekendWorkResponse.model_validate(r).model_dump(mode="json")
+        dump["user_name"] = r.user_name
+        dump["user_avatar"] = r.user_avatar
+        dump["project_name"] = r.project_name
+        items.append(dump)
     paginated_data = create_pagination_data(items=items, total=total, page=page, limit=limit)
     return success_response(
         data=paginated_data,
-        message="Pending weekend work requests retrieved successfully",
+        message="Managed weekend work requests retrieved successfully",
     )
 
 
