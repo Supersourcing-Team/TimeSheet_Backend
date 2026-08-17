@@ -29,6 +29,8 @@ from app.modules.timesheets.router import router as timesheets_router
 from app.modules.project_assignments.router import router as project_assignments_router
 from app.modules.tools.router import router as tools_router
 from app.modules.tool_allocations.router import router as tool_allocations_router
+from app.modules.working_calendar.router import router as working_calendar_router
+from app.modules.settings.router import router as settings_router
 
 from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.reports.router import router as reports_router
@@ -41,6 +43,8 @@ api_router.include_router(timesheets_router, prefix="/timesheets", tags=["Timesh
 api_router.include_router(tools_router, prefix="/tools", tags=["Tools"])
 api_router.include_router(tool_allocations_router, prefix="/tool-allocations", tags=["Tool Allocations"])
 api_router.include_router(weekend_work_router, prefix="/weekend-work", tags=["Weekend Work Overtime"])
+api_router.include_router(working_calendar_router, prefix="/working-calendar", tags=["Working Calendar"])
+api_router.include_router(settings_router, prefix="/settings", tags=["System Settings"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
 
 

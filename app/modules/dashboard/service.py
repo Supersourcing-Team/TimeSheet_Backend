@@ -12,6 +12,7 @@ from app.modules.dashboard.schema import (
     RecentLeaveRequestWidget,
     TimesheetSummaryWidget,
     UpcomingHolidayWidget,
+    AdminOverviewWidget,
 )
 from app.models.holiday import Holiday
 from app.modules.holidays.repository import HolidayRepository
@@ -149,6 +150,28 @@ class DashboardService:
                 select(func.count(Project.id)).where(Project.status == 'Active')
             )
             role_overview["active_org_projects"] = active_proj_res.scalar() or 0
+            
+            # Admin Overview
+            active_users_res = await db.execute(
+                select(func.count(User.id)).where(User.status == 'Active')
+            )
+            active_users_count = active_users_res.scalar() or 0
+            
+            # Count users on leave today
+            on_leave_users_res = await db.execute(
+                select(func.count(User.id)).join(LeaveRequest, User.id == LeaveRequest.user_id)
+                .where(LeaveRequest.status == 'Approved')
+                .where(LeaveRequest.start_date <= today)
+                .where(LeaveRequest.end_date >= today)
+            )
+            on_leave_users_count = on_leave_users_res.scalar() or 0
+            
+            admin_overview = AdminOverviewWidget(
+                active_users_count=active_users_count,
+                on_leave_users_count=on_leave_users_count,
+                pending_leaves_count=role_overview["team_pending_leaves"],
+                active_projects_count=role_overview["active_org_projects"]
+            )
 
         return DashboardSummaryResponse(
             timesheet_summary=timesheet_widget,
@@ -156,5 +179,6 @@ class DashboardService:
             leave_balance=leave_balance_widget,
             recent_leaves=recent_leaves,
             upcoming_holiday=upcoming_holiday_widget,
-            role_overview=role_overview
+            role_overview=role_overview,
+            admin_overview=admin_overview if role_name in ["Admin", "Project_Manager", "Account_Manager"] else None
         )
