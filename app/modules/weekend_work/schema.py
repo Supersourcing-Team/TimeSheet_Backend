@@ -36,12 +36,13 @@ class WeekendWorkResponse(BaseModel):
     id: int
     project_assignment_id: int
     work_date: date
-    planned_hours: float
+    planned_hours: float = 8.0
     reason: str
     status: str
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None
     created_at: datetime
+
 
     project_assignment: Optional[ProjectAssignmentMinimal] = None
     approver: Optional[UserMinimal] = None

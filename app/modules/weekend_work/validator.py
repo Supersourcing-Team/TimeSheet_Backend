@@ -1,8 +1,10 @@
 from datetime import date
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import BadRequestException
+from app.core.exceptions import BadRequestException, ForbiddenException
+from app.models.project import Project
 from app.models.project_assignment import ProjectAssignment
 from app.modules.holidays.repository import HolidayRepository
 
@@ -28,14 +30,16 @@ class WeekendWorkValidator:
         db: AsyncSession, user_id: int, project_assignment_id: int
     ) -> ProjectAssignment:
         result = await db.execute(
-            select(ProjectAssignment).filter(
-                ProjectAssignment.id == project_assignment_id,
-                ProjectAssignment.user_id == user_id,
-            )
+            select(ProjectAssignment)
+            .options(selectinload(ProjectAssignment.project).selectinload(Project.assignments))
+            .filter(ProjectAssignment.id == project_assignment_id)
         )
         assignment = result.scalar_one_or_none()
-        if not assignment:
-            raise BadRequestException(
-                detail="Invalid project assignment. Assignment does not exist or belong to you."
-            )
+        if not assignment or assignment.user_id != user_id:
+            raise ForbiddenException(detail="User is not assigned to this project.")
+
+        project = assignment.project
+        if not project or user_id not in project.assigned_user_ids:
+            raise ForbiddenException(detail="User is not assigned to this project.")
+
         return assignment

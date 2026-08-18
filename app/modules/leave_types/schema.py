@@ -5,12 +5,13 @@ from pydantic import BaseModel, ConfigDict
 
 class LeaveTypeBase(BaseModel):
     name: str
-    code: str
-    days_per_year: int
-    is_paid: bool
-    requires_document: bool
+    code: Optional[str] = "GENERAL"
+    days_per_year: Optional[int] = 12
+    is_paid: Optional[bool] = True
+    requires_document: Optional[bool] = False
     description: Optional[str] = None
     is_active: bool = True
+
 
 
 class LeaveTypeCreate(LeaveTypeBase):
