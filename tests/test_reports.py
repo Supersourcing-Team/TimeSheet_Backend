@@ -49,9 +49,10 @@ def test_get_timesheet_report_success():
         TimesheetReportItem(
             timesheet_id=1,
             timesheet_date=date(2026, 8, 10),
-            hours=8.0,
-            is_billable=True,
-            work_summary="Development work",
+            billable_hours=8.0,
+            billable_work_summary="Development work",
+            non_billable_hours=0.0,
+            non_billable_work_summary=None,
             user_id=1,
             user_name="John Doe",
             project_id=10,
@@ -59,6 +60,7 @@ def test_get_timesheet_report_success():
             client_id=5,
             client_name="Acme Corp",
         )
+
     ]
 
     with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=ADMIN_USER), \
