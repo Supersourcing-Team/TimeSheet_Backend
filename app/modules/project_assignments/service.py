@@ -25,10 +25,15 @@ class ProjectAssignmentService:
         if not user or user.status != "Active":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found or inactive")
 
-        # Check if already assigned
-        existing_assignment = await self.repository.get_assignment(assignment_in.project_id, assignment_in.user_id)
+        # Check if already assigned (active or inactive)
+        existing_assignment = await self.repository.get_any_assignment(assignment_in.project_id, assignment_in.user_id)
         if existing_assignment:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is already assigned to this project")
+            if existing_assignment.is_active:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User is already assigned to this project")
+            else:
+                # Reactivate the old assignment
+                assignment = await self.repository.reactivate(existing_assignment)
+                return ProjectAssignmentResponse.model_validate(assignment)
 
         assignment = await self.repository.create(assignment_in)
         return ProjectAssignmentResponse.model_validate(assignment)

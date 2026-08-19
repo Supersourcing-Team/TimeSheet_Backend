@@ -31,6 +31,18 @@ class ProjectAssignmentRepository:
         )
         return result.scalars().first()
 
+    async def get_any_assignment(self, project_id: int, user_id: int) -> Optional[ProjectAssignment]:
+        result = await self.db.execute(
+            select(ProjectAssignment)
+            .where(
+                and_(
+                    ProjectAssignment.project_id == project_id,
+                    ProjectAssignment.user_id == user_id
+                )
+            )
+        )
+        return result.scalars().first()
+
     async def get_by_project(self, project_id: int, skip: int = 0, limit: int = 100) -> List[ProjectAssignment]:
         result = await self.db.execute(
             select(ProjectAssignment)
@@ -56,6 +68,12 @@ class ProjectAssignmentRepository:
 
     async def soft_delete(self, assignment: ProjectAssignment) -> ProjectAssignment:
         assignment.is_active = False
+        await self.db.commit()
+        await self.db.refresh(assignment)
+        return assignment
+
+    async def reactivate(self, assignment: ProjectAssignment) -> ProjectAssignment:
+        assignment.is_active = True
         await self.db.commit()
         await self.db.refresh(assignment)
         return assignment
