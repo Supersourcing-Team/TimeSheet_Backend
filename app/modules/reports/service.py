@@ -39,9 +39,10 @@ class ReportService:
             pm_user_id=pm_filter_id,
         )
 
-        total_hours = sum(item.hours for item in items)
-        billable_hours = sum(item.hours for item in items if item.is_billable)
-        non_billable_hours = total_hours - billable_hours
+        total_hours = sum((item.billable_hours + item.non_billable_hours) for item in items)
+        billable_hours = sum(item.billable_hours for item in items)
+        non_billable_hours = sum(item.non_billable_hours for item in items)
+
 
         return TimesheetReportSummary(
             start_date=start_date,

@@ -2,14 +2,21 @@ from datetime import date
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import BadRequestException, ForbiddenException, NotFoundException
+from app.models.project import Project
 from app.models.project_assignment import ProjectAssignment
 from app.modules.timesheets.repository import TimesheetRepository
 
 
 class TimesheetValidator:
-    """Validates timesheet hour limits (max 24h/day) and project assignment ownership."""
+    """Validates timesheet date rules, hour limits (max 24h/day), and project assignment ownership."""
+
+    @staticmethod
+    def validate_not_future_date(timesheet_date: date) -> None:
+        if timesheet_date > date.today():
+            raise BadRequestException(detail="Cannot log timesheets for future dates.")
 
     @staticmethod
     async def validate_project_assignment(
@@ -18,21 +25,20 @@ class TimesheetValidator:
         project_assignment_id: int,
     ) -> ProjectAssignment:
         result = await db.execute(
-            select(ProjectAssignment).filter(
-                ProjectAssignment.id == project_assignment_id,
-                ProjectAssignment.user_id == user_id,
-            )
+            select(ProjectAssignment)
+            .options(selectinload(ProjectAssignment.project).selectinload(Project.assignments))
+            .filter(ProjectAssignment.id == project_assignment_id)
         )
         assignment = result.scalar_one_or_none()
-        if not assignment:
-            raise BadRequestException(
-                detail="Invalid project assignment. Assignment does not exist or belong to you."
-            )
+        if not assignment or assignment.user_id != user_id:
+            raise ForbiddenException(detail="User is not assigned to this project.")
 
-        if getattr(assignment, "assignment_status", "Active") != "Active":
-            raise BadRequestException(
-                detail="Project assignment is not active."
-            )
+        project = assignment.project
+        if not project or user_id not in project.assigned_user_ids:
+            raise ForbiddenException(detail="User is not assigned to this project.")
+
+        if getattr(assignment, "assignment_status", "Active") != "Active" or not assignment.is_active:
+            raise ForbiddenException(detail="Project assignment is not active.")
 
         return assignment
 
