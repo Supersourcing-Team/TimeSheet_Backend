@@ -84,11 +84,18 @@ async def get_leave_report(
     summary="Get aggregated portfolio analytics (Total Budget, Revenue, Cost, Profit)",
 )
 @router.get(
+    "/analytics/project-financials",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated project financials analytics",
+)
+@router.get(
     "/summary",
     response_model=dict,
     dependencies=[Depends(report_authorized_roles)],
     summary="Get aggregated portfolio analytics summary",
 )
+
 async def get_analytics_summary(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
