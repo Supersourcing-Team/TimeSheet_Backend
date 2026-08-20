@@ -40,10 +40,11 @@ class MockProjectAssignment:
 
 
 class MockWeekendWorkRequest:
-    def __init__(self, id=1, project_assignment_id=1, status="Pending"):
+    def __init__(self, id=1, project_assignment_id=1, status="Pending", planned_hours=8.0):
         self.id = id
         self.project_assignment_id = project_assignment_id
         self.work_date = date(2026, 8, 15)  # Saturday
+        self.planned_hours = planned_hours
         self.reason = "Urgent project deployment"
         self.status = status
         self.approved_by = None
@@ -51,6 +52,7 @@ class MockWeekendWorkRequest:
         self.created_at = datetime(2026, 8, 11)
         self.project_assignment = MockProjectAssignment()
         self.approver = None
+
 
 
 EMPLOYEE_USER = MockUser(id=1, role_name="Employee")

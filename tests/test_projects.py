@@ -59,7 +59,10 @@ def test_create_project_pm_success():
     with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER), \
          patch("app.modules.clients.repository.ClientRepository.get_by_id", return_value=True), \
          patch("app.modules.users.repository.UserRepository.get_by_id", return_value=PM_USER), \
-         patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project):
+         patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project), \
+         patch("app.modules.projects.service.ProjectAssignmentRepository.create", new_callable=AsyncMock), \
+         patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project):
+
 
         response = client.post("/api/v1/projects/", json=payload, headers=pm_auth_headers())
         assert response.status_code == 201
