@@ -49,9 +49,15 @@ async def google_login(request: GoogleLoginRequest, db: AsyncSession = Depends(g
     """
     auth_data = await login_with_google(request.credential, db)
     resp = success_response(
-        data={"user": auth_data.user.model_dump()},
+        data={
+            "access_token": auth_data.access_token,
+            "refresh_token": auth_data.refresh_token,
+            "token_type": "bearer",
+            "user": auth_data.user.model_dump(),
+        },
         message="Login successful",
     )
+
     set_auth_cookies(resp, auth_data.access_token, auth_data.refresh_token)
     return resp
 

@@ -22,7 +22,8 @@ class TimesheetRepository:
     async def get_by_id(db: AsyncSession, timesheet_id: int) -> Optional[Timesheet]:
         result = await db.execute(
             select(Timesheet)
-            .options(selectinload(Timesheet.project_assignment))
+            .options(selectinload(Timesheet.user),
+            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project))
             .filter(Timesheet.id == timesheet_id)
         )
         return result.scalar_one_or_none()

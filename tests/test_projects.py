@@ -72,6 +72,7 @@ def test_create_project_pm_success():
         assert json_data["data"]["budget"] == 1000.50
 
 
+
 def test_create_project_invalid_dates():
     payload = {
         "client_id": 1,

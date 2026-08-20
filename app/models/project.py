@@ -16,6 +16,8 @@ class Project(Base):
     project_name: Mapped[str] = mapped_column(String(150), unique=True, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     budget: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    allocated_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="Planning", nullable=False)

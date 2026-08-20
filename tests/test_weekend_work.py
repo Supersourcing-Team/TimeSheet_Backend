@@ -77,6 +77,7 @@ def test_submit_weekend_work_success():
     payload = {
         "project_assignment_id": 1,
         "work_date": "2026-08-15",  # Saturday
+        "planned_hours": 8.0,
         "reason": "Production release monitoring",
     }
     assignment = MockProjectAssignment()
@@ -98,8 +99,10 @@ def test_submit_weekend_work_rejected_for_regular_weekday():
     payload = {
         "project_assignment_id": 1,
         "work_date": "2026-08-12",  # Wednesday (Not a weekend or holiday)
+        "planned_hours": 8.0,
         "reason": "Regular work",
     }
+
     assignment = MockProjectAssignment()
 
     with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER), \

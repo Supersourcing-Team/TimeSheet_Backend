@@ -13,32 +13,32 @@ SEED_ROLES = [
 
 SEED_USERS = [
     {
-        "email": "balram6604@gmail.com",
-        "first_name": "Balram",
+        "email": "govinda@supersourcing.com",
+        "first_name": "Govinda",
         "last_name": "Admin",
         "role_name": "Admin",
         "employee_id": "EMP-ADM-001",
     },
     {
-        "email": "balramprajapati3263@gmail.com",
-        "first_name": "Balram",
+        "email": "tapadiagovinda@gmail.com",
+        "first_name": "Govinda",
         "last_name": "PM",
         "role_name": "Project_Manager",
         "employee_id": "EMP-PM-002",
     },
     {
-        "email": "balram.btech@gmail.com",
-        "first_name": "Balram",
-        "last_name": "Employee",
-        "role_name": "Employee",
-        "employee_id": "EMP-DEV-003",
-    },
-    {
-        "email": "balram@supersourcing.com",
-        "first_name": "Balram",
+        "email": "govindatapadia005@gmail.com",
+        "first_name": "Govinda",
         "last_name": "Account Manager",
         "role_name": "Account_Manager",
-        "employee_id": "EMP-AM-004",
+        "employee_id": "EMP-AM-003",
+    },
+    {
+        "email": "govindatapadia220900@acropolis.in",
+        "first_name": "Govinda",
+        "last_name": "Employee",
+        "role_name": "Employee",
+        "employee_id": "EMP-DEV-004",
     },
 ]
 
