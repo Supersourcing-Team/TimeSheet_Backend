@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,15 +15,18 @@
       color: #0F172A;
       -webkit-font-smoothing: antialiased;
     }
+
     table {
       border-collapse: collapse;
     }
+
     .wrapper {
       width: 100%;
       table-layout: fixed;
       background-color: #F8FAFC;
       padding: 40px 0;
     }
+
     .main-card {
       background-color: #FFFFFF;
       margin: 0 auto;
@@ -33,12 +37,14 @@
       overflow: hidden;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
     }
+
     .brand-header-table {
       width: 100%;
       padding: 20px 28px;
       background-color: #FFFFFF;
       border-bottom: 1px solid #F1F5F9;
     }
+
     .logo-badge {
       display: inline-block;
       background-color: #2563EB;
@@ -48,6 +54,7 @@
       padding: 8px 12px;
       border-radius: 10px;
     }
+
     .logo-title {
       font-size: 16px;
       font-weight: 800;
@@ -55,6 +62,7 @@
       margin-left: 10px;
       vertical-align: middle;
     }
+
     .logo-subtitle {
       display: block;
       font-size: 11px;
@@ -62,6 +70,7 @@
       font-weight: 500;
       margin-top: 2px;
     }
+
     .top-pill-blue {
       display: inline-block;
       background-color: #EFF6FF;
@@ -74,11 +83,13 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
     .hero-banner {
       background-color: #2563EB;
       padding: 28px 28px;
       color: #FFFFFF;
     }
+
     .hero-icon-box {
       background: rgba(255, 255, 255, 0.2);
       border-radius: 12px;
@@ -91,10 +102,12 @@
       vertical-align: middle;
       margin-right: 14px;
     }
+
     .hero-text-box {
       display: inline-block;
       vertical-align: middle;
     }
+
     .hero-title {
       font-size: 20px;
       font-weight: 700;
@@ -102,26 +115,31 @@
       letter-spacing: -0.02em;
       color: #FFFFFF;
     }
+
     .hero-subtitle {
       font-size: 13px;
       margin: 0;
       color: #DBEAFE;
     }
+
     .content-body {
       padding: 28px;
     }
+
     .greeting {
       font-size: 16px;
       font-weight: 700;
       color: #0F172A;
       margin-bottom: 12px;
     }
+
     .text-p {
       font-size: 14px;
       line-height: 1.6;
       color: #475569;
       margin: 0 0 20px 0;
     }
+
     .card-box {
       background-color: #FFFFFF;
       border: 1px solid #E2E8F0;
@@ -129,6 +147,7 @@
       padding: 20px;
       margin-bottom: 24px;
     }
+
     .card-header {
       font-size: 14px;
       font-weight: 700;
@@ -137,28 +156,34 @@
       padding-bottom: 12px;
       border-bottom: 1px solid #F1F5F9;
     }
+
     .data-table {
       width: 100%;
     }
+
     .data-row {
       padding: 10px 0;
       border-bottom: 1px solid #F8FAFC;
     }
+
     .data-row:last-child {
       border-bottom: none;
     }
+
     .data-label {
       font-size: 13px;
       font-weight: 500;
       color: #64748B;
       width: 40%;
     }
+
     .data-value {
       font-size: 13px;
       font-weight: 600;
       color: #0F172A;
       text-align: right;
     }
+
     .role-pill {
       display: inline-block;
       background-color: #EFF6FF;
@@ -169,6 +194,7 @@
       padding: 2px 10px;
       border-radius: 9999px;
     }
+
     .cta-card {
       background-color: #F8FAFC;
       border: 1px solid #E2E8F0;
@@ -177,17 +203,20 @@
       text-align: center;
       margin-bottom: 20px;
     }
+
     .cta-title {
       font-size: 15px;
       font-weight: 700;
       color: #0F172A;
       margin: 0 0 6px 0;
     }
+
     .cta-subtitle {
       font-size: 12px;
       color: #64748B;
       margin: 0 0 16px 0;
     }
+
     .btn-primary {
       display: inline-block;
       background-color: #2563EB;
@@ -199,12 +228,14 @@
       text-decoration: none;
       box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     }
+
     .sub-note {
       font-size: 12px;
       color: #94A3B8;
       text-align: center;
       margin: 0 0 20px 0;
     }
+
     .footer {
       padding: 24px 28px;
       border-top: 1px solid #F1F5F9;
@@ -215,6 +246,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrapper">
     <div class="main-card">
@@ -247,7 +279,8 @@
       <div class="content-body">
         <div class="greeting">Hi {{ user_name }},</div>
         <p class="text-p">
-          We are excited to welcome you to the team! Your employee profile has been configured and is ready for time tracking, project assignments, and leave management.
+          We are excited to welcome you to the team! Your employee profile has been configured and is ready for time
+          tracking, project assignments, and leave management.
         </p>
 
         <!-- Account Profile Details Box -->
@@ -281,7 +314,7 @@
         <div class="cta-card">
           <div class="cta-title">Sign In to SuperTime</div>
           <div class="cta-subtitle">Access your dashboard to view assigned projects and log hours.</div>
-          <a href="#" class="btn-primary">Sign In to Dashboard</a>
+          <a href="https://devmeet.help" class="btn-primary">Sign In to Dashboard</a>
         </div>
       </div>
 
@@ -292,4 +325,5 @@
     </div>
   </div>
 </body>
+
 </html>

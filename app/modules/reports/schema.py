@@ -52,3 +52,14 @@ class LeaveReportSummary(BaseModel):
     pending_requests: int
     rejected_requests: int
     items: List[LeaveReportItem]
+
+
+class AnalyticsSummaryResponse(BaseModel):
+    total_budget: float
+    total_revenue: float
+    total_cost: float
+    total_profit: float
+    active_projects_count: int
+
+    model_config = ConfigDict(from_attributes=True)
+

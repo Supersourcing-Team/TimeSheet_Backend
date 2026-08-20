@@ -60,8 +60,10 @@ def test_create_project_pm_success():
          patch("app.modules.clients.repository.ClientRepository.get_by_id", return_value=True), \
          patch("app.modules.users.repository.UserRepository.get_by_id", return_value=PM_USER), \
          patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project), \
-         patch("app.modules.projects.service.ProjectAssignmentRepository.create", new_callable=AsyncMock), \
-         patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project):
+         patch("app.modules.project_assignments.repository.ProjectAssignmentRepository.create", new_callable=AsyncMock), \
+         patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project), \
+         patch("app.modules.projects.service.ProjectService.compute_financials_for_projects", return_value=[ProjectResponse.model_validate(created_project)]):
+
 
 
         response = client.post("/api/v1/projects/", json=payload, headers=pm_auth_headers())
