@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,137 +8,295 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f3f4f6;
-      color: #1f2937;
+      width: 100% !important;
+      background-color: #F8FAFC;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
     }
     .wrapper {
-      max-width: 600px;
-      margin: 30px auto;
-      background: #ffffff;
-      border-radius: 12px;
+      width: 100%;
+      table-layout: fixed;
+      background-color: #F8FAFC;
+      padding: 40px 0;
+    }
+    .main-card {
+      background-color: #FFFFFF;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 580px;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
       overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
     }
-    .header {
-      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-      padding: 32px 24px;
-      text-align: center;
-      color: #ffffff;
+    .brand-header-table {
+      width: 100%;
+      padding: 20px 28px;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid #F1F5F9;
     }
-    .header-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.025em;
-    }
-    .content {
-      padding: 32px 24px;
-    }
-    .greeting {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #111827;
-    }
-    .message {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #4b5563;
-      margin-bottom: 24px;
-    }
-    .badge {
+    .logo-badge {
       display: inline-block;
-      background-color: #d1fae5;
-      color: #065f46;
-      font-weight: 600;
-      font-size: 13px;
+      background-color: #2563EB;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 8px 12px;
+      border-radius: 10px;
+    }
+    .logo-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .logo-subtitle {
+      display: block;
+      font-size: 11px;
+      color: #64748B;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .top-pill-green {
+      display: inline-block;
+      background-color: #ECFDF5;
+      color: #047857;
+      border: 1px solid #A7F3D0;
+      font-size: 10px;
+      font-weight: 700;
       padding: 4px 12px;
       border-radius: 9999px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .details-box {
-      background-color: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
+    .hero-banner {
+      background-color: #2563EB;
+      padding: 28px 28px;
+      color: #FFFFFF;
+    }
+    .hero-icon-box {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      line-height: 44px;
+      text-align: center;
+      font-size: 22px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 14px;
+    }
+    .hero-text-box {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .hero-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      margin: 0;
+      color: #DBEAFE;
+    }
+    .content-body {
+      padding: 28px;
+    }
+    .greeting {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 12px;
+    }
+    .text-p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #475569;
+      margin: 0 0 20px 0;
+    }
+    .card-box {
+      background-color: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
       padding: 20px;
       margin-bottom: 24px;
     }
-    .details-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #f3f4f6;
+    .card-header-table {
+      width: 100%;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #F1F5F9;
     }
-    .details-row:last-child {
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .approved-badge {
+      display: inline-block;
+      background-color: #ECFDF5;
+      color: #047857;
+      border: 1px solid #A7F3D0;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+    .data-table {
+      width: 100%;
+    }
+    .data-row {
+      padding: 10px 0;
+      border-bottom: 1px solid #F8FAFC;
+    }
+    .data-row:last-child {
       border-bottom: none;
     }
-    .details-label {
+    .data-label {
+      font-size: 13px;
       font-weight: 500;
-      color: #6b7280;
-      font-size: 14px;
+      color: #64748B;
+      width: 40%;
     }
-    .details-value {
+    .data-value {
+      font-size: 13px;
       font-weight: 600;
-      color: #111827;
+      color: #0F172A;
+      text-align: right;
+    }
+    .cta-card {
+      background-color: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .cta-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 6px 0;
+    }
+    .cta-subtitle {
+      font-size: 12px;
+      color: #64748B;
+      margin: 0 0 16px 0;
+    }
+    .btn-primary {
+      display: inline-block;
+      background-color: #2563EB;
+      color: #FFFFFF !important;
       font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
     }
     .footer {
-      background-color: #f9fafb;
-      padding: 20px 24px;
+      padding: 24px 28px;
+      border-top: 1px solid #F1F5F9;
       text-align: center;
-      font-size: 13px;
-      color: #9ca3af;
-      border-top: 1px solid #e5e7eb;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748B;
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <div class="header">
-      <div class="header-icon">🎉</div>
-      <h1>Leave Request Approved</h1>
-    </div>
-    <div class="content">
-      <div class="greeting">Hi {{ user_name }},</div>
-      <p class="message">
-        Great news! Your leave request for <strong>{{ leave_type }}</strong> has been formally approved by <strong>{{ approver_name }}</strong>.
-      </p>
-      
-      <div class="details-box">
-        <div class="details-row">
-          <span class="details-label">Status</span>
-          <span class="badge">Approved</span>
-        </div>
-        <div class="details-row">
-          <span class="details-label">Leave Category</span>
-          <span class="details-value">{{ leave_type }}</span>
-        </div>
-        <div class="details-row">
-          <span class="details-label">Start Date</span>
-          <span class="details-value">{{ start_date }}</span>
-        </div>
-        <div class="details-row">
-          <span class="details-label">End Date</span>
-          <span class="details-value">{{ end_date }}</span>
-        </div>
-        <div class="details-row">
-          <span class="details-label">Total Working Days</span>
-          <span class="details-value">{{ working_days }} day(s)</span>
+    <div class="main-card">
+      <!-- Top Header -->
+      <table class="brand-header-table">
+        <tr>
+          <td>
+            <span class="logo-badge">eb</span>
+            <span class="logo-title">
+              SuperTime
+              <span class="logo-subtitle">Timesheet & Resource Governance</span>
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <span class="top-pill-green">LEAVE APPROVED</span>
+          </td>
+        </tr>
+      </table>
+
+      <!-- Blue Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-icon-box">🎉</div>
+        <div class="hero-text-box">
+          <h1 class="hero-title">Leave Request Approved</h1>
+          <p class="hero-subtitle">Your leave application has been confirmed.</p>
         </div>
       </div>
 
-      <p class="message">
-        Your leave balance quota has been updated accordingly. Have a wonderful time off!
-      </p>
-    </div>
-    <div class="footer">
-      &copy; Timesheet Management System. This is an automated email notice.
+      <!-- Content Body -->
+      <div class="content-body">
+        <div class="greeting">Hi {{ user_name }},</div>
+        <p class="text-p">
+          Great news! Your leave request for <strong>{{ leave_type }}</strong> has been formally approved by <strong>{{ approver_name }}</strong>.
+        </p>
+
+        <!-- Leave Details Box -->
+        <div class="card-box">
+          <table class="card-header-table">
+            <tr>
+              <td class="card-title">Leave Application Details</td>
+              <td style="text-align: right;"><span class="approved-badge">APPROVED</span></td>
+            </tr>
+          </table>
+
+          <table class="data-table">
+            <tr>
+              <td class="data-row data-label">Leave Category</td>
+              <td class="data-row data-value">{{ leave_type }}</td>
+            </tr>
+            <tr>
+              <td class="data-row data-label">Approved By</td>
+              <td class="data-row data-value">{{ approver_name }}</td>
+            </tr>
+            <tr>
+              <td class="data-row data-label">Start Date</td>
+              <td class="data-row data-value">{{ start_date }}</td>
+            </tr>
+            <tr>
+              <td class="data-row data-label">End Date</td>
+              <td class="data-row data-value">{{ end_date }}</td>
+            </tr>
+            <tr>
+              <td class="data-row data-label">Total Working Days</td>
+              <td class="data-row data-value">{{ working_days }} day(s)</td>
+            </tr>
+          </table>
+        </div>
+
+        <p class="text-p">
+          Your leave quota balance has been updated accordingly. Have a wonderful time off!
+        </p>
+
+        <!-- CTA Box -->
+        <div class="cta-card">
+          <div class="cta-title">View Leave Dashboard</div>
+          <div class="cta-subtitle">Check your remaining leave quota and upcoming leave schedule.</div>
+          <a href="#" class="btn-primary">Open Leave Dashboard</a>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        SuperTime &middot; Timesheet & Resource Governance
+      </div>
     </div>
   </div>
 </body>

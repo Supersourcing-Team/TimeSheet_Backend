@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,145 +8,373 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f3f4f6;
-      color: #1f2937;
+      width: 100% !important;
+      background-color: #F8FAFC;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
     }
     .wrapper {
-      max-width: 600px;
-      margin: 30px auto;
-      background: #ffffff;
-      border-radius: 12px;
+      width: 100%;
+      table-layout: fixed;
+      background-color: #F8FAFC;
+      padding: 40px 0;
+    }
+    .main-card {
+      background-color: #FFFFFF;
+      margin: 0 auto;
+      width: 100%;
+      max-width: 580px;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
       overflow: hidden;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
     }
-    .header {
-      background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-      padding: 32px 24px;
-      text-align: center;
-      color: #ffffff;
+    .brand-header-table {
+      width: 100%;
+      padding: 20px 28px;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid #F1F5F9;
     }
-    .header-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+    .logo-badge {
+      display: inline-block;
+      background-color: #2563EB;
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 8px 12px;
+      border-radius: 10px;
     }
-    .header h1 {
-      margin: 0;
-      font-size: 24px;
+    .logo-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    .logo-subtitle {
+      display: block;
+      font-size: 11px;
+      color: #64748B;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .top-pill-orange {
+      display: inline-block;
+      background-color: #FFF7ED;
+      color: #C2410C;
+      border: 1px solid #FFEDD5;
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: -0.025em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .content {
-      padding: 32px 24px;
+    .hero-banner {
+      background-color: #2563EB;
+      padding: 28px 28px;
+      color: #FFFFFF;
+    }
+    .hero-icon-box {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      line-height: 44px;
+      text-align: center;
+      font-size: 22px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 14px;
+    }
+    .hero-text-box {
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .hero-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.02em;
+      color: #FFFFFF;
+    }
+    .hero-subtitle {
+      font-size: 13px;
+      margin: 0;
+      color: #DBEAFE;
+    }
+    .content-body {
+      padding: 28px;
     }
     .greeting {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #111827;
+      font-size: 16px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 12px;
     }
-    .message {
-      font-size: 15px;
+    .text-p {
+      font-size: 14px;
       line-height: 1.6;
-      color: #4b5563;
+      color: #475569;
+      margin: 0 0 20px 0;
+    }
+    .period-card {
+      background-color: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 16px 20px;
       margin-bottom: 24px;
     }
-    .stats-card {
-      background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
-      border: 1px solid #fde68a;
-      border-radius: 10px;
+    .period-icon-cell {
+      width: 36px;
+    }
+    .period-icon-box {
+      background-color: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      text-align: center;
+      font-size: 13px;
+      color: #2563EB;
+    }
+    .period-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+    .period-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .stats-card-container {
+      background-color: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
       padding: 20px;
       margin-bottom: 24px;
     }
-    .stats-grid {
-      display: table;
+    .stats-card-header {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+    .stats-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0F172A;
+    }
+    .stats-sub {
+      font-size: 12px;
+      color: #94A3B8;
+      margin-top: 2px;
+    }
+    .action-pill {
+      display: inline-block;
+      background-color: #FFF7ED;
+      color: #C2410C;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stats-table {
       width: 100%;
     }
-    .stat-col {
-      display: table-cell;
-      width: 33.33%;
-      text-align: center;
-      padding: 8px;
-    }
-    .stat-number {
+    .stat-cell-val {
       font-size: 24px;
       font-weight: 800;
-      color: #92400e;
+      color: #0F172A;
+      line-height: 1.2;
     }
-    .stat-number.danger {
-      color: #dc2626;
-    }
-    .stat-label {
-      font-size: 12px;
-      color: #78350f;
+    .stat-cell-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748B;
       text-transform: uppercase;
-      font-weight: 600;
+      letter-spacing: 0.03em;
       margin-top: 4px;
     }
-    .cta-container {
+    .missing-box {
+      background-color: #FFF7ED;
+      border-radius: 10px;
+      padding: 16px;
       text-align: center;
-      margin: 32px 0 16px 0;
     }
-    .cta-button {
-      display: inline-block;
-      background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-      color: #ffffff !important;
-      font-weight: 600;
+    .missing-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: #EA580C;
+      line-height: 1.2;
+    }
+    .missing-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      color: #C2410C;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-top: 4px;
+    }
+    .cta-card {
+      background-color: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .cta-title {
       font-size: 15px;
-      padding: 12px 28px;
+      font-weight: 700;
+      color: #0F172A;
+      margin: 0 0 6px 0;
+    }
+    .cta-subtitle {
+      font-size: 12px;
+      color: #64748B;
+      margin: 0 0 16px 0;
+    }
+    .btn-primary {
+      display: inline-block;
+      background-color: #2563EB;
+      color: #FFFFFF !important;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 24px;
       border-radius: 8px;
       text-decoration: none;
-      box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+    .sub-note {
+      font-size: 12px;
+      color: #94A3B8;
+      text-align: center;
+      margin: 0 0 20px 0;
     }
     .footer {
-      background-color: #f9fafb;
-      padding: 20px 24px;
+      padding: 24px 28px;
+      border-top: 1px solid #F1F5F9;
       text-align: center;
-      font-size: 13px;
-      color: #9ca3af;
-      border-top: 1px solid #e5e7eb;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748B;
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <div class="header">
-      <div class="header-icon">⏰</div>
-      <h1>Weekly Timesheet Reminder</h1>
-    </div>
-    <div class="content">
-      <div class="greeting">Hi {{ user_name }},</div>
-      <p class="message">
-        This is an automated reminder that your timesheet entries for the preceding week (<strong>{{ period_start }}</strong> to <strong>{{ period_end }}</strong>) have not reached the standard weekly 40.0-hour target.
-      </p>
+    <div class="main-card">
+      <!-- Top Header -->
+      <table class="brand-header-table">
+        <tr>
+          <td>
+            <span class="logo-badge">eb</span>
+            <span class="logo-title">
+              SuperTime
+              <span class="logo-subtitle">Timesheet & Resource Governance</span>
+            </span>
+          </td>
+          <td style="text-align: right;">
+            <span class="top-pill-orange">TIMESHEET REMINDER</span>
+          </td>
+        </tr>
+      </table>
 
-      <div class="stats-card">
-        <div class="stats-grid">
-          <div class="stat-col">
-            <div class="stat-number">{{ logged_hours }}</div>
-            <div class="stat-label">Hours Logged</div>
-          </div>
-          <div class="stat-col">
-            <div class="stat-number">40.0</div>
-            <div class="stat-label">Target Hours</div>
-          </div>
-          <div class="stat-col">
-            <div class="stat-number danger">{{ missing_hours }}</div>
-            <div class="stat-label">Hours Missing</div>
-          </div>
+      <!-- Blue Hero Banner -->
+      <div class="hero-banner">
+        <div class="hero-icon-box">⏰</div>
+        <div class="hero-text-box">
+          <h1 class="hero-title">Weekly Timesheet Reminder</h1>
+          <p class="hero-subtitle">Your timesheet is below the required weekly target.</p>
         </div>
       </div>
 
-      <p class="message">
-        Please complete your time entries for all assigned projects to ensure accurate reporting and payroll compliance.
-      </p>
+      <!-- Content Body -->
+      <div class="content-body">
+        <div class="greeting">Hi {{ user_name }},</div>
+        <p class="text-p">
+          This is a reminder that your timesheet for the previous week has not yet reached the standard <strong>40.0-hour target</strong>.
+        </p>
 
-      <div class="cta-container">
-        <a href="#" class="cta-button">Log In & Complete Timesheet</a>
+        <!-- Timesheet Period Box -->
+        <div class="period-card">
+          <table style="width: 100%;">
+            <tr>
+              <td class="period-icon-cell">
+                <div class="period-icon-box">📅</div>
+              </td>
+              <td>
+                <div class="period-lbl">TIMESHEET PERIOD</div>
+                <div class="period-val">{{ period_start }} &ndash; {{ period_end }}</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Weekly Timesheet Stats Box -->
+        <div class="stats-card-container">
+          <table class="stats-card-header">
+            <tr>
+              <td>
+                <div class="stats-title">Weekly Timesheet</div>
+                <div class="stats-sub">Current hours against your weekly requirement</div>
+              </td>
+              <td style="text-align: right; vertical-align: top;">
+                <span class="action-pill">ACTION REQUIRED</span>
+              </td>
+            </tr>
+          </table>
+
+          <table class="stats-table">
+            <tr>
+              <td style="width: 30%; text-align: center; vertical-align: middle;">
+                <div class="stat-cell-val">{{ logged_hours }}</div>
+                <div class="stat-cell-lbl">HOURS LOGGED</div>
+              </td>
+              <td style="width: 30%; text-align: center; vertical-align: middle;">
+                <div class="stat-cell-val">40.0</div>
+                <div class="stat-cell-lbl">WEEKLY TARGET</div>
+              </td>
+              <td style="width: 40%; vertical-align: middle;">
+                <div class="missing-box">
+                  <div class="missing-val">{{ missing_hours }}</div>
+                  <div class="missing-lbl">HOURS MISSING</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <p class="text-p">
+          Please review your timesheet and complete any missing entries for your assigned projects. Keeping your timesheet up to date helps ensure accurate reporting, project tracking, and payroll processing.
+        </p>
+
+        <!-- CTA Box -->
+        <div class="cta-card">
+          <div class="cta-title">Complete your timesheet</div>
+          <div class="cta-subtitle">Review your entries and add any missing time before the reporting period closes.</div>
+          <a href="#" class="btn-primary">Review My Timesheet</a>
+        </div>
+
+        <div class="sub-note">
+          If you have already completed your timesheet, you can safely ignore this reminder.
+        </div>
       </div>
-    </div>
-    <div class="footer">
-      &copy; Timesheet Management System. This is an automated email notice.
+
+      <!-- Footer -->
+      <div class="footer">
+        SuperTime &middot; Timesheet & Resource Governance
+      </div>
     </div>
   </div>
 </body>
