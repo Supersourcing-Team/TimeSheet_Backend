@@ -41,7 +41,8 @@ class UserService:
             )
 
         # 4. Validate status if provided
-        user_status = UserValidator.validate_status(data.status or "Active")
+        user_status = UserValidator.validate_status(data.status or "Pending")
+
 
         new_user = User(
             email=data.email,
