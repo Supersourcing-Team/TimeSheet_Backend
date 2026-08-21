@@ -49,6 +49,8 @@ api_router.include_router(weekend_work_router, prefix="/weekend-work", tags=["We
 api_router.include_router(working_calendar_router, prefix="/working-calendar", tags=["Working Calendar"])
 api_router.include_router(settings_router, prefix="/settings", tags=["System Settings"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
+api_router.include_router(reports_router, prefix="/analytics", tags=["Analytics"])
+
 
 
 

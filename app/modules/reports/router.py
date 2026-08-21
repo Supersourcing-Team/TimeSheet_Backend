@@ -75,3 +75,19 @@ async def get_leave_report(
         data=report.model_dump(mode="json"),
         message="Leave analytics report generated successfully",
     )
+
+
+@router.get("/project-financials", response_model=dict, dependencies=[Depends(report_authorized_roles)])
+@router.get("/analytics", response_model=dict, dependencies=[Depends(report_authorized_roles)])
+async def get_project_financials(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.modules.projects.service import ProjectService
+    service = ProjectService(db)
+    projects = await service.get_all_projects(current_user=current_user)
+    return success_response(
+        data=[p.model_dump(mode="json") for p in projects],
+        message="Project financials retrieved successfully",
+    )
+
