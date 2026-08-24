@@ -33,11 +33,19 @@ async def login_with_google(credential: str, db: AsyncSession) -> AuthData:
             detail="User not registered. Please contact Admin.",
         )
 
-    if user.status != "Active":
+    if user.status == "Inactive":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is deactivated.",
         )
+
+    # Transition status from Pending to Active on first successful login
+    if user.status == "Pending":
+        user.status = "Active"
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
 
     # 3. Generate tokens
     payload = {

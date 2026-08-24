@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 
-ALLOWED_STATUSES = {"Active", "Inactive"}
+ALLOWED_STATUSES = {"Active", "Pending", "Inactive"}
+
 
 
 class UserValidator:

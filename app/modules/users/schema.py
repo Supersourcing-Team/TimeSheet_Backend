@@ -12,7 +12,8 @@ class UserCreate(BaseModel):
     employee_id: str = Field(..., min_length=1, max_length=50)
     role_id: int = Field(..., ge=1)
     joining_date: Optional[date] = None
-    status: Optional[str] = "Active"
+    status: Optional[str] = "Pending"
+
 
 
 class UserUpdate(BaseModel):

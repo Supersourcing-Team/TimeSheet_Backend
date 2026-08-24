@@ -25,7 +25,10 @@ class TimesheetService:
         current_user: User,
         timesheet_in: TimesheetCreate,
     ) -> Timesheet:
-        # 1. Validate project assignment
+        # 1. Validate date is not in the future
+        TimesheetValidator.validate_not_future_date(timesheet_in.timesheet_date)
+
+        # 2. Validate project assignment
         await TimesheetValidator.validate_project_assignment(
             db, current_user.id, timesheet_in.project_assignment_id
         )
@@ -34,7 +37,7 @@ class TimesheetService:
             db, current_user.id, timesheet_in.project_assignment_id, timesheet_in.timesheet_date
         )
 
-        # 2. Validate max 24h/day limit (excluding existing if upsert)
+        # 3. Validate max 24h/day limit (excluding existing if upsert)
         target_total_hours = timesheet_in.billable_hours + timesheet_in.non_billable_hours
         await TimesheetValidator.validate_daily_hours(
             db, 
@@ -54,7 +57,7 @@ class TimesheetService:
             }
             return await TimesheetRepository.update(db, existing, update_data)
 
-        # 3. Create timesheet entry
+        # 4. Create timesheet entry
         timesheet = Timesheet(
             user_id=current_user.id,
             project_assignment_id=timesheet_in.project_assignment_id,
@@ -65,6 +68,7 @@ class TimesheetService:
             non_billable_work_summary=timesheet_in.non_billable_work_summary,
         )
         return await TimesheetRepository.create(db, timesheet)
+
 
     @staticmethod
     async def get_my_timesheets(
@@ -139,6 +143,9 @@ class TimesheetService:
 
         target_date = update_data.get("timesheet_date", entry.timesheet_date)
         target_assignment = update_data.get("project_assignment_id", entry.project_assignment_id)
+
+        TimesheetValidator.validate_not_future_date(target_date)
+
 
         if "project_assignment_id" in update_data:
             await TimesheetValidator.validate_project_assignment(

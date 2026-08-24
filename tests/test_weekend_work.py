@@ -40,10 +40,11 @@ class MockProjectAssignment:
 
 
 class MockWeekendWorkRequest:
-    def __init__(self, id=1, project_assignment_id=1, status="Pending"):
+    def __init__(self, id=1, project_assignment_id=1, status="Pending", planned_hours=8.0):
         self.id = id
         self.project_assignment_id = project_assignment_id
         self.work_date = date(2026, 8, 15)  # Saturday
+        self.planned_hours = planned_hours
         self.reason = "Urgent project deployment"
         self.status = status
         self.approved_by = None
@@ -51,6 +52,7 @@ class MockWeekendWorkRequest:
         self.created_at = datetime(2026, 8, 11)
         self.project_assignment = MockProjectAssignment()
         self.approver = None
+
 
 
 EMPLOYEE_USER = MockUser(id=1, role_name="Employee")
@@ -75,6 +77,7 @@ def test_submit_weekend_work_success():
     payload = {
         "project_assignment_id": 1,
         "work_date": "2026-08-15",  # Saturday
+        "planned_hours": 8.0,
         "reason": "Production release monitoring",
     }
     assignment = MockProjectAssignment()
@@ -96,8 +99,10 @@ def test_submit_weekend_work_rejected_for_regular_weekday():
     payload = {
         "project_assignment_id": 1,
         "work_date": "2026-08-12",  # Wednesday (Not a weekend or holiday)
+        "planned_hours": 8.0,
         "reason": "Regular work",
     }
+
     assignment = MockProjectAssignment()
 
     with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER), \

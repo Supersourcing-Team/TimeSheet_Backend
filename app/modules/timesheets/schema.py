@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import List, Literal, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ProjectAssignmentMinimal(BaseModel):
@@ -20,6 +20,13 @@ class TimesheetCreate(BaseModel):
     non_billable_hours: float = Field(0.0, ge=0, le=24.0, description="Non-billable hours worked")
     non_billable_work_summary: Optional[str] = Field(None, description="Summary of non-billable work")
 
+    @field_validator("timesheet_date")
+    @classmethod
+    def validate_timesheet_date(cls, v: date) -> date:
+        if v > date.today():
+            raise ValueError("Cannot log timesheets for future dates.")
+        return v
+
 
 class TimesheetUpdate(BaseModel):
     project_assignment_id: Optional[int] = None
@@ -28,6 +35,13 @@ class TimesheetUpdate(BaseModel):
     billable_work_summary: Optional[str] = None
     non_billable_hours: Optional[float] = Field(None, ge=0, le=24.0)
     non_billable_work_summary: Optional[str] = None
+
+    @field_validator("timesheet_date")
+    @classmethod
+    def validate_timesheet_date(cls, v: Optional[date]) -> Optional[date]:
+        if v is not None and v > date.today():
+            raise ValueError("Cannot log timesheets for future dates.")
+        return v
 
 
 class TimesheetResponse(BaseModel):
@@ -63,4 +77,3 @@ class WeeklyTimesheetSummary(BaseModel):
     end_date: date
     total_weekly_hours: float
     daily_breakdowns: List[DailyTimesheetBreakdown]
-

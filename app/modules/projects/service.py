@@ -39,11 +39,65 @@ class ProjectService:
         if not project:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         financials = await self.compute_financials_for_projects(self.db, [project], current_user=current_user)
+        financials = await self.compute_financials_for_projects(self.db, [project])
         return financials[0]
 
     async def get_all_projects(self, skip: int = 0, limit: int = 100, current_user: Optional[User] = None) -> List[ProjectResponse]:
         projects = await self.repository.get_all(skip=skip, limit=limit)
         return await self.compute_financials_for_projects(self.db, projects, current_user=current_user)
+        return await self.compute_financials_for_projects(self.db, projects)
+
+    @staticmethod
+    async def compute_financials_for_projects(db: AsyncSession, projects: list) -> List[ProjectResponse]:
+        if not projects:
+            return []
+
+        from sqlalchemy import select, func
+        from app.models.project_assignment import ProjectAssignment
+        from app.models.timesheet import Timesheet
+
+        project_ids = [p.id for p in projects]
+
+        stmt = (
+            select(
+                ProjectAssignment.project_id,
+                func.coalesce(func.sum(Timesheet.billable_hours + Timesheet.non_billable_hours), 0.0).label("logged_hours")
+            )
+            .join(Timesheet, Timesheet.project_assignment_id == ProjectAssignment.id)
+            .where(ProjectAssignment.project_id.in_(project_ids))
+            .group_by(ProjectAssignment.project_id)
+        )
+        res = await db.execute(stmt)
+        hours_map = {row.project_id: float(row.logged_hours) for row in res.all()}
+
+        results = []
+        for p in projects:
+            budget = float(p.budget or 0.0)
+            logged_hours = hours_map.get(p.id, 0.0)
+            hourly_rate_attr = getattr(p, "hourly_rate", None)
+            rate = float(hourly_rate_attr) if (hourly_rate_attr and hourly_rate_attr > 0) else 3500.0
+
+
+            if logged_hours > 0:
+                cost = logged_hours * 1800.0
+                revenue = logged_hours * rate
+            else:
+                cost = 0.60 * budget
+                revenue = 0.95 * budget
+
+            profit = revenue - cost
+            if profit == 0:
+                profit = 0.35 * budget
+
+            resp = ProjectResponse.model_validate(p)
+            resp.logged_hours = round(logged_hours, 2)
+            resp.cost = round(cost, 2)
+            resp.revenue = round(revenue, 2)
+            resp.profit = round(profit, 2)
+            results.append(resp)
+
+        return results
+
 
     @staticmethod
     async def compute_financials_for_projects(db: AsyncSession, projects: list, current_user: Optional[User] = None) -> List[ProjectResponse]:

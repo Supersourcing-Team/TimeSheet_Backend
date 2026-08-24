@@ -89,5 +89,83 @@ async def get_project_financials(
     return success_response(
         data=[p.model_dump(mode="json") for p in projects],
         message="Project financials retrieved successfully",
+@router.get(
+    "/project-financials",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated project financials analytics",
+)
+@router.get(
+    "/analytics",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated portfolio analytics (Total Budget, Revenue, Cost, Profit)",
+)
+@router.get(
+    "/analytics/project-financials",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated project financials analytics",
+)
+@router.get(
+    "/summary",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated portfolio analytics summary",
+)
+
+
+async def get_analytics_summary(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    summary = await ReportService.get_analytics_summary(db)
+    return success_response(
+        data=summary.model_dump(mode="json"),
+        message="Analytics summary generated successfully",
+    )
+
+
+@router.get(
+    "/export/ledger-csv",
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Download Client Billing Ledger (CSV)",
+)
+@router.get(
+    "/csv",
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Download Client Billing Ledger (CSV)",
+)
+async def export_ledger_csv(
+    db: AsyncSession = Depends(get_db),
+):
+    from fastapi import Response
+    csv_content = await ReportService.generate_ledger_csv(db)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=client_billing_ledger.csv"},
+    )
+
+
+@router.get(
+    "/export/pnl-pdf",
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Download Portfolio P&L Summary (PDF)",
+)
+@router.get(
+    "/pdf",
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Download Portfolio P&L Summary (PDF)",
+)
+async def export_pnl_pdf(
+    db: AsyncSession = Depends(get_db),
+):
+    from fastapi import Response
+    pdf_bytes = await ReportService.generate_pnl_pdf(db)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=portfolio_pnl_summary.pdf"},
     )
 

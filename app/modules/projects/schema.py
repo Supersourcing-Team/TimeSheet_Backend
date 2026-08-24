@@ -58,6 +58,8 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     
+    hourly_rate: Optional[float] = None
+    allocated_hours: Optional[float] = None
     client_name: Optional[str] = None
     project_manager_name: Optional[str] = None
     assigned_user_ids: list[int] = Field(default_factory=list)
@@ -67,6 +69,11 @@ class ProjectResponse(BaseModel):
     revenue: float = 0.0
     profit: float = 0.0
 
+
+    logged_hours: float = 0.0
+    cost: float = 0.0
+    revenue: float = 0.0
+    profit: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
 

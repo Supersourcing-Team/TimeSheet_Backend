@@ -231,3 +231,28 @@ def test_pm_cannot_delete_timesheet():
     with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER):
         response = client.delete("/api/v1/timesheets/1", headers=pm_headers())
         assert response.status_code == 403
+
+def test_cannot_create_timesheet_future_date():
+    payload = {
+        "project_assignment_id": 1,
+        "timesheet_date": "2099-01-01",
+        "billable_hours": 4.0,
+    }
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER):
+        response = client.post("/api/v1/timesheets/", json=payload, headers=employee_headers())
+        assert response.status_code in [400, 422]
+        assert "Cannot log timesheets for future dates" in str(response.json())
+
+def test_cannot_update_timesheet_future_date():
+    payload = {
+        "timesheet_date": "2099-01-01",
+        "billable_hours": 4.0,
+    }
+    existing_ts = MockTimesheet(id=1)
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER), \
+         patch("app.modules.timesheets.repository.TimesheetRepository.get_by_id", return_value=existing_ts):
+        response = client.put("/api/v1/timesheets/1", json=payload, headers=employee_headers())
+        assert response.status_code in [400, 422]
+        assert "Cannot log timesheets for future dates" in str(response.json())
+
+

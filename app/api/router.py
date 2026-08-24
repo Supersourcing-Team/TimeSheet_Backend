@@ -3,6 +3,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_active_user
+from app.models.user import User
+
 
 api_router = APIRouter()
 
@@ -50,6 +53,15 @@ api_router.include_router(working_calendar_router, prefix="/working-calendar", t
 api_router.include_router(settings_router, prefix="/settings", tags=["System Settings"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
 api_router.include_router(reports_router, prefix="/analytics", tags=["Analytics"])
+
+
+@api_router.get("/notifications", tags=["Notifications"])
+async def get_notifications(current_user: User = Depends(get_current_active_user)):
+    return {
+        "success": True,
+        "message": "Notifications retrieved successfully",
+        "data": []
+    }
 
 
 
