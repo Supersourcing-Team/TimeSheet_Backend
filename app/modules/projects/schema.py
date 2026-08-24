@@ -8,7 +8,8 @@ class ProjectCreate(BaseModel):
     project_manager_id: int = Field(..., ge=1)
     project_name: str = Field(..., min_length=1, max_length=150)
     description: Optional[str] = None
-    budget: Optional[float] = Field(None, gt=0)
+    budget: Optional[float] = Field(None, ge=0)
+
     hourly_rate: Optional[float] = Field(None, ge=0)
     allocated_hours: Optional[float] = Field(None, ge=0)
     start_date: Optional[date] = None
@@ -26,7 +27,8 @@ class ProjectUpdate(BaseModel):
     project_manager_id: Optional[int] = Field(None, ge=1)
     project_name: Optional[str] = Field(None, min_length=1, max_length=150)
     description: Optional[str] = None
-    budget: Optional[float] = Field(None, gt=0)
+    budget: Optional[float] = Field(None, ge=0)
+
     hourly_rate: Optional[float] = Field(None, ge=0)
     allocated_hours: Optional[float] = Field(None, ge=0)
     start_date: Optional[date] = None
@@ -56,9 +58,22 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     
+    hourly_rate: Optional[float] = None
+    allocated_hours: Optional[float] = None
     client_name: Optional[str] = None
     project_manager_name: Optional[str] = None
     assigned_user_ids: list[int] = Field(default_factory=list)
     tools: list[dict] = Field(default_factory=list)
+    logged_hours: float = 0.0
+    cost: float = 0.0
+    revenue: float = 0.0
+    profit: float = 0.0
+
+
+    logged_hours: float = 0.0
+    cost: float = 0.0
+    revenue: float = 0.0
+    profit: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
+

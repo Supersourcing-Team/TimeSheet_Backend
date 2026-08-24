@@ -3,6 +3,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_active_user
+from app.models.user import User
+
 
 api_router = APIRouter()
 
@@ -50,6 +53,7 @@ api_router.include_router(weekend_work_router, prefix="/weekend-work", tags=["We
 api_router.include_router(working_calendar_router, prefix="/working-calendar", tags=["Working Calendar"])
 api_router.include_router(settings_router, prefix="/settings", tags=["System Settings"])
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
+api_router.include_router(reports_router, prefix="/analytics", tags=["Analytics"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
 
 

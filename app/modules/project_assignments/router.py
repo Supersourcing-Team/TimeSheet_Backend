@@ -11,7 +11,8 @@ from app.modules.project_assignments.schema import ProjectAssignmentCreate, Proj
 from app.modules.project_assignments.service import ProjectAssignmentService
 
 router = APIRouter()
-pm_only = require_roles("Project_Manager")
+pm_only = require_roles("Project_Manager", "Account_Manager", "Admin")
+
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])

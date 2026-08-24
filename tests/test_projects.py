@@ -59,16 +59,17 @@ def test_create_project_pm_success():
     with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER), \
          patch("app.modules.clients.repository.ClientRepository.get_by_id", return_value=True), \
          patch("app.modules.users.repository.UserRepository.get_by_id", return_value=PM_USER), \
-         patch("app.modules.projects.repository.ProjectRepository.create", return_value=created_project), \
-         patch("app.modules.project_assignments.repository.ProjectAssignmentRepository.create", return_value=True), \
-         patch("app.modules.projects.repository.ProjectRepository.get_by_id", return_value=created_project):
+         patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project), \
+         patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project), \
+         patch("app.modules.project_assignments.repository.ProjectAssignmentRepository.get_any_assignment", return_value=True):
 
         response = client.post("/api/v1/projects/", json=payload, headers=pm_auth_headers())
         assert response.status_code == 201
         json_data = response.json()
         assert json_data["success"] is True
         assert json_data["data"]["project_name"] == "Project X"
-        assert json_data["data"]["budget"] == 1000.50
+        assert json_data["data"]["budget"] is None
+
 
 
 
@@ -99,3 +100,34 @@ def test_create_project_invalid_budget():
         response = client.post("/api/v1/projects/", json=payload, headers=pm_auth_headers())
         # Should fail Pydantic validation (422)
         assert response.status_code == 422
+
+
+AM_USER = MockUser(id=3, role_name="Account_Manager")
+
+
+def am_auth_headers():
+    token = create_access_token(data={"sub": "3", "email": "am@example.com", "role": "Account_Manager", "employee_id": "EMP003"})
+    return {"Authorization": f"Bearer {token}"}
+
+
+def test_am_create_and_view_budget_success():
+    payload = {
+        "client_id": 1,
+        "project_manager_id": 1,
+        "project_name": "AM Project",
+        "budget": 500000.0
+    }
+    created_project = MockProject(id=2, budget=500000.0, name="AM Project")
+
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=AM_USER), \
+         patch("app.modules.clients.repository.ClientRepository.get_by_id", return_value=True), \
+         patch("app.modules.users.repository.UserRepository.get_by_id", return_value=PM_USER), \
+         patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project), \
+         patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project), \
+         patch("app.modules.project_assignments.repository.ProjectAssignmentRepository.get_any_assignment", return_value=True):
+
+        response = client.post("/api/v1/projects/", json=payload, headers=am_auth_headers())
+        assert response.status_code == 201
+        json_data = response.json()
+        assert json_data["success"] is True
+        assert json_data["data"]["budget"] == 500000.0

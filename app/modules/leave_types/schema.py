@@ -7,6 +7,7 @@ class LeaveTypeBase(BaseModel):
     name: str
     code: Optional[str] = "GENERAL"
     days_per_year: Optional[int] = 12
+    allocated_hours: Optional[int] = None
     is_paid: Optional[bool] = True
     requires_document: Optional[bool] = False
     description: Optional[str] = None
@@ -22,10 +23,12 @@ class LeaveTypeUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
     days_per_year: Optional[int] = None
+    allocated_hours: Optional[int] = None
     is_paid: Optional[bool] = None
     requires_document: Optional[bool] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
+
 
 
 class LeaveTypeResponse(LeaveTypeBase):
