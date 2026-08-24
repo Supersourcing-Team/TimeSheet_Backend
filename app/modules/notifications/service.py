@@ -251,6 +251,23 @@ class NotificationService:
         # ------------------------------------------------------------------
         # 5. Sort by timestamp descending, cap, compute unread count
         # ------------------------------------------------------------------
+        if current_user.notifications_cleared_at:
+            # ensure current_user.notifications_cleared_at is offset-aware
+            cleared_at = current_user.notifications_cleared_at
+            if cleared_at.tzinfo is None:
+                from datetime import timezone
+                cleared_at = cleared_at.replace(tzinfo=timezone.utc)
+            
+            filtered_notifications = []
+            for n in notifications:
+                n_time = n.timestamp
+                if n_time.tzinfo is None:
+                    from datetime import timezone
+                    n_time = n_time.replace(tzinfo=timezone.utc)
+                if n_time > cleared_at:
+                    filtered_notifications.append(n)
+            notifications = filtered_notifications
+
         notifications.sort(key=lambda n: n.timestamp, reverse=True)
         notifications = notifications[: NotificationService.MAX_ITEMS]
         unread_count = sum(1 for n in notifications if not n.is_read)
@@ -259,3 +276,10 @@ class NotificationService:
             notifications=notifications,
             unread_count=unread_count,
         )
+
+    @staticmethod
+    async def clear_all_notifications(db: AsyncSession, current_user: User) -> None:
+        from datetime import datetime, timezone
+        current_user.notifications_cleared_at = datetime.now(timezone.utc)
+        db.add(current_user)
+        await db.commit()

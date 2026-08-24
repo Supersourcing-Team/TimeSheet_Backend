@@ -27,3 +27,12 @@ async def get_notifications(
         data=result.model_dump(mode="json"),
         message="Notifications retrieved successfully",
     )
+
+
+@router.delete("/clear-all", summary="Clear all notifications for current user")
+async def clear_all_notifications(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await NotificationService.clear_all_notifications(db, current_user)
+    return success_response(message="Notifications cleared successfully")
