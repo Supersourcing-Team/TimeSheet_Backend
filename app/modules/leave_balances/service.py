@@ -11,17 +11,18 @@ from app.modules.leave_types.repository import LeaveTypeRepository
 
 class LeaveBalanceService:
     @staticmethod
-    def _format_balance_response(b: LeaveBalance) -> LeaveBalanceResponse:
+    def _format_balance_response(b: LeaveBalance, leave_type_name: Optional[str] = None) -> LeaveBalanceResponse:
         remaining = max(0.0, b.allocated_days - b.used_days)
         return LeaveBalanceResponse(
             id=b.id,
             user_id=b.user_id,
             leave_type_id=b.leave_type_id,
+            leave_type_name=leave_type_name,
             year=b.year,
             allocated_days=b.allocated_days,
             used_days=b.used_days,
             remaining_days=remaining,
-            updated_at=b.updated_at,
+            updated_at=b.updated_at or datetime.now(),
         )
 
     @staticmethod
@@ -29,8 +30,36 @@ class LeaveBalanceService:
         db: AsyncSession, user_id: int, year: Optional[int] = None
     ) -> List[LeaveBalanceResponse]:
         target_year = year or datetime.now().year
-        balances = await LeaveBalanceRepository.get_by_user_and_year(db, user_id, target_year)
-        return [LeaveBalanceService._format_balance_response(b) for b in balances]
+        active_leave_types = await LeaveTypeRepository.get_all(db, active_only=True)
+        custom_balances = await LeaveBalanceRepository.get_by_user_and_year(db, user_id, target_year)
+        balance_map = {b.leave_type_id: b for b in custom_balances}
+
+        responses = []
+        for lt in active_leave_types:
+            if lt.id in balance_map:
+                b = balance_map[lt.id]
+                responses.append(LeaveBalanceService._format_balance_response(b, leave_type_name=lt.name))
+            else:
+                # Direct reference from Admin configured LeaveType policy (days_per_year)
+                allocated = float(lt.days_per_year) if lt.days_per_year is not None else 0.0
+
+                responses.append(
+                    LeaveBalanceResponse(
+                        id=lt.id,
+                        user_id=user_id,
+                        leave_type_id=lt.id,
+                        leave_type_name=lt.name,
+                        year=target_year,
+                        allocated_days=allocated,
+                        used_days=0.0,
+                        remaining_days=allocated,
+                        updated_at=datetime.now(),
+                    )
+                )
+
+
+        return responses
+
 
     @staticmethod
     async def allocate_balance(
