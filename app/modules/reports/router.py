@@ -89,6 +89,7 @@ async def get_project_financials(
     return success_response(
         data=[p.model_dump(mode="json") for p in projects],
         message="Project financials retrieved successfully",
+    )
 @router.get(
     "/project-financials",
     response_model=dict,
