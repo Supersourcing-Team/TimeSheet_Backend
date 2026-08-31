@@ -93,6 +93,30 @@ class LeaveRequestRepository:
         return requests, total
 
     @staticmethod
+    async def get_upcoming_team_leaves(
+        db: AsyncSession,
+        user_ids: Optional[List[int]] = None,
+        is_admin: bool = False,
+    ) -> List[LeaveRequest]:
+        from datetime import date
+        query = select(LeaveRequest).options(
+            selectinload(LeaveRequest.user),
+            selectinload(LeaveRequest.leave_type),
+        ).filter(
+            LeaveRequest.status.in_(["Approved", "Pending"]),
+            LeaveRequest.end_date >= date.today()
+        )
+        
+        if not is_admin and user_ids is not None:
+            if not user_ids:
+                return []
+            query = query.filter(LeaveRequest.user_id.in_(user_ids))
+            
+        query = query.order_by(LeaveRequest.start_date.asc())
+        result = await db.execute(query)
+        return list(result.scalars().all())
+
+    @staticmethod
     async def update_status(
         db: AsyncSession,
         leave_request: LeaveRequest,
@@ -158,4 +182,5 @@ class LeaveRequestRepository:
             )
         )
         return list(result.scalars().all())
+
 

@@ -93,6 +93,27 @@ class LeaveRequestService:
         )
 
     @staticmethod
+    async def get_upcoming_team_leaves(
+        db: AsyncSession,
+        current_user: User,
+    ) -> List[LeaveRequest]:
+        is_admin = getattr(current_user.role, "name", None) == "Admin"
+        user_ids = None
+        
+        if not is_admin:
+            from app.modules.projects.repository import ProjectRepository
+            # PM logic: Get projects where user is PM, then get assigned users
+            pm_projects = await ProjectRepository.get_projects_for_pm(db, current_user.id)
+            user_ids = []
+            for p in pm_projects:
+                user_ids.extend([a.user_id for a in p.assignments if a.is_active])
+            # also include PM themselves
+            user_ids.append(current_user.id)
+            user_ids = list(set(user_ids))
+            
+        return await LeaveRequestRepository.get_upcoming_team_leaves(db, user_ids, is_admin)
+
+    @staticmethod
     async def approve_leave_request(
         db: AsyncSession,
         request_id: int,
@@ -466,4 +487,6 @@ class LeaveRequestService:
             available_hours=available_hours,
             blocked_message=blocked_message,
         )
+
+
 

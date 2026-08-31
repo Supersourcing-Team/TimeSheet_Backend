@@ -142,3 +142,4 @@ async def cancel_leave_request(
         data=resp.model_dump(mode="json"),
         message="Leave application cancelled successfully",
     )
+
