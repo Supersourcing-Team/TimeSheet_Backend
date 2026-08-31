@@ -143,3 +143,14 @@ async def cancel_leave_request(
         message="Leave application cancelled successfully",
     )
 
+
+@router.get("/upcoming", response_model=dict, summary="Get upcoming team leaves (PM/Admin)")
+async def get_upcoming_leaves(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    leaves = await LeaveRequestService.get_upcoming_team_leaves(db, current_user)
+    return success_response(
+        data=[LeaveRequestResponse.model_validate(l).model_dump(mode="json") for l in leaves],
+        message="Upcoming leaves fetched successfully",
+    )
