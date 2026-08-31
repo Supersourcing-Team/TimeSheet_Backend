@@ -19,6 +19,15 @@ class LeaveRequest(Base):
     status: Mapped[str] = mapped_column(String(20), default="Pending", nullable=False)
     managers_user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)
     rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Inline mark-leave from timesheet fields
+    leave_duration_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    # 'full_day', 'half_day', 'partial_day'
+    half_day_period: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    # 'first', 'second'
+    partial_start_time: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
+    # HH:MM e.g. '16:00'
+    partial_end_time: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
+    # HH:MM e.g. '18:00'
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

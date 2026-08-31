@@ -47,6 +47,14 @@ class TimesheetService:
             exclude_id=existing.id if existing else None
         )
 
+        # 4. Validate no leave conflict for this date
+        await TimesheetValidator.validate_no_leave_conflict(
+            db,
+            current_user.id,
+            timesheet_in.timesheet_date,
+            target_total_hours,
+        )
+
         if existing:
             # Upsert: Update completely the existing row
             update_data = {
@@ -162,6 +170,13 @@ class TimesheetService:
                 timesheet_date=target_date,
                 new_hours=target_hours,
                 exclude_id=entry.id,
+            )
+            # Validate no leave conflict
+            await TimesheetValidator.validate_no_leave_conflict(
+                db,
+                user_id=current_user.id,
+                timesheet_date=target_date,
+                new_hours=target_hours,
             )
 
         return await TimesheetRepository.update(db, entry, update_data)

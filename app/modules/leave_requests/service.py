@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,7 +7,7 @@ from app.models.leave_request import LeaveRequest
 from app.models.user import User
 from app.modules.leave_balances.repository import LeaveBalanceRepository
 from app.modules.leave_requests.repository import LeaveRequestRepository
-from app.modules.leave_requests.schema import LeaveRequestReview, LeaveRequestSubmit
+from app.modules.leave_requests.schema import LeaveCheckDateResponse, LeaveMarkFromTimesheetRequest, LeaveRequestReview, LeaveRequestSubmit
 from app.modules.leave_requests.validator import LeaveRequestValidator
 from app.modules.leave_types.repository import LeaveTypeRepository
 from app.services.email_service import send_leave_approved_email, send_leave_rejected_email
@@ -230,3 +231,223 @@ class LeaveRequestService:
         return await LeaveRequestRepository.update_status(
             db, leave_request, status="Cancelled"
         )
+
+    # -------------------------------------------------------------------------
+    # Inline Mark-Leave from Timesheet
+    # -------------------------------------------------------------------------
+
+    @staticmethod
+    async def mark_leave_from_timesheet(
+        db: AsyncSession,
+        current_user: User,
+        request_in: LeaveMarkFromTimesheetRequest,
+    ) -> List[LeaveRequest]:
+        """
+        Mark leave directly from the timesheet UI.
+        Returns a list of created LeaveRequest records (one per day for multiple_days).
+        Leave is auto-Approved; balance is deducted immediately.
+        """
+        duration = request_in.leave_duration_type
+
+        # 1. Validate leave type
+        leave_type = await LeaveTypeRepository.get_by_id(db, request_in.leave_type_id)
+        if not leave_type or not leave_type.is_active:
+            raise BadRequestException(detail="Invalid or inactive leave type.")
+
+        created_records: List[LeaveRequest] = []
+
+        # ---- Multiple Days ----
+        if duration == "multiple_days":
+            if not request_in.start_date or not request_in.end_date:
+                raise BadRequestException(detail="start_date and end_date are required for multiple_days leave.")
+            if request_in.start_date > request_in.end_date:
+                raise BadRequestException(detail="start_date must be before end_date.")
+            if request_in.end_date > date.today():
+                raise BadRequestException(detail="Cannot mark leave for future dates.")
+
+            # Iterate each working day in the range
+            current = request_in.start_date
+            while current <= request_in.end_date:
+                if current.weekday() not in (5, 6):  # Skip weekends
+                    # Check for duplicate leave on this day
+                    await LeaveRequestValidator.validate_no_duplicate_leave(db, current_user.id, current)
+                    # Check timesheet conflict
+                    await LeaveRequestValidator.validate_no_timesheet_conflict(
+                        db, current_user.id, current, "full_day"
+                    )
+                    # Deduct balance (0.5 day per day worked)
+                    year = current.year
+                    balance = await LeaveBalanceRepository.get_specific_balance(
+                        db, current_user.id, request_in.leave_type_id, year
+                    )
+                    if balance:
+                        if balance.allocated_days - balance.used_days < 1:
+                            raise BadRequestException(
+                                detail=f"Insufficient leave balance on {current}. "
+                                       f"Available: {balance.allocated_days - balance.used_days:.1f} day(s)."
+                            )
+
+                    leave_record = LeaveRequest(
+                        user_id=current_user.id,
+                        leave_type_id=request_in.leave_type_id,
+                        start_date=current,
+                        end_date=current,
+                        reason=request_in.reason or "Marked from timesheet",
+                        status="Approved",
+                        leave_duration_type="full_day",
+                    )
+                    saved = await LeaveRequestRepository.create(db, leave_record)
+                    created_records.append(saved)
+
+                    # Deduct balance for this day
+                    if balance:
+                        balance.used_days += 1.0
+                        await db.commit()
+
+                current += timedelta(days=1)
+
+            return created_records
+
+        # ---- Single Day Leaves ----
+        leave_date = request_in.leave_date
+        if not leave_date:
+            raise BadRequestException(detail="leave_date is required for single-day leaves.")
+        if leave_date > date.today():
+            raise BadRequestException(detail="Cannot mark leave for future dates.")
+
+        # Partial day extra validation
+        if duration == "partial_day":
+            LeaveRequestValidator.validate_partial_time(
+                request_in.partial_start_time, request_in.partial_end_time
+            )
+
+        # Half day requires period
+        if duration == "half_day" and not request_in.half_day_period:
+            raise BadRequestException(detail="half_day_period ('first' or 'second') is required for half_day leave.")
+
+        # Duplicate leave check
+        await LeaveRequestValidator.validate_no_duplicate_leave(db, current_user.id, leave_date)
+
+        # Timesheet conflict check
+        await LeaveRequestValidator.validate_no_timesheet_conflict(
+            db,
+            current_user.id,
+            leave_date,
+            duration,
+            request_in.partial_start_time,
+            request_in.partial_end_time,
+        )
+
+        # Check and deduct leave balance
+        year = leave_date.year
+        balance = await LeaveBalanceRepository.get_specific_balance(
+            db, current_user.id, request_in.leave_type_id, year
+        )
+        if not balance:
+            alloc = float(leave_type.days_per_year) if leave_type.days_per_year else 0.0
+            balance = await LeaveBalanceRepository.create(
+                db,
+                user_id=current_user.id,
+                leave_type_id=request_in.leave_type_id,
+                year=year,
+                allocated_days=alloc,
+            )
+
+        # Determine deduction
+        if duration == "full_day":
+            deduction = 1.0
+        elif duration == "half_day":
+            deduction = 0.5
+        else:  # partial_day
+            start_h, start_m = map(int, request_in.partial_start_time.split(":"))
+            end_h, end_m = map(int, request_in.partial_end_time.split(":"))
+            leave_hours = (end_h * 60 + end_m - start_h * 60 - start_m) / 60.0
+            deduction = leave_hours / 8.0  # fraction of a day
+
+        available = (balance.allocated_days or 0) - (balance.used_days or 0)
+        if available < deduction:
+            raise BadRequestException(
+                detail=f"Insufficient leave balance. Required: {deduction:.2f} day(s), Available: {available:.2f} day(s)."
+            )
+
+        # Create the leave record
+        leave_record = LeaveRequest(
+            user_id=current_user.id,
+            leave_type_id=request_in.leave_type_id,
+            start_date=leave_date,
+            end_date=leave_date,
+            reason=request_in.reason or "Marked from timesheet",
+            status="Approved",
+            leave_duration_type=duration,
+            half_day_period=request_in.half_day_period,
+            partial_start_time=request_in.partial_start_time,
+            partial_end_time=request_in.partial_end_time,
+        )
+        saved = await LeaveRequestRepository.create(db, leave_record)
+
+        # Deduct balance
+        balance.used_days += deduction
+        await db.commit()
+
+        return [saved]
+
+    @staticmethod
+    async def check_leave_for_date(
+        db: AsyncSession,
+        current_user: User,
+        check_date: date,
+    ) -> LeaveCheckDateResponse:
+        """
+        Return a structured leave status object for a specific date.
+        The frontend uses this to block/enable timesheet inputs.
+        """
+        leaves = await LeaveRequestRepository.get_approved_leaves_for_date(db, current_user.id, check_date)
+
+        if not leaves:
+            return LeaveCheckDateResponse(date=check_date, has_leave=False, available_hours=8.0)
+
+        # Pick the first (most recently relevant) leave
+        leave = leaves[0]
+        duration = leave.leave_duration_type or "full_day"
+        leave_type_name = leave.leave_type.name if leave.leave_type else "Leave"
+
+        # Calculate available hours and blocked message
+        if duration == "full_day":
+            available_hours = 0.0
+            blocked_message = "On Leave – Full Day"
+        elif duration == "half_day":
+            available_hours = 4.0
+            period_label = "First Half" if leave.half_day_period == "first" else "Second Half"
+            blocked_message = f"On Leave – {period_label}"
+        elif duration == "partial_day":
+            start_h, start_m = map(int, leave.partial_start_time.split(":"))
+            end_h, end_m = map(int, leave.partial_end_time.split(":"))
+            leave_hours = (end_h * 60 + end_m - start_h * 60 - start_m) / 60.0
+            available_hours = max(0.0, 8.0 - leave_hours)
+            # Format times for display
+            def fmt_time(hh: int, mm: int) -> str:
+                suffix = "AM" if hh < 12 else "PM"
+                display_h = hh if hh <= 12 else hh - 12
+                if display_h == 0:
+                    display_h = 12
+                return f"{display_h}:{mm:02d} {suffix}"
+            blocked_message = (
+                f"On Leave – {fmt_time(start_h, start_m)} – {fmt_time(end_h, end_m)}"
+            )
+        else:
+            available_hours = 0.0
+            blocked_message = "On Leave"
+
+        return LeaveCheckDateResponse(
+            date=check_date,
+            has_leave=True,
+            leave_duration_type=duration,
+            half_day_period=leave.half_day_period,
+            partial_start_time=leave.partial_start_time,
+            partial_end_time=leave.partial_end_time,
+            leave_id=leave.id,
+            leave_type_name=leave_type_name,
+            available_hours=available_hours,
+            blocked_message=blocked_message,
+        )
+

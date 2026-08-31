@@ -114,3 +114,48 @@ class LeaveRequestRepository:
     async def delete(db: AsyncSession, leave_request: LeaveRequest) -> None:
         await db.delete(leave_request)
         await db.commit()
+
+    @staticmethod
+    async def get_approved_leaves_for_date(
+        db: AsyncSession,
+        user_id: int,
+        leave_date: "date",
+    ) -> List[LeaveRequest]:
+        """Return all Approved/Pending leave records for a user that cover a specific date."""
+        from datetime import date as date_type
+        result = await db.execute(
+            select(LeaveRequest)
+            .options(
+                selectinload(LeaveRequest.leave_type),
+            )
+            .filter(
+                LeaveRequest.user_id == user_id,
+                LeaveRequest.start_date <= leave_date,
+                LeaveRequest.end_date >= leave_date,
+                LeaveRequest.status.in_(["Approved", "Pending"]),
+            )
+        )
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def get_approved_leaves_for_range(
+        db: AsyncSession,
+        user_id: int,
+        start_date: "date",
+        end_date: "date",
+    ) -> List[LeaveRequest]:
+        """Return all Approved/Pending leave records for a user that overlap a date range."""
+        result = await db.execute(
+            select(LeaveRequest)
+            .options(
+                selectinload(LeaveRequest.leave_type),
+            )
+            .filter(
+                LeaveRequest.user_id == user_id,
+                LeaveRequest.start_date <= end_date,
+                LeaveRequest.end_date >= start_date,
+                LeaveRequest.status.in_(["Approved", "Pending"]),
+            )
+        )
+        return list(result.scalars().all())
+

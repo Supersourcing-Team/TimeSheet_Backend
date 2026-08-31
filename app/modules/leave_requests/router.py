@@ -1,4 +1,5 @@
-from typing import Optional
+from datetime import date
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +10,8 @@ from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin
 from app.models.user import User
 from app.modules.leave_requests.schema import (
+    LeaveCheckDateResponse,
+    LeaveMarkFromTimesheetRequest,
     LeaveRequestResponse,
     LeaveRequestReview,
     LeaveRequestSubmit,
@@ -16,6 +19,34 @@ from app.modules.leave_requests.schema import (
 from app.modules.leave_requests.service import LeaveRequestService
 
 router = APIRouter()
+
+
+@router.post("/mark-from-timesheet", response_model=dict, status_code=status.HTTP_201_CREATED,
+             summary="Mark leave directly from timesheet (auto-approved)")
+async def mark_leave_from_timesheet(
+    request_in: LeaveMarkFromTimesheetRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    leave_records = await LeaveRequestService.mark_leave_from_timesheet(db, current_user, request_in)
+    items = [LeaveRequestResponse.model_validate(r).model_dump(mode="json") for r in leave_records]
+    return created_response(
+        data=items,
+        message=f"Leave marked successfully ({len(items)} record(s) created).",
+    )
+
+
+@router.get("/check-date", response_model=dict, summary="Check leave status for a specific date")
+async def check_leave_for_date(
+    date: date = Query(..., description="Date to check in YYYY-MM-DD format"),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await LeaveRequestService.check_leave_for_date(db, current_user, date)
+    return success_response(
+        data=result.model_dump(mode="json"),
+        message="Leave status for date retrieved successfully.",
+    )
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Submit a leave application")
