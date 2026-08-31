@@ -36,21 +36,25 @@ class LeaveRequestService:
                 detail="Selected date range contains no working days (all weekends or public holidays)."
             )
 
-        # 3. Check available leave balance for the year of start_date
+        # 3. Check available leave balance for the year of start_date (dynamically referencing Admin LeaveType)
         year = request_in.start_date.year
         balance = await LeaveBalanceRepository.get_specific_balance(
             db, current_user.id, request_in.leave_type_id, year
         )
-        if not balance:
-            raise BadRequestException(
-                detail=f"No allocated leave balance found for leave type '{leave_type.name}' in year {year}."
-            )
+        if balance:
+            allocated_days = balance.allocated_days
+            used_days = balance.used_days
+        else:
+            allocated_days = float(leave_type.days_per_year) if (leave_type and leave_type.days_per_year is not None) else 0.0
+            used_days = 0.0
 
-        available_days = balance.allocated_days - balance.used_days
+        available_days = allocated_days - used_days
         if working_days > available_days:
             raise BadRequestException(
                 detail=f"Insufficient leave balance. Required: {working_days} day(s), Available: {available_days} day(s)."
             )
+
+
 
         # 4. Create LeaveRequest record
         leave_request = LeaveRequest(
@@ -112,13 +116,21 @@ class LeaveRequestService:
             db, leave_request.user_id, leave_request.leave_type_id, year
         )
         if not balance:
-            raise BadRequestException(
-                detail=f"Leave balance record not found for user ID {leave_request.user_id}."
+            leave_type = await LeaveTypeRepository.get_by_id(db, leave_request.leave_type_id)
+            alloc = float(leave_type.days_per_year) if (leave_type and leave_type.days_per_year is not None) else 0.0
+            balance = await LeaveBalanceRepository.create(
+                db,
+                user_id=leave_request.user_id,
+                leave_type_id=leave_request.leave_type_id,
+                year=year,
+                allocated_days=alloc,
             )
+
 
         # Deduct used days
         balance.used_days += working_days
         await db.commit()
+
 
         # Update leave request status to Approved
         updated_request = await LeaveRequestRepository.update_status(

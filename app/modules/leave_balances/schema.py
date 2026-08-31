@@ -23,6 +23,7 @@ class LeaveBalanceResponse(BaseModel):
     id: int
     user_id: int
     leave_type_id: int
+    leave_type_name: Optional[str] = None
     year: int
     allocated_days: float
     used_days: float
@@ -30,3 +31,4 @@ class LeaveBalanceResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
