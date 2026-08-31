@@ -77,8 +77,24 @@ async def get_leave_report(
     )
 
 
-@router.get("/project-financials", response_model=dict, dependencies=[Depends(report_authorized_roles)])
-@router.get("/analytics", response_model=dict, dependencies=[Depends(report_authorized_roles)])
+@router.get(
+    "/project-financials",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated project financials",
+)
+@router.get(
+    "/analytics",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated project financials",
+)
+@router.get(
+    "/analytics/project-financials",
+    response_model=dict,
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Get aggregated project financials",
+)
 async def get_project_financials(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -90,32 +106,14 @@ async def get_project_financials(
         data=[p.model_dump(mode="json") for p in projects],
         message="Project financials retrieved successfully",
     )
-@router.get(
-    "/project-financials",
-    response_model=dict,
-    dependencies=[Depends(report_authorized_roles)],
-    summary="Get aggregated project financials analytics",
-)
-@router.get(
-    "/analytics",
-    response_model=dict,
-    dependencies=[Depends(report_authorized_roles)],
-    summary="Get aggregated portfolio analytics (Total Budget, Revenue, Cost, Profit)",
-)
-@router.get(
-    "/analytics/project-financials",
-    response_model=dict,
-    dependencies=[Depends(report_authorized_roles)],
-    summary="Get aggregated project financials analytics",
-)
+
+
 @router.get(
     "/summary",
     response_model=dict,
     dependencies=[Depends(report_authorized_roles)],
     summary="Get aggregated portfolio analytics summary",
 )
-
-
 async def get_analytics_summary(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
@@ -127,6 +125,11 @@ async def get_analytics_summary(
     )
 
 
+@router.get(
+    "/billing-ledger",
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Download Client Billing Ledger (CSV)",
+)
 @router.get(
     "/export/ledger-csv",
     dependencies=[Depends(report_authorized_roles)],
@@ -149,6 +152,11 @@ async def export_ledger_csv(
     )
 
 
+@router.get(
+    "/portfolio-pnl",
+    dependencies=[Depends(report_authorized_roles)],
+    summary="Download Portfolio P&L Summary (PDF)",
+)
 @router.get(
     "/export/pnl-pdf",
     dependencies=[Depends(report_authorized_roles)],
