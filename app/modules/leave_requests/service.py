@@ -250,9 +250,25 @@ class LeaveRequestService:
         duration = request_in.leave_duration_type
 
         # 1. Validate leave type
-        leave_type = await LeaveTypeRepository.get_by_id(db, request_in.leave_type_id)
-        if not leave_type or not leave_type.is_active:
-            raise BadRequestException(detail="Invalid or inactive leave type.")
+        if request_in.leave_type_id:
+            leave_type = await LeaveTypeRepository.get_by_id(db, request_in.leave_type_id)
+            if not leave_type or not leave_type.is_active:
+                raise BadRequestException(detail="Invalid or inactive leave type.")
+        else:
+            # Fallback for half_day/partial_day where type might not be selected
+            all_types = await LeaveTypeRepository.get_all(db, active_only=True)
+            if all_types:
+                leave_type = all_types[0]
+                request_in.leave_type_id = leave_type.id
+            else:
+                # Auto-create fallback General Leave
+                leave_type = await LeaveTypeRepository.create(
+                    db,
+                    name="General Leave",
+                    code="GENERAL",
+                    is_active=True,
+                )
+                request_in.leave_type_id = leave_type.id
 
         created_records: List[LeaveRequest] = []
 

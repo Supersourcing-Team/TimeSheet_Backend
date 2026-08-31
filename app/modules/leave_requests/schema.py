@@ -21,7 +21,7 @@ class UserMinimal(BaseModel):
 
 
 class LeaveRequestSubmit(BaseModel):
-    leave_type_id: int
+    leave_type_id: Optional[int] = None
     start_date: date
     end_date: date
     reason: str = Field(..., min_length=3, description="Reason for leave request")
@@ -33,7 +33,7 @@ class LeaveRequestReview(BaseModel):
 
 class LeaveMarkFromTimesheetRequest(BaseModel):
     """Payload for marking leave directly from the timesheet view."""
-    leave_type_id: int
+    leave_type_id: Optional[int] = None
     leave_duration_type: str = Field(
         ..., description="One of: full_day, half_day, partial_day, multiple_days"
     )
@@ -70,7 +70,7 @@ class LeaveMarkFromTimesheetRequest(BaseModel):
 class LeaveRequestResponse(BaseModel):
     id: int
     user_id: int
-    leave_type_id: int
+    leave_type_id: Optional[int] = None
     start_date: date
     end_date: date
     reason: str
@@ -105,4 +105,5 @@ class LeaveCheckDateResponse(BaseModel):
     # Derived fields for UI convenience
     available_hours: float = 8.0                 # hours available for timesheet on this date
     blocked_message: Optional[str] = None        # human-readable label, e.g. "On Leave – Full Day"
+
 
