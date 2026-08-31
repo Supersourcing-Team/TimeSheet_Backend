@@ -37,34 +37,14 @@ class LeaveRequestService:
                 detail="Selected date range contains no working days (all weekends or public holidays)."
             )
 
-        # 3. Check available leave balance for the year of start_date (dynamically referencing Admin LeaveType)
-        year = request_in.start_date.year
-        balance = await LeaveBalanceRepository.get_specific_balance(
-            db, current_user.id, request_in.leave_type_id, year
-        )
-        if balance:
-            allocated_days = balance.allocated_days
-            used_days = balance.used_days
-        else:
-            allocated_days = float(leave_type.days_per_year) if (leave_type and leave_type.days_per_year is not None) else 0.0
-            used_days = 0.0
-
-        available_days = allocated_days - used_days
-        if working_days > available_days:
-            raise BadRequestException(
-                detail=f"Insufficient leave balance. Required: {working_days} day(s), Available: {available_days} day(s)."
-            )
-
-
-
-        # 4. Create LeaveRequest record
+        # 3. Create LeaveRequest record (auto-approved as single source of truth)
         leave_request = LeaveRequest(
             user_id=current_user.id,
             leave_type_id=request_in.leave_type_id,
             start_date=request_in.start_date,
             end_date=request_in.end_date,
             reason=request_in.reason,
-            status="Pending",
+            status="Approved",
         )
         return await LeaveRequestRepository.create(db, leave_request)
 
@@ -315,8 +295,6 @@ class LeaveRequestService:
                 raise BadRequestException(detail="start_date and end_date are required for multiple_days leave.")
             if request_in.start_date > request_in.end_date:
                 raise BadRequestException(detail="start_date must be before end_date.")
-            if request_in.end_date > date.today():
-                raise BadRequestException(detail="Cannot mark leave for future dates.")
 
             # Iterate each working day in the range
             current = request_in.start_date
@@ -328,17 +306,6 @@ class LeaveRequestService:
                     await LeaveRequestValidator.validate_no_timesheet_conflict(
                         db, current_user.id, current, "full_day"
                     )
-                    # Deduct balance (0.5 day per day worked)
-                    year = current.year
-                    balance = await LeaveBalanceRepository.get_specific_balance(
-                        db, current_user.id, request_in.leave_type_id, year
-                    )
-                    if balance:
-                        if balance.allocated_days - balance.used_days < 1:
-                            raise BadRequestException(
-                                detail=f"Insufficient leave balance on {current}. "
-                                       f"Available: {balance.allocated_days - balance.used_days:.1f} day(s)."
-                            )
 
                     leave_record = LeaveRequest(
                         user_id=current_user.id,
@@ -352,11 +319,6 @@ class LeaveRequestService:
                     saved = await LeaveRequestRepository.create(db, leave_record)
                     created_records.append(saved)
 
-                    # Deduct balance for this day
-                    if balance:
-                        balance.used_days += 1.0
-                        await db.commit()
-
                 current += timedelta(days=1)
 
             return created_records
@@ -365,8 +327,6 @@ class LeaveRequestService:
         leave_date = request_in.leave_date
         if not leave_date:
             raise BadRequestException(detail="leave_date is required for single-day leaves.")
-        if leave_date > date.today():
-            raise BadRequestException(detail="Cannot mark leave for future dates.")
 
         # Partial day extra validation
         if duration == "partial_day":
@@ -391,38 +351,6 @@ class LeaveRequestService:
             request_in.partial_end_time,
         )
 
-        # Check and deduct leave balance
-        year = leave_date.year
-        balance = await LeaveBalanceRepository.get_specific_balance(
-            db, current_user.id, request_in.leave_type_id, year
-        )
-        if not balance:
-            alloc = float(leave_type.days_per_year) if leave_type.days_per_year else 0.0
-            balance = await LeaveBalanceRepository.create(
-                db,
-                user_id=current_user.id,
-                leave_type_id=request_in.leave_type_id,
-                year=year,
-                allocated_days=alloc,
-            )
-
-        # Determine deduction
-        if duration == "full_day":
-            deduction = 1.0
-        elif duration == "half_day":
-            deduction = 0.5
-        else:  # partial_day
-            start_h, start_m = map(int, request_in.partial_start_time.split(":"))
-            end_h, end_m = map(int, request_in.partial_end_time.split(":"))
-            leave_hours = (end_h * 60 + end_m - start_h * 60 - start_m) / 60.0
-            deduction = leave_hours / 8.0  # fraction of a day
-
-        available = (balance.allocated_days or 0) - (balance.used_days or 0)
-        if available < deduction:
-            raise BadRequestException(
-                detail=f"Insufficient leave balance. Required: {deduction:.2f} day(s), Available: {available:.2f} day(s)."
-            )
-
         # Create the leave record
         leave_record = LeaveRequest(
             user_id=current_user.id,
@@ -437,10 +365,6 @@ class LeaveRequestService:
             partial_end_time=request_in.partial_end_time,
         )
         saved = await LeaveRequestRepository.create(db, leave_record)
-
-        # Deduct balance
-        balance.used_days += deduction
-        await db.commit()
 
         return [saved]
 

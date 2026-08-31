@@ -1,26 +1,21 @@
 import asyncio
 from app.core.database import get_db
-from app.modules.leave_requests.service import LeaveRequestService
 from app.models.user import User
-from app.modules.leave_requests.schema import LeaveRequestResponse
+from app.core.security import create_access_token
+import requests
 
 async def main():
     async for db in get_db():
         from sqlalchemy.future import select
-        res = await db.execute(select(User).where(User.role_id == 2)) # Try finding a PM (role_id 2 or similar)
-        pm = res.scalars().first()
-        if not pm:
-            res = await db.execute(select(User))
-            pm = res.scalars().first()
-
-        print(f"Using user {pm.id}")
-        leaves = await LeaveRequestService.get_upcoming_team_leaves(db, pm)
-        print(f"Leaves found: {len(leaves)}")
-        for l in leaves:
-            try:
-                LeaveRequestResponse.model_validate(l)
-            except Exception as e:
-                print(f"Validation failed for leaf {l.id}: {e}")
+        res = await db.execute(select(User).where(User.email == 'balram6604@gmail.com'))
+        admin = res.scalars().first()
+        token = create_access_token({"sub": str(admin.id)})
+        print(f"Generated token for Admin")
+        
+        # Test endpoint
+        res = requests.get("http://127.0.0.1:8000/api/v1/leave-requests/upcoming", headers={"Authorization": f"Bearer {token}"})
+        print(f"Status: {res.status_code}")
+        print(f"Response: {res.text}")
         break
 
 if __name__ == '__main__':

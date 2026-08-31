@@ -102,6 +102,7 @@ class LeaveRequestRepository:
         query = select(LeaveRequest).options(
             selectinload(LeaveRequest.user),
             selectinload(LeaveRequest.leave_type),
+            selectinload(LeaveRequest.manager),
         ).filter(
             LeaveRequest.status.in_(["Approved", "Pending"]),
             LeaveRequest.end_date >= date.today()
