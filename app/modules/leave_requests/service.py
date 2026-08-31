@@ -101,12 +101,28 @@ class LeaveRequestService:
         user_ids = None
         
         if not is_admin:
-            from app.modules.projects.repository import ProjectRepository
+            from sqlalchemy.future import select
+            from app.models.project import Project
+            from app.models.project_assignment import ProjectAssignment
+            
             # PM logic: Get projects where user is PM, then get assigned users
-            pm_projects = await ProjectRepository.get_projects_for_pm(db, current_user.id)
-            user_ids = []
-            for p in pm_projects:
-                user_ids.extend([a.user_id for a in p.assignments if a.is_active])
+            res = await db.execute(
+                select(Project).where(Project.project_manager_id == current_user.id)
+            )
+            pm_projects = res.scalars().all()
+            project_ids = [p.id for p in pm_projects]
+            
+            if project_ids:
+                assign_res = await db.execute(
+                    select(ProjectAssignment.user_id).where(
+                        ProjectAssignment.project_id.in_(project_ids),
+                        ProjectAssignment.is_active == True
+                    )
+                )
+                user_ids = [row for row in assign_res.scalars().all()]
+            else:
+                user_ids = []
+                
             # also include PM themselves
             user_ids.append(current_user.id)
             user_ids = list(set(user_ids))
