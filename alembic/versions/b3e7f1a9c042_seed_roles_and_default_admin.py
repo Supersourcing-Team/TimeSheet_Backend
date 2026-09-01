@@ -26,7 +26,7 @@ from sqlalchemy import text
 # Revision identifiers
 # ---------------------------------------------------------------------------
 revision: str = "b3e7f1a9c042"
-down_revision: Union[str, None] = "a1b2c3d4e5f6"
+down_revision: Union[str, None] = "0001_consolidated_schema"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -106,8 +106,10 @@ def upgrade() -> None:
         )
 
     existing_user = conn.execute(
-        text("SELECT id FROM users WHERE email = :email"),
-        {"email": admin_email},
+        text(
+            "SELECT id FROM users WHERE email = :email OR employee_id = :employee_id"
+        ),
+        {"email": admin_email, "employee_id": DEFAULT_ADMIN["employee_id"]},
     ).fetchone()
 
     if not existing_user:

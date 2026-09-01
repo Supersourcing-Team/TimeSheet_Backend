@@ -20,7 +20,8 @@ class ProjectRepository:
                 selectinload(Project.client), 
                 selectinload(Project.project_manager),
                 selectinload(Project.assignments),
-                selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool)
+                selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
+                selectinload(Project.milestones)
             )
             .where(Project.id == project_id, Project.is_active == True)
         )
@@ -33,7 +34,8 @@ class ProjectRepository:
                 selectinload(Project.client), 
                 selectinload(Project.project_manager),
                 selectinload(Project.assignments),
-                selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool)
+                selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
+                selectinload(Project.milestones)
             )
             .where(Project.is_active == True)
             .offset(skip).limit(limit)
