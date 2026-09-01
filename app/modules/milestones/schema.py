@@ -8,6 +8,7 @@ class MilestoneBase(BaseModel):
     description: Optional[str] = None
     start_date: Optional[date] = None
     expected_completion_date: Optional[date] = None
+    budget: Optional[float] = None
     status: str = Field(default="planned", max_length=20)
     weight_percentage: float = Field(default=0.0, ge=0.0, le=100.0)
 
@@ -21,6 +22,7 @@ class MilestoneUpdate(BaseModel):
     description: Optional[str] = None
     start_date: Optional[date] = None
     expected_completion_date: Optional[date] = None
+    budget: Optional[float] = None
     status: Optional[str] = Field(None, max_length=20)
     weight_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
 

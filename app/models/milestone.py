@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from app.models.project import Project
+    from app.models.milestone_assignment import MilestoneAssignment
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -19,6 +20,7 @@ class Milestone(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     expected_completion_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    budget: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="planned", nullable=False) # planned, in_progress, achieved
     weight_percentage: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     actual_achievement_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -28,3 +30,6 @@ class Milestone(Base):
     )
 
     project: Mapped["Project"] = relationship("Project", back_populates="milestones")
+    assignments: Mapped[list["MilestoneAssignment"]] = relationship(
+        "MilestoneAssignment", back_populates="milestone", cascade="all, delete-orphan"
+    )

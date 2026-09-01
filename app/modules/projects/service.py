@@ -57,6 +57,7 @@ class ProjectService:
         from app.models.project_assignment import ProjectAssignment
         from app.models.timesheet import Timesheet
         from app.models.milestone import Milestone
+        from app.models.milestone_assignment import MilestoneAssignment
         from app.modules.milestones.schema import MilestoneResponse
 
         project_ids = [p.id for p in projects]
@@ -76,8 +77,11 @@ class ProjectService:
         except Exception:
             hours_map = {}
 
+        from sqlalchemy.orm import selectinload
         try:
-            m_stmt = select(Milestone).where(Milestone.project_id.in_(project_ids))
+            m_stmt = select(Milestone).options(
+                selectinload(Milestone.assignments).selectinload(MilestoneAssignment.user)
+            ).where(Milestone.project_id.in_(project_ids))
             m_res = await db.execute(m_stmt)
             all_milestones = m_res.scalars().all()
             milestone_map = {}
@@ -86,18 +90,34 @@ class ProjectService:
         except Exception:
             milestone_map = {}
 
-
-        is_pm = ProjectService._is_pm(current_user)
+        is_ac_manager = current_user and current_user.role and current_user.role.name == "Account_Manager"
+        is_admin = current_user and current_user.role and current_user.role.name == "Admin"
+        
+        # User explicitly requested: "only AC manager will tkae care of finacial thigns"
+        can_view_budget = is_ac_manager
 
         results = []
         for p in projects:
-            budget = float(p.budget or 0.0)
+            project_milestones = milestone_map.get(p.id, [])
+            
+            # Calculate project budget from milestones (if the project itself doesn't have an override)
+            calculated_budget = sum([float(m.budget or 0.0) for m in project_milestones])
+            budget = float(p.budget or calculated_budget)
+
             logged_hours = hours_map.get(p.id, 0.0)
             
-            project_milestones = milestone_map.get(p.id, [])
             completion_percentage = sum([m.weight_percentage for m in project_milestones if m.status == "achieved"])
             
-            cost = logged_hours * 1800.0
+            # Milestone Duration * Employee Daily Cost
+            cost = 0.0
+            for m in project_milestones:
+                if m.start_date and m.expected_completion_date:
+                    duration_days = (m.expected_completion_date - m.start_date).days
+                    if duration_days > 0:
+                        for assignment in m.assignments:
+                            if assignment.is_active and assignment.user:
+                                cost += (duration_days * assignment.user.daily_cost)
+            
             revenue = budget * (completion_percentage / 100.0)
             profit = revenue - cost
 
@@ -109,8 +129,8 @@ class ProjectService:
             resp.revenue = round(revenue, 2)
             resp.profit = round(profit, 2)
 
-            # Restrict budget visibility for Project Managers
-            if is_pm:
+            # Restrict budget visibility (Only AC Manager can see budget/financials)
+            if not can_view_budget:
                 resp.budget = None
                 resp.cost = 0.0
                 resp.revenue = 0.0
@@ -123,8 +143,9 @@ class ProjectService:
     async def create_project(self, project_in: ProjectCreate, current_user: Optional[User] = None) -> ProjectResponse:
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         
-        # PMs cannot enter or modify project budget
-        if self._is_pm(current_user):
+        # Only AC Manager can enter or modify project budget
+        is_ac_manager = current_user and current_user.role and current_user.role.name == "Account_Manager"
+        if not is_ac_manager:
             project_in.budget = None
 
         project = await self.repository.create(project_in)
@@ -154,8 +175,9 @@ class ProjectService:
         
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         
-        # PMs cannot modify project budget
-        if self._is_pm(current_user):
+        # Only AC Manager can modify project budget
+        is_ac_manager = current_user and current_user.role and current_user.role.name == "Account_Manager"
+        if not is_ac_manager:
             project_in.budget = None
 
         updated_project = await self.repository.update(project, project_in)

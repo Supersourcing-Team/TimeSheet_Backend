@@ -9,11 +9,11 @@ class UserCreate(BaseModel):
     email: EmailStr
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
-    employee_id: str = Field(..., min_length=1, max_length=50)
+    employee_id: Optional[str] = Field(None, max_length=50) # Auto-generated if not provided
     role_id: int = Field(..., ge=1)
     joining_date: Optional[date] = None
+    ctc: Optional[float] = Field(None, ge=0.0)
     status: Optional[str] = "Pending"
-
 
 
 class UserUpdate(BaseModel):
@@ -23,6 +23,7 @@ class UserUpdate(BaseModel):
     employee_id: Optional[str] = Field(None, min_length=1, max_length=50)
     role_id: Optional[int] = Field(None, ge=1)
     joining_date: Optional[date] = None
+    ctc: Optional[float] = Field(None, ge=0.0)
     status: Optional[str] = None
 
 
@@ -38,6 +39,7 @@ class UserResponse(BaseModel):
     employee_id: str
     role_id: int
     joining_date: Optional[date] = None
+    ctc: Optional[float] = None
     status: str
     created_at: datetime
     updated_at: datetime

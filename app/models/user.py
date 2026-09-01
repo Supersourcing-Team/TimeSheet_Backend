@@ -1,9 +1,10 @@
 from app.models.leave_balance import LeaveBalance
 from app.models.role import Role
+from app.models.milestone_assignment import MilestoneAssignment
 from datetime import date, datetime
 from typing import List, Optional
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, func
+from sqlalchemy import Date, DateTime, ForeignKey, String, func, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -19,6 +20,7 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     joining_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    ctc: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="Active", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -46,4 +48,13 @@ class User(Base):
     project_assignments: Mapped[List["ProjectAssignment"]] = relationship(
         "ProjectAssignment", back_populates="user"
     )
+    milestone_assignments: Mapped[List["MilestoneAssignment"]] = relationship(
+        "MilestoneAssignment", back_populates="user"
+    )
     timesheets: Mapped[List["Timesheet"]] = relationship("Timesheet", back_populates="user")
+
+    @property
+    def daily_cost(self) -> float:
+        if self.ctc:
+            return self.ctc / 260.0
+        return 0.0

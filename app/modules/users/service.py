@@ -32,6 +32,13 @@ class UserService:
                 detail=f"User with email '{data.email}' already exists.",
             )
 
+        # Auto-generate employee_id if not provided
+        if not data.employee_id:
+            from sqlalchemy import select, func
+            stmt = select(func.max(User.id))
+            max_id = await db.scalar(stmt) or 0
+            data.employee_id = f"EMP-{max_id + 1}"
+
         # 3. Check duplicate employee ID
         existing_emp_id = await UserRepository.get_by_employee_id(db, data.employee_id)
         if existing_emp_id:
@@ -51,6 +58,7 @@ class UserService:
             employee_id=data.employee_id,
             role_id=data.role_id,
             joining_date=data.joining_date,
+            ctc=data.ctc,
             status=user_status,
         )
 

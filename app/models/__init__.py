@@ -15,6 +15,7 @@ from app.models.weekend_work import WeekendWorkRequest
 from app.models.working_calendar import WorkingCalendar
 from app.models.system_settings import SystemSettings
 from app.models.milestone import Milestone
+from app.models.milestone_assignment import MilestoneAssignment
 
 __all__ = [
     "Base",
@@ -34,5 +35,6 @@ __all__ = [
     "WorkingCalendar",
     "SystemSettings",
     "Milestone",
+    "MilestoneAssignment",
 ]
 from .working_calendar import WorkingCalendar
