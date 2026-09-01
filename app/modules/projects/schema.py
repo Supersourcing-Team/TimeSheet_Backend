@@ -9,9 +9,6 @@ class ProjectCreate(BaseModel):
     project_name: str = Field(..., min_length=1, max_length=150)
     description: Optional[str] = None
     budget: Optional[float] = Field(None, ge=0)
-
-    hourly_rate: Optional[float] = Field(None, ge=0)
-    allocated_hours: Optional[float] = Field(None, ge=0)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
@@ -28,9 +25,6 @@ class ProjectUpdate(BaseModel):
     project_name: Optional[str] = Field(None, min_length=1, max_length=150)
     description: Optional[str] = None
     budget: Optional[float] = Field(None, ge=0)
-
-    hourly_rate: Optional[float] = Field(None, ge=0)
-    allocated_hours: Optional[float] = Field(None, ge=0)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     status: Optional[str] = Field(None, max_length=20)
@@ -49,17 +43,12 @@ class ProjectResponse(BaseModel):
     project_name: str
     description: Optional[str] = None
     budget: Optional[float] = None
-    hourly_rate: Optional[float] = None
-    allocated_hours: Optional[float] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     status: str
     is_active: bool
     created_at: datetime
     updated_at: datetime
-    
-    hourly_rate: Optional[float] = None
-    allocated_hours: Optional[float] = None
     client_name: Optional[str] = None
     project_manager_name: Optional[str] = None
     assigned_user_ids: list[int] = Field(default_factory=list)
@@ -69,11 +58,4 @@ class ProjectResponse(BaseModel):
     revenue: float = 0.0
     profit: float = 0.0
 
-
-    logged_hours: float = 0.0
-    cost: float = 0.0
-    revenue: float = 0.0
-    profit: float = 0.0
-
     model_config = ConfigDict(from_attributes=True)
-

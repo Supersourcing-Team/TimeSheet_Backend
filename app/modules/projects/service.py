@@ -74,9 +74,7 @@ class ProjectService:
         for p in projects:
             budget = float(p.budget or 0.0)
             logged_hours = hours_map.get(p.id, 0.0)
-            hourly_rate_attr = getattr(p, "hourly_rate", None)
-            rate = float(hourly_rate_attr) if (hourly_rate_attr and hourly_rate_attr > 0) else 3500.0
-
+            rate = 3500.0
 
             if logged_hours > 0:
                 cost = logged_hours * 1800.0
@@ -132,8 +130,7 @@ class ProjectService:
         for p in projects:
             budget = float(p.budget or 0.0)
             logged_hours = hours_map.get(p.id, 0.0)
-            hourly_rate_attr = getattr(p, "hourly_rate", None)
-            rate = float(hourly_rate_attr) if (hourly_rate_attr and hourly_rate_attr > 0) else 3500.0
+            rate = 3500.0
 
             if logged_hours > 0:
                 cost = logged_hours * 1800.0
