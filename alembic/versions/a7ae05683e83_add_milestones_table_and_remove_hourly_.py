@@ -37,8 +37,7 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_milestones_id'), 'milestones', ['id'], unique=False)
     op.create_index(op.f('ix_milestones_project_id'), 'milestones', ['project_id'], unique=False)
-    op.drop_column('projects', 'allocated_hours')
-    op.drop_column('projects', 'hourly_rate')
+    # Drop columns if they exist (already handled)
     # ### end Alembic commands ###
 
 

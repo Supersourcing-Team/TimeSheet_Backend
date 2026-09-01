@@ -45,9 +45,6 @@ class ProjectService:
         projects = await self.repository.get_all(skip=skip, limit=limit)
         return await self.compute_financials_for_projects(self.db, projects, current_user=current_user)
 
-
-
-
     @staticmethod
     async def compute_financials_for_projects(db: AsyncSession, projects: list, current_user: Optional[User] = None) -> List[ProjectResponse]:
         if not projects:
@@ -95,7 +92,6 @@ class ProjectService:
         
         # User explicitly requested: "only AC manager will tkae care of finacial thigns"
         can_view_budget = is_ac_manager
-
         results = []
         for p in projects:
             project_milestones = milestone_map.get(p.id, [])
@@ -161,12 +157,10 @@ class ProjectService:
                 user_id=project.project_manager_id
             ))
 
-        
         fetched = await self.repository.get_by_id(project.id)
         target_project = fetched if fetched else project
         financials = await self.compute_financials_for_projects(self.db, [target_project], current_user=current_user)
         return financials[0]
-
 
     async def update_project(self, project_id: int, project_in: ProjectUpdate, current_user: Optional[User] = None) -> ProjectResponse:
         project = await self.repository.get_by_id(project_id)
@@ -190,4 +184,3 @@ class ProjectService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         
         await self.repository.soft_delete(project)
-

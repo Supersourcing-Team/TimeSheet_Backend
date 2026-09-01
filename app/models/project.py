@@ -66,7 +66,10 @@ class Project(Base):
                 "allocation_id": ta.id,
                 "name": getattr(ta, "tool", None).name if getattr(ta, "tool", None) else "Unknown",
                 "category": getattr(ta, "tool", None).category if getattr(ta, "tool", None) else "Unknown",
-                "monthly_cost": getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0
+                "monthly_cost": getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0,
+                "allocation_date": str(ta.allocation_date) if getattr(ta, "allocation_date", None) else None,
+                "deallocation_date": str(ta.deallocation_date) if getattr(ta, "deallocation_date", None) else None,
+                "status": getattr(ta, "status", "Active")
             } 
             for ta in self.tool_allocations if ta.status.lower() == "active"
         ]
