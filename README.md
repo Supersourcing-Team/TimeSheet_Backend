@@ -77,24 +77,19 @@ DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/timesheet_db
 GOOGLE_CLIENT_ID=your_google_client_id
 ```
 
-### 5. Run database migrations
+### 5. Run database migrations & seed
+
+This single command applies all schema migrations **and** seeds the four
+system roles plus your default Admin account (using `ADMIN_EMAIL` from `.env`):
 
 ```bash
 alembic upgrade head
 ```
 
-### 6. Seed the database (first-time setup only)
+> **That's it.** After this, the Admin can log in via Google OAuth to begin
+> onboarding the rest of the team.
 
-This creates all roles and your initial Admin account:
-
-```bash
-python seed_users.py
-```
-
-> **Note:** The Admin user is created using the `ADMIN_EMAIL` from your `.env`.
-> After seeding, log in with that email via Google OAuth to begin onboarding.
-
-### 7. Start the server
+### 6. Start the server
 
 ```bash
 uvicorn app.main:app --reload
