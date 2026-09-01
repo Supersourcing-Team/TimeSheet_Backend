@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     GOOGLE_CLIENT_ID: str = ""
+
+    # Default admin account seeded into the database on first run.
+    # Change this to your own work email before running seed_users.py.
+    ADMIN_EMAIL: str = "admin@yourcompany.com"
     FRONTEND_URLS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
 
     # SMTP Email Settings

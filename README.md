@@ -58,21 +58,23 @@ pip install -r requirements.txt
 
 ### 4. Configure environment variables
 
-Create a `.env` file in the root directory and add your configuration:
+Copy the example file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+The **only value you must change** before seeding is `ADMIN_EMAIL`:
 
 ```env
-PROJECT_NAME="Timesheet Management System"
-VERSION="1.0.0"
-API_V1_STR="/api/v1"
+# Set this to YOUR work email — this becomes the first Admin account
+ADMIN_EMAIL=you@yourcompany.com
 
+# Update DATABASE_URL if your Postgres credentials differ from the default
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/timesheet_db
 
-SECRET_KEY=your_super_secret_key_here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
+# Obtain from Google Cloud Console → Credentials
 GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
 ### 5. Run database migrations
@@ -81,7 +83,18 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 alembic upgrade head
 ```
 
-### 6. Start the server
+### 6. Seed the database (first-time setup only)
+
+This creates all roles and your initial Admin account:
+
+```bash
+python seed_users.py
+```
+
+> **Note:** The Admin user is created using the `ADMIN_EMAIL` from your `.env`.
+> After seeding, log in with that email via Google OAuth to begin onboarding.
+
+### 7. Start the server
 
 ```bash
 uvicorn app.main:app --reload
