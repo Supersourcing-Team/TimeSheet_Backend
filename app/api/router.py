@@ -41,6 +41,7 @@ from app.modules.settings.router import router as settings_router
 from app.modules.weekend_work.router import router as weekend_work_router
 from app.modules.reports.router import router as reports_router
 from app.modules.notifications.router import router as notifications_router
+from app.modules.milestones.router import router as milestones_router
 
 api_router.include_router(clients_router, prefix="/clients", tags=["Clients"])
 api_router.include_router(projects_router, prefix="/projects", tags=["Projects"])
@@ -55,6 +56,7 @@ api_router.include_router(settings_router, prefix="/settings", tags=["System Set
 api_router.include_router(reports_router, prefix="/reports", tags=["Reports & Analytics"])
 api_router.include_router(reports_router, prefix="/analytics", tags=["Analytics"])
 api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
+api_router.include_router(milestones_router, prefix="/milestones", tags=["Milestones"])
 
 
 

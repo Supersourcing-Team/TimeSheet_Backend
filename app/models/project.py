@@ -1,5 +1,12 @@
 from datetime import date, datetime
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
+
+if TYPE_CHECKING:
+    from app.models.client import Client
+    from app.models.user import User
+    from app.models.project_assignment import ProjectAssignment
+    from app.models.tool_allocation import ToolAllocation
+    from app.models.milestone import Milestone
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -32,6 +39,9 @@ class Project(Base):
     )
     tool_allocations: Mapped[List["ToolAllocation"]] = relationship(
         "ToolAllocation", back_populates="project"
+    )
+    milestones: Mapped[List["Milestone"]] = relationship(
+        "Milestone", back_populates="project", cascade="all, delete-orphan"
     )
 
     @property

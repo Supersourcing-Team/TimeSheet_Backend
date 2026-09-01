@@ -39,62 +39,13 @@ class ProjectService:
         if not project:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         financials = await self.compute_financials_for_projects(self.db, [project], current_user=current_user)
-        financials = await self.compute_financials_for_projects(self.db, [project])
         return financials[0]
 
     async def get_all_projects(self, skip: int = 0, limit: int = 100, current_user: Optional[User] = None) -> List[ProjectResponse]:
         projects = await self.repository.get_all(skip=skip, limit=limit)
         return await self.compute_financials_for_projects(self.db, projects, current_user=current_user)
-        return await self.compute_financials_for_projects(self.db, projects)
 
-    @staticmethod
-    async def compute_financials_for_projects(db: AsyncSession, projects: list) -> List[ProjectResponse]:
-        if not projects:
-            return []
 
-        from sqlalchemy import select, func
-        from app.models.project_assignment import ProjectAssignment
-        from app.models.timesheet import Timesheet
-
-        project_ids = [p.id for p in projects]
-
-        stmt = (
-            select(
-                ProjectAssignment.project_id,
-                func.coalesce(func.sum(Timesheet.billable_hours + Timesheet.non_billable_hours), 0.0).label("logged_hours")
-            )
-            .join(Timesheet, Timesheet.project_assignment_id == ProjectAssignment.id)
-            .where(ProjectAssignment.project_id.in_(project_ids))
-            .group_by(ProjectAssignment.project_id)
-        )
-        res = await db.execute(stmt)
-        hours_map = {row.project_id: float(row.logged_hours) for row in res.all()}
-
-        results = []
-        for p in projects:
-            budget = float(p.budget or 0.0)
-            logged_hours = hours_map.get(p.id, 0.0)
-            rate = 3500.0
-
-            if logged_hours > 0:
-                cost = logged_hours * 1800.0
-                revenue = logged_hours * rate
-            else:
-                cost = 0.60 * budget
-                revenue = 0.95 * budget
-
-            profit = revenue - cost
-            if profit == 0:
-                profit = 0.35 * budget
-
-            resp = ProjectResponse.model_validate(p)
-            resp.logged_hours = round(logged_hours, 2)
-            resp.cost = round(cost, 2)
-            resp.revenue = round(revenue, 2)
-            resp.profit = round(profit, 2)
-            results.append(resp)
-
-        return results
 
 
     @staticmethod
@@ -105,6 +56,8 @@ class ProjectService:
         from sqlalchemy import select, func
         from app.models.project_assignment import ProjectAssignment
         from app.models.timesheet import Timesheet
+        from app.models.milestone import Milestone
+        from app.modules.milestones.schema import MilestoneResponse
 
         project_ids = [p.id for p in projects]
 
@@ -123,6 +76,16 @@ class ProjectService:
         except Exception:
             hours_map = {}
 
+        try:
+            m_stmt = select(Milestone).where(Milestone.project_id.in_(project_ids))
+            m_res = await db.execute(m_stmt)
+            all_milestones = m_res.scalars().all()
+            milestone_map = {}
+            for m in all_milestones:
+                milestone_map.setdefault(m.project_id, []).append(m)
+        except Exception:
+            milestone_map = {}
+
 
         is_pm = ProjectService._is_pm(current_user)
 
@@ -130,20 +93,17 @@ class ProjectService:
         for p in projects:
             budget = float(p.budget or 0.0)
             logged_hours = hours_map.get(p.id, 0.0)
-            rate = 3500.0
-
-            if logged_hours > 0:
-                cost = logged_hours * 1800.0
-                revenue = logged_hours * rate
-            else:
-                cost = 0.60 * budget
-                revenue = 0.95 * budget
-
+            
+            project_milestones = milestone_map.get(p.id, [])
+            completion_percentage = sum([m.weight_percentage for m in project_milestones if m.status == "achieved"])
+            
+            cost = logged_hours * 1800.0
+            revenue = budget * (completion_percentage / 100.0)
             profit = revenue - cost
-            if profit == 0:
-                profit = 0.35 * budget
 
             resp = ProjectResponse.model_validate(p)
+            resp.milestones = [MilestoneResponse.model_validate(m) for m in project_milestones]
+            resp.completion_percentage = round(completion_percentage, 2)
             resp.logged_hours = round(logged_hours, 2)
             resp.cost = round(cost, 2)
             resp.revenue = round(revenue, 2)
@@ -152,6 +112,9 @@ class ProjectService:
             # Restrict budget visibility for Project Managers
             if is_pm:
                 resp.budget = None
+                resp.cost = 0.0
+                resp.revenue = 0.0
+                resp.profit = 0.0
 
             results.append(resp)
 

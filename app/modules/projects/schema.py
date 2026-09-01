@@ -1,6 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from app.modules.milestones.schema import MilestoneResponse
 
 
 class ProjectCreate(BaseModel):
@@ -57,5 +58,7 @@ class ProjectResponse(BaseModel):
     cost: float = 0.0
     revenue: float = 0.0
     profit: float = 0.0
+    milestones: list[MilestoneResponse] = Field(default_factory=list)
+    completion_percentage: float = 0.0
 
     model_config = ConfigDict(from_attributes=True)
