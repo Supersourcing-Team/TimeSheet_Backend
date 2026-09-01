@@ -103,8 +103,6 @@ def upgrade() -> None:
         sa.Column("project_name", sa.String(length=150), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("budget", sa.Float(), nullable=True),
-        sa.Column("hourly_rate", sa.Float(), nullable=True),
-        sa.Column("allocated_hours", sa.Float(), nullable=True),
         sa.Column("start_date", sa.Date(), nullable=True),
         sa.Column("end_date", sa.Date(), nullable=True),
         sa.Column("status", sa.String(length=20), nullable=False, server_default="Planning"),

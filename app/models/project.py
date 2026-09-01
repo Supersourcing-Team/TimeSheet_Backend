@@ -16,8 +16,6 @@ class Project(Base):
     project_name: Mapped[str] = mapped_column(String(150), unique=True, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     budget: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    hourly_rate: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    allocated_hours: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="Planning", nullable=False)
@@ -58,8 +56,7 @@ class Project(Base):
                 "allocation_id": ta.id,
                 "name": getattr(ta, "tool", None).name if getattr(ta, "tool", None) else "Unknown",
                 "category": getattr(ta, "tool", None).category if getattr(ta, "tool", None) else "Unknown",
-                "monthly_cost": getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0,
-                "allocated_hours": 0
+                "monthly_cost": getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0
             } 
             for ta in self.tool_allocations if ta.status.lower() == "active"
         ]
