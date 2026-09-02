@@ -23,6 +23,8 @@ class Milestone(Base):
     budget: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="planned", nullable=False) # planned, in_progress, achieved
     weight_percentage: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    completion_percentage: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    actual_start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     actual_achievement_date: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(

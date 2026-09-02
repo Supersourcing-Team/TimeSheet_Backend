@@ -5,8 +5,9 @@ from sqlalchemy.orm import selectinload
 
 from app.models.project import Project
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate
+from app.modules.projects.schema import ProjectCreate, ProjectUpdate
 
-
+from app.models.project_assignment import ProjectAssignment
 from app.models.tool_allocation import ToolAllocation
 
 class ProjectRepository:
@@ -19,7 +20,7 @@ class ProjectRepository:
             .options(
                 selectinload(Project.client), 
                 selectinload(Project.project_manager),
-                selectinload(Project.assignments),
+                selectinload(Project.assignments).selectinload(ProjectAssignment.user),
                 selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
                 selectinload(Project.milestones)
             )
@@ -33,7 +34,7 @@ class ProjectRepository:
             .options(
                 selectinload(Project.client), 
                 selectinload(Project.project_manager),
-                selectinload(Project.assignments),
+                selectinload(Project.assignments).selectinload(ProjectAssignment.user),
                 selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
                 selectinload(Project.milestones)
             )

@@ -58,6 +58,15 @@ class ProjectResponse(BaseModel):
     cost: float = 0.0
     revenue: float = 0.0
     profit: float = 0.0
+    earned_value: float = 0.0
+    actual_cost: float = 0.0
+    budget_utilization_percentage: float = 0.0
+    cost_utilization_percentage: float = 0.0
+    cost_variance: float = 0.0
+    cpi: float = 0.0
+    forecast_cost: float = 0.0
+    financial_status: Optional[str] = None
+    health: Optional[str] = None
     milestones: list[MilestoneResponse] = Field(default_factory=list)
     completion_percentage: float = 0.0
 
