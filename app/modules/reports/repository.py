@@ -4,13 +4,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.client import Client
-from app.models.leave_request import LeaveRequest
-from app.models.leave_type import LeaveType
-from app.models.project import Project
-from app.models.project_assignment import ProjectAssignment
-from app.models.timesheet import Timesheet
-from app.models.user import User
+from app.modules.clients.model import Client
+from app.modules.leave_requests.model import LeaveRequest
+from app.modules.leave_types.model import LeaveType
+from app.modules.projects.model import Project
+from app.modules.project_assignments.model import ProjectAssignment
+from app.modules.timesheets.model import Timesheet
+from app.modules.users.model import User
 from app.modules.reports.schema import LeaveReportItem, TimesheetReportItem
 
 

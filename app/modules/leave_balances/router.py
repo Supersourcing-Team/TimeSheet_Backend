@@ -6,7 +6,7 @@ from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin, require_project_manager
-from app.models.user import User
+from app.modules.users.model import User
 from app.modules.leave_balances.schema import LeaveBalanceCreate, LeaveBalanceResponse, LeaveBalanceUpdate
 from app.modules.leave_balances.service import LeaveBalanceService
 

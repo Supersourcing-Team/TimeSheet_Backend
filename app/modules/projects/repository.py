@@ -3,12 +3,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.project import Project
+from app.modules.projects.model import Project
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate
 
-from app.models.project_assignment import ProjectAssignment
-from app.models.tool_allocation import ToolAllocation
+from app.modules.project_assignments.model import ProjectAssignment
+from app.modules.tool_allocations.model import ToolAllocation
 
 class ProjectRepository:
     def __init__(self, db: AsyncSession):

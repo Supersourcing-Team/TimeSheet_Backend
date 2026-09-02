@@ -5,8 +5,8 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
 
 from app.core.database import AsyncSessionLocal
-from app.models.timesheet import Timesheet
-from app.models.user import User
+from app.modules.timesheets.model import Timesheet
+from app.modules.users.model import User
 from app.services.email_service import send_timesheet_reminder_email
 
 logger = logging.getLogger(__name__)

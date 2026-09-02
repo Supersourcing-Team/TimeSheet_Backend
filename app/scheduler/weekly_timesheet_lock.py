@@ -2,7 +2,7 @@ import logging
 from datetime import date, timedelta
 from sqlalchemy import select, func, update
 from app.core.database import AsyncSessionLocal
-from app.models.timesheet import Timesheet
+from app.modules.timesheets.model import Timesheet
 
 logger = logging.getLogger(__name__)
 

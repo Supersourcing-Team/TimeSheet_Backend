@@ -4,8 +4,8 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.timesheet import Timesheet
-from app.models.project_assignment import ProjectAssignment
+from app.modules.timesheets.model import Timesheet
+from app.modules.project_assignments.model import ProjectAssignment
 
 
 class TimesheetRepository:
@@ -96,8 +96,8 @@ class TimesheetRepository:
         page: int = 1,
         limit: int = 20,
     ) -> Tuple[List[Timesheet], int]:
-        from app.models.project_assignment import ProjectAssignment
-        from app.models.project import Project
+        from app.modules.project_assignments.model import ProjectAssignment
+        from app.modules.projects.model import Project
 
         base_query = (
             select(Timesheet)

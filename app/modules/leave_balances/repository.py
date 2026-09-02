@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.leave_balance import LeaveBalance
+from app.modules.leave_balances.model import LeaveBalance
 
 
 class LeaveBalanceRepository:

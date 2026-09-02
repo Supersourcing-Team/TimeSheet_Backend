@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, extract, func
 
-from app.models.user import User
+from app.modules.users.model import User
 from app.modules.dashboard.schema import (
     DashboardSummaryResponse,
     LeaveBalanceWidget,
@@ -14,15 +14,15 @@ from app.modules.dashboard.schema import (
     UpcomingHolidayWidget,
     AdminOverviewWidget,
 )
-from app.models.holiday import Holiday
+from app.modules.holidays.model import Holiday
 from app.modules.holidays.repository import HolidayRepository
 from app.modules.leave_balances.repository import LeaveBalanceRepository
 from app.modules.leave_requests.repository import LeaveRequestRepository
 from app.modules.project_assignments.repository import ProjectAssignmentRepository
 from app.modules.timesheets.repository import TimesheetRepository
-from app.models.project import Project
-from app.models.leave_type import LeaveType
-from app.models.leave_request import LeaveRequest
+from app.modules.projects.model import Project
+from app.modules.leave_types.model import LeaveType
+from app.modules.leave_requests.model import LeaveRequest
 
 
 class DashboardService:

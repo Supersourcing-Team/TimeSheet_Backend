@@ -2,7 +2,7 @@ from typing import List
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.role import Role
+from app.modules.roles.model import Role
 from app.modules.roles.repository import RoleRepository
 
 

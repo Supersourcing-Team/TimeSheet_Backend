@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.leave_type import LeaveType
+from app.modules.leave_types.model import LeaveType
 
 
 class LeaveTypeRepository:

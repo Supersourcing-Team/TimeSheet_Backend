@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
-from app.models.working_calendar import WorkingCalendar
+from app.modules.working_calendar.model import WorkingCalendar
 
 class WorkingCalendarRepository:
     @staticmethod

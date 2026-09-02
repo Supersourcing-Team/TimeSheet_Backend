@@ -1,6 +1,6 @@
-from app.models.leave_balance import LeaveBalance
-from app.models.role import Role
-from app.models.milestone_assignment import MilestoneAssignment
+from app.modules.leave_balances.model import LeaveBalance
+from app.modules.roles.model import Role
+from app.modules.milestones.assignment_model import MilestoneAssignment
 from datetime import date, datetime
 from typing import List, Optional
 

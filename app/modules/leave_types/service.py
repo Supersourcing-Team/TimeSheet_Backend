@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.leave_type import LeaveType
+from app.modules.leave_types.model import LeaveType
 from app.modules.leave_types.repository import LeaveTypeRepository
 from app.modules.leave_types.schema import LeaveTypeCreate, LeaveTypeUpdate
 

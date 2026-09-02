@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin
-from app.models.user import User
+from app.modules.users.model import User
 from app.modules.working_calendar.schema import WorkingCalendarResponse, WorkingCalendarUpdate
 from app.modules.working_calendar.service import WorkingCalendarService
 from app.common.responses import success_response

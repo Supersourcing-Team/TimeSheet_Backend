@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.client import Client
+from app.modules.clients.model import Client
 from app.modules.clients.schema import ClientCreate, ClientUpdate
 
 

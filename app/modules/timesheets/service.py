@@ -3,8 +3,8 @@ from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenException, NotFoundException
-from app.models.timesheet import Timesheet
-from app.models.user import User
+from app.modules.timesheets.model import Timesheet
+from app.modules.users.model import User
 from app.modules.timesheets.repository import TimesheetRepository
 from app.modules.timesheets.schema import (
     DailyTimesheetBreakdown,

@@ -4,12 +4,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.leave_request import LeaveRequest
-from app.models.user import User
-from app.models.weekend_work import WeekendWorkRequest
+from app.modules.leave_requests.model import LeaveRequest
+from app.modules.users.model import User
+from app.modules.weekend_work.model import WeekendWorkRequest
 from app.modules.notifications.schema import NotificationItem, NotificationsResponse
-from app.models.project_assignment import ProjectAssignment
-from app.models.project import Project
+from app.modules.project_assignments.model import ProjectAssignment
+from app.modules.projects.model import Project
 
 
 class NotificationService:

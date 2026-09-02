@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from app.modules.milestones.repository import MilestoneRepository
 from app.modules.milestones.schema import MilestoneCreate, MilestoneUpdate, MilestoneResponse
 from app.modules.projects.repository import ProjectRepository
-from app.models.user import User
+from app.modules.users.model import User
 
 class MilestoneService:
     def __init__(self, db: AsyncSession):

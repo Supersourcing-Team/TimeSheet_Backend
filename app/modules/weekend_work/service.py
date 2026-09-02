@@ -2,8 +2,8 @@ from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ConflictException, ForbiddenException, NotFoundException
-from app.models.user import User
-from app.models.weekend_work import WeekendWorkRequest
+from app.modules.users.model import User
+from app.modules.weekend_work.model import WeekendWorkRequest
 from app.modules.weekend_work.repository import WeekendWorkRepository
 from app.modules.weekend_work.schema import WeekendWorkReview, WeekendWorkSubmit
 from app.modules.weekend_work.validator import WeekendWorkValidator

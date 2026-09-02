@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.leave_balance import LeaveBalance
+from app.modules.leave_balances.model import LeaveBalance
 from app.modules.leave_balances.repository import LeaveBalanceRepository
 from app.modules.leave_balances.schema import LeaveBalanceCreate, LeaveBalanceResponse, LeaveBalanceUpdate
 from app.modules.leave_types.repository import LeaveTypeRepository

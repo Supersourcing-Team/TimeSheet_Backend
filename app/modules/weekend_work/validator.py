@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.exceptions import BadRequestException, ForbiddenException
-from app.models.project import Project
-from app.models.project_assignment import ProjectAssignment
+from app.modules.projects.model import Project
+from app.modules.project_assignments.model import ProjectAssignment
 from app.modules.holidays.repository import HolidayRepository
 
 

@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.holiday import Holiday
+from app.modules.holidays.model import Holiday
 
 
 class HolidayRepository:

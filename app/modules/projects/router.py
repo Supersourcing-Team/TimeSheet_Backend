@@ -10,7 +10,7 @@ from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectRes
 from app.modules.projects.service import ProjectService
 
 
-from app.models.user import User
+from app.modules.users.model import User
 
 router = APIRouter()
 pm_only = require_roles("Project_Manager")

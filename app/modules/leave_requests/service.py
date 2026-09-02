@@ -3,8 +3,8 @@ from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ConflictException, ForbiddenException, NotFoundException
-from app.models.leave_request import LeaveRequest
-from app.models.user import User
+from app.modules.leave_requests.model import LeaveRequest
+from app.modules.users.model import User
 from app.modules.leave_balances.repository import LeaveBalanceRepository
 from app.modules.leave_requests.repository import LeaveRequestRepository
 from app.modules.leave_requests.schema import LeaveCheckDateResponse, LeaveMarkFromTimesheetRequest, LeaveRequestReview, LeaveRequestSubmit
@@ -82,8 +82,8 @@ class LeaveRequestService:
         
         if not is_admin:
             from sqlalchemy.future import select
-            from app.models.project import Project
-            from app.models.project_assignment import ProjectAssignment
+            from app.modules.projects.model import Project
+            from app.modules.project_assignments.model import ProjectAssignment
             
             # PM logic: Get projects where user is PM, then get assigned users
             res = await db.execute(

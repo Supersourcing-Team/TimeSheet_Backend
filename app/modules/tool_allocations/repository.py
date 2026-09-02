@@ -3,7 +3,7 @@ from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.tool_allocation import ToolAllocation
+from app.modules.tool_allocations.model import ToolAllocation
 from app.modules.tool_allocations.schema import ToolAllocationCreate, ToolAllocationUpdate
 
 

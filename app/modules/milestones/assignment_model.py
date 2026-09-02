@@ -2,8 +2,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.models.milestone import Milestone
-    from app.models.user import User
+    from app.modules.milestones.model import Milestone
+    from app.modules.users.model import User
 
 from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

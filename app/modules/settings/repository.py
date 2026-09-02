@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.models.system_settings import SystemSettings
+from app.modules.settings.model import SystemSettings
 from app.modules.settings.schema import SystemSettingsUpdate
 
 class SystemSettingsRepository:

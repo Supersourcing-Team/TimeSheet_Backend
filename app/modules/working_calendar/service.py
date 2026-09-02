@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.working_calendar import WorkingCalendar
+from app.modules.working_calendar.model import WorkingCalendar
 from app.modules.working_calendar.repository import WorkingCalendarRepository
 from app.modules.working_calendar.schema import WorkingCalendarUpdate
 

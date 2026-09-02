@@ -6,7 +6,7 @@ from app.modules.projects.repository import ProjectRepository
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse
 from app.modules.clients.repository import ClientRepository
 from app.modules.users.repository import UserRepository
-from app.models.user import User
+from app.modules.users.model import User
 
 
 class ProjectService:
@@ -51,10 +51,10 @@ class ProjectService:
             return []
 
         from sqlalchemy import select, func
-        from app.models.project_assignment import ProjectAssignment
-        from app.models.timesheet import Timesheet
-        from app.models.milestone import Milestone
-        from app.models.milestone_assignment import MilestoneAssignment
+        from app.modules.project_assignments.model import ProjectAssignment
+        from app.modules.timesheets.model import Timesheet
+        from app.modules.milestones.model import Milestone
+        from app.modules.milestones.assignment_model import MilestoneAssignment
         from app.modules.milestones.schema import MilestoneResponse
         from datetime import date, datetime
 
@@ -82,7 +82,7 @@ class ProjectService:
             
         # We need to get users for those project assignments to calculate cost
         # Actually, let's just query users directly for all project assignments
-        from app.models.user import User
+        from app.modules.users.model import User
         try:
             u_stmt = select(ProjectAssignment.project_id, User).join(User, User.id == ProjectAssignment.user_id).where(ProjectAssignment.project_id.in_(project_ids))
             u_res = await db.execute(u_stmt)

@@ -7,7 +7,7 @@ from app.common.pagination import create_pagination_data
 from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
-from app.models.user import User
+from app.modules.users.model import User
 from app.modules.timesheets.schema import (
     TimesheetCreate,
     TimesheetResponse,

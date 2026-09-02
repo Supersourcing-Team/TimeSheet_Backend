@@ -2,7 +2,7 @@ from datetime import date
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
+from app.modules.users.model import User
 from app.modules.reports.repository import ReportRepository
 from app.modules.reports.schema import LeaveReportSummary, TimesheetReportSummary
 
@@ -91,11 +91,11 @@ class ReportService:
     async def get_analytics_summary(db: AsyncSession):
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload
-        from app.models.project import Project
+        from app.modules.projects.model import Project
         from app.modules.projects.service import ProjectService
         from app.modules.reports.schema import AnalyticsSummaryResponse
 
-        from app.models.tool_allocation import ToolAllocation
+        from app.modules.tool_allocations.model import ToolAllocation
 
         stmt = select(Project).options(
             selectinload(Project.client),
@@ -129,10 +129,10 @@ class ReportService:
         import io
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload
-        from app.models.project import Project
+        from app.modules.projects.model import Project
         from app.modules.projects.service import ProjectService
 
-        from app.models.tool_allocation import ToolAllocation
+        from app.modules.tool_allocations.model import ToolAllocation
 
         stmt = select(Project).options(
             selectinload(Project.client),
@@ -186,9 +186,9 @@ class ReportService:
         from reportlab.lib import colors
         from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-        from app.models.project import Project
+        from app.modules.projects.model import Project
         from app.modules.projects.service import ProjectService
-        from app.models.tool_allocation import ToolAllocation
+        from app.modules.tool_allocations.model import ToolAllocation
 
         stmt = select(Project).options(
             selectinload(Project.client),

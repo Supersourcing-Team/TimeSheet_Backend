@@ -2,11 +2,11 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, List, Optional
 
 if TYPE_CHECKING:
-    from app.models.client import Client
-    from app.models.user import User
-    from app.models.project_assignment import ProjectAssignment
-    from app.models.tool_allocation import ToolAllocation
-    from app.models.milestone import Milestone
+    from app.modules.clients.model import Client
+    from app.modules.users.model import User
+    from app.modules.project_assignments.model import ProjectAssignment
+    from app.modules.tool_allocations.model import ToolAllocation
+    from app.modules.milestones.model import Milestone
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

@@ -7,7 +7,7 @@ from app.dependencies.permissions import require_roles
 from app.common.responses import success_response, created_response
 
 pm_only = require_roles("Project_Manager")
-from app.models.user import User
+from app.modules.users.model import User
 from app.modules.milestones.schema import MilestoneCreate, MilestoneUpdate, MilestoneResponse
 from app.modules.milestones.service import MilestoneService
 

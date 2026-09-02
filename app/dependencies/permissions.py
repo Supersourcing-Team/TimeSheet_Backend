@@ -3,7 +3,7 @@ from typing import Callable, List
 from fastapi import Depends, HTTPException, status
 
 from app.dependencies.auth import get_current_active_user
-from app.models.user import User
+from app.modules.users.model import User
 
 
 class RoleChecker:

@@ -3,7 +3,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.leave_request import LeaveRequest
+from app.modules.leave_requests.model import LeaveRequest
 
 
 class LeaveRequestRepository:

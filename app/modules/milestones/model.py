@@ -2,8 +2,8 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from app.models.project import Project
-    from app.models.milestone_assignment import MilestoneAssignment
+    from app.modules.projects.model import Project
+    from app.modules.milestones.assignment_model import MilestoneAssignment
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

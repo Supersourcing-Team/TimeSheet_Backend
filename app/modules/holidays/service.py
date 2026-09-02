@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.holiday import Holiday
+from app.modules.holidays.model import Holiday
 from app.modules.holidays.repository import HolidayRepository
 from app.modules.holidays.schema import HolidayCreate, HolidayUpdate
 

@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.milestone import Milestone
+from app.modules.milestones.model import Milestone
 from app.modules.milestones.schema import MilestoneCreate, MilestoneUpdate
 
 class MilestoneRepository:
