@@ -110,32 +110,34 @@ timesheet-management-Backend/
 ├── app/
 │   ├── api/                  # Main API router and endpoints
 │   ├── common/               # Common utilities and helpers
-│   ├── core/                 # App configurations and database session setup
+│   ├── core/                 # App configs, database session, and central models registry
 │   ├── dependencies/         # FastAPI dependency injection
-│   ├── models/               # SQLAlchemy ORM models (13 core models)
-│   ├── modules/              # Modular feature components
+│   ├── modules/              # Modular domain-driven feature components
 │   │   ├── auth/             # Authentication & OAuth
-│   │   ├── clients/          # Client management
+│   │   ├── clients/          # Client management (includes model.py, router, service, etc.)
 │   │   ├── dashboard/        # Dashboard analytics
 │   │   ├── holidays/         # Company holidays
 │   │   ├── leave_balances/   # Annual leave tracking
 │   │   ├── leave_requests/   # Leave applications & approvals
 │   │   ├── leave_types/      # Types of leave
+│   │   ├── milestones/       # Project milestones
 │   │   ├── project_assignments/ # User-project assignments
 │   │   ├── projects/         # Project management
 │   │   ├── reports/          # Timesheet & leave reports
 │   │   ├── roles/            # Role-based permissions
+│   │   ├── settings/         # System settings
 │   │   ├── timesheets/       # Daily timesheets & entries
 │   │   ├── tool_allocations/ # Software license allocation
 │   │   ├── tools/            # Software tools inventory
 │   │   ├── users/            # Employee / User management
-│   │   └── weekend_work/     # Weekend & holiday work requests
+│   │   ├── weekend_work/     # Weekend & holiday work requests
+│   │   └── working_calendar/ # Working calendar definitions
 │   ├── scheduler/            # APScheduler background tasks
-│   ├── services/             # Business logic layer
+│   ├── services/             # External/Shared services (Email, PDF, etc.)
 │   ├── templates/            # Email templates (Jinja2)
 │   └── main.py               # FastAPI app initialization
 │
-├── alembic/                  # Database migration scripts
+├── alembic/                  # Database migration scripts (consolidated into a single version)
 │   └── versions/             # Migration version histories
 ├── tests/                    # Unit and integration tests
 ├── .env                      # Environment variables (git-ignored)
@@ -164,21 +166,25 @@ timesheet-management-Backend/
 
 ## Database Schema
 
-The database consists of **13 core tables**:
+The database consists of **17 core tables**:
 
 1. **`roles`**: Defines user authority levels (Admin, Manager, Employee).
 2. **`users`**: Employee accounts, auth metadata, and manager reporting structure.
 3. **`clients`**: Client profiles and contacts.
 4. **`projects`**: Projects linked to clients.
 5. **`project_assignments`**: Assigns employees to active projects.
-6. **`timesheets`**: Logged daily working hours and activity descriptions.
-7. **`weekend_work_requests`**: Approval workflow for extra weekend hours.
-8. **`leave_types`**: Configurable leave policies (Casual, Sick, Earned, etc.).
-9. **`leave_balances`**: Track remaining leave quotas per employee per year.
-10. **`leave_requests`**: Employee leave applications with status tracking.
-11. **`holidays`**: Public and company holiday records.
-12. **`tools`**: Inventory of software/hardware tools.
-13. **`tool_allocations`**: Track active tool assignments per user.
+6. **`milestones`**: Project milestones and deliverables tracking.
+7. **`milestone_assignments`**: Assigns users and budgets to specific milestones.
+8. **`timesheets`**: Logged daily working hours and activity descriptions.
+9. **`weekend_work_requests`**: Approval workflow for extra weekend hours.
+10. **`leave_types`**: Configurable leave policies (Casual, Sick, Earned, etc.).
+11. **`leave_balances`**: Track remaining leave quotas per employee per year.
+12. **`leave_requests`**: Employee leave applications with status tracking.
+13. **`holidays`**: Public and company holiday records.
+14. **`working_calendar`**: Organization's standard working days and hours.
+15. **`tools`**: Inventory of software/hardware tools.
+16. **`tool_allocations`**: Track active tool assignments per user.
+17. **`system_settings`**: Configurable platform-wide global settings.
 
 ---
 
@@ -197,11 +203,11 @@ The database consists of **13 core tables**:
 | :--- | :---: | :--- |
 | **Project Architecture** | ✅ Completed | Modular directory structure & FastAPI setup |
 | **Database Connection** | ✅ Completed | Async Engine (`sqlalchemy.ext.asyncio` + `asyncpg`) |
-| **ORM Models** | ✅ Completed | 13 core models defined and linked |
-| **Alembic Migrations** | ✅ Completed | Initial migration executed against PostgreSQL |
+| **ORM Models** | ✅ Completed | 17 core models defined and modularized |
+| **Alembic Migrations** | ✅ Completed | Single consolidated initial migration executed against PostgreSQL |
 | **Health API** | ✅ Completed | `/api/v1/health` verifying live DB connection |
-| **Authentication Module** | ⏳ Pending | OAuth + JWT login implementation |
-| **Feature APIs** | ⏳ Pending | CRUD routers & services for Timesheets, Leaves, etc. |
+| **Authentication Module** | ✅ Completed | OAuth + JWT login implementation |
+| **Feature APIs** | ✅ Completed | CRUD routers & services for Timesheets, Leaves, etc. |
 
 ---
 
