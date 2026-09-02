@@ -236,8 +236,8 @@ docs: update README with setup instructions
 
 ## Developers
 
-* **Govinda** — Developer
-* **Balram** — Developer
+* **Balram Prajapati** — Developer
+* **Govinda Tapadia** — Developer
 
 ---
 
