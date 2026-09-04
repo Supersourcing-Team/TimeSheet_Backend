@@ -58,6 +58,9 @@ api_router.include_router(reports_router, prefix="/analytics", tags=["Analytics"
 api_router.include_router(notifications_router, prefix="/notifications", tags=["Notifications"])
 api_router.include_router(milestones_router, prefix="/milestones", tags=["Milestones"])
 
+from app.modules.utilization.router import router as utilization_router
+api_router.include_router(utilization_router, prefix="/utilization", tags=["Employee Utilization"])
+
 
 
 

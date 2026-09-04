@@ -15,6 +15,7 @@ class ToolAllocation(Base):
     tool_id: Mapped[int] = mapped_column(ForeignKey("tools.id"), nullable=False)
     allocation_date: Mapped[date] = mapped_column(Date, nullable=False)
     deallocation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    allocation_basis: Mapped[str] = mapped_column(String(20), default="working_day", nullable=False)  # working_day | calendar_day | week | month
     status: Mapped[str] = mapped_column(String(20), default="Active", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
