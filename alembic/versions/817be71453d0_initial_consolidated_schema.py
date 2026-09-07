@@ -216,6 +216,7 @@ def upgrade() -> None:
     sa.Column('tool_id', sa.Integer(), nullable=False),
     sa.Column('monthly_cost', sa.Float(), server_default='0.0', nullable=False),
     sa.Column('seats', sa.Integer(), server_default='1', nullable=False),
+    sa.Column('allocation_basis', sa.String(length=20), server_default='working_day', nullable=False),
     sa.Column('allocation_date', sa.Date(), nullable=False),
     sa.Column('deallocation_date', sa.Date(), nullable=True),
     sa.Column('status', sa.String(length=20), nullable=False),
