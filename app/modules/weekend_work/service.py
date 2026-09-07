@@ -36,10 +36,22 @@ class WeekendWorkService:
             )
 
         # 4. Create record
+        total_hours = (
+            request_in.planned_hours
+            if request_in.planned_hours is not None and request_in.planned_hours > 0
+            else (request_in.billable_hours + request_in.non_billable_hours)
+        )
+        if total_hours <= 0:
+            total_hours = 8.0
+
         weekend_request = WeekendWorkRequest(
             project_assignment_id=request_in.project_assignment_id,
             work_date=request_in.work_date,
-            planned_hours=request_in.planned_hours,
+            planned_hours=total_hours,
+            billable_hours=request_in.billable_hours,
+            billable_work_summary=request_in.billable_work_summary,
+            non_billable_hours=request_in.non_billable_hours,
+            non_billable_work_summary=request_in.non_billable_work_summary,
             reason=request_in.reason,
             status="Pending",
         )
@@ -97,9 +109,49 @@ class WeekendWorkService:
                 detail="Only the Project Manager assigned to this project can approve weekend work."
             )
 
-        return await WeekendWorkRepository.update_status(
+        approved_request = await WeekendWorkRepository.update_status(
             db, request, status="Approved", approver_id=pm_user.id
         )
+
+        # Automatically insert or update Timesheet record
+        from sqlalchemy import and_, select
+        from app.modules.timesheets.model import Timesheet
+
+        user_id = request.project_assignment.user_id
+        project_assignment_id = request.project_assignment_id
+        work_date = request.work_date
+
+        stmt = select(Timesheet).where(
+            and_(
+                Timesheet.user_id == user_id,
+                Timesheet.project_assignment_id == project_assignment_id,
+                Timesheet.timesheet_date == work_date,
+            )
+        )
+        res = await db.execute(stmt)
+        existing_timesheet = res.scalars().first()
+
+        if existing_timesheet:
+            existing_timesheet.billable_hours = request.billable_hours
+            existing_timesheet.billable_work_summary = request.billable_work_summary or request.reason
+            existing_timesheet.non_billable_hours = request.non_billable_hours
+            existing_timesheet.non_billable_work_summary = request.non_billable_work_summary
+            existing_timesheet.status = "approved"
+        else:
+            new_timesheet = Timesheet(
+                user_id=user_id,
+                project_assignment_id=project_assignment_id,
+                timesheet_date=work_date,
+                billable_hours=request.billable_hours,
+                billable_work_summary=request.billable_work_summary or request.reason,
+                non_billable_hours=request.non_billable_hours,
+                non_billable_work_summary=request.non_billable_work_summary,
+                status="approved",
+            )
+            db.add(new_timesheet)
+
+        await db.commit()
+        return approved_request
 
     @staticmethod
     async def reject_weekend_work(

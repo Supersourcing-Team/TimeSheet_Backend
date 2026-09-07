@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, func
+from sqlalchemy import Date, DateTime, Float, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -13,6 +13,8 @@ class ToolAllocation(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), nullable=False)
     tool_id: Mapped[int] = mapped_column(ForeignKey("tools.id"), nullable=False)
+    monthly_cost: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    seats: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     allocation_date: Mapped[date] = mapped_column(Date, nullable=False)
     deallocation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="Active", nullable=False)
@@ -20,3 +22,4 @@ class ToolAllocation(Base):
 
     project: Mapped["Project"] = relationship("Project", back_populates="tool_allocations")
     tool: Mapped["Tool"] = relationship("Tool", back_populates="allocations")
+

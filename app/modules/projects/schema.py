@@ -28,13 +28,26 @@ class ProjectUpdate(BaseModel):
     budget: Optional[float] = Field(None, ge=0)
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    status: Optional[str] = Field(None, max_length=20)
+    status: Optional[str] = Field(None, max_length=50)
+    is_active: Optional[bool] = None
 
     @model_validator(mode='after')
     def validate_dates(self) -> 'ProjectUpdate':
         if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValueError("end_date must be after start_date")
         return self
+
+
+class ProjectDocumentResponse(BaseModel):
+    id: int
+    project_id: int
+    file_name: str
+    file_path: str
+    file_size: Optional[int] = None
+    file_type: Optional[str] = None
+    uploaded_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectResponse(BaseModel):
@@ -54,6 +67,7 @@ class ProjectResponse(BaseModel):
     project_manager_name: Optional[str] = None
     assigned_user_ids: list[int] = Field(default_factory=list)
     tools: list[dict] = Field(default_factory=list)
+    documents: list[ProjectDocumentResponse] = Field(default_factory=list)
     logged_hours: float = 0.0
     cost: float = 0.0
     revenue: float = 0.0

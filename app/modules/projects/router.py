@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.responses import created_response, success_response
@@ -68,3 +68,25 @@ async def delete_project(project_id: int, db: AsyncSession = Depends(get_db)):
     service = ProjectService(db)
     await service.delete_project(project_id)
     return success_response(message="Project deleted successfully")
+
+
+@router.post("/{project_id}/documents", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(project_manage_roles)])
+async def upload_project_document(
+    project_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    service = ProjectService(db)
+    doc = await service.upload_document(project_id, file)
+    return created_response(data=doc.model_dump(mode="json"), message="Document uploaded successfully")
+
+
+@router.delete("/{project_id}/documents/{document_id}", response_model=dict, dependencies=[Depends(project_manage_roles)])
+async def delete_project_document(
+    project_id: int,
+    document_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    service = ProjectService(db)
+    await service.delete_document(project_id, document_id)
+    return success_response(message="Document deleted successfully")

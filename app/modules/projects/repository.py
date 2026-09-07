@@ -3,8 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.modules.projects.model import Project
-from app.modules.projects.schema import ProjectCreate, ProjectUpdate
+from app.modules.projects.model import Project, ProjectDocument
 from app.modules.projects.schema import ProjectCreate, ProjectUpdate
 
 from app.modules.project_assignments.model import ProjectAssignment
@@ -22,9 +21,10 @@ class ProjectRepository:
                 selectinload(Project.project_manager),
                 selectinload(Project.assignments).selectinload(ProjectAssignment.user),
                 selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
-                selectinload(Project.milestones)
+                selectinload(Project.milestones),
+                selectinload(Project.documents)
             )
-            .where(Project.id == project_id, Project.is_active == True)
+            .where(Project.id == project_id)
         )
         return result.scalars().first()
 
@@ -36,9 +36,9 @@ class ProjectRepository:
                 selectinload(Project.project_manager),
                 selectinload(Project.assignments).selectinload(ProjectAssignment.user),
                 selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
-                selectinload(Project.milestones)
+                selectinload(Project.milestones),
+                selectinload(Project.documents)
             )
-            .where(Project.is_active == True)
             .offset(skip).limit(limit)
         )
         return list(result.scalars().all())
@@ -63,3 +63,19 @@ class ProjectRepository:
         await self.db.commit()
         await self.db.refresh(project)
         return project
+
+    async def add_document(self, document: ProjectDocument) -> ProjectDocument:
+        self.db.add(document)
+        await self.db.commit()
+        await self.db.refresh(document)
+        return document
+
+    async def get_document_by_id(self, document_id: int) -> Optional[ProjectDocument]:
+        result = await self.db.execute(
+            select(ProjectDocument).where(ProjectDocument.id == document_id)
+        )
+        return result.scalars().first()
+
+    async def delete_document(self, document: ProjectDocument) -> None:
+        await self.db.delete(document)
+        await self.db.commit()

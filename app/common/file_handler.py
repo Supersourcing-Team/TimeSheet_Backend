@@ -9,6 +9,7 @@ from app.common.utils import sanitize_filename
 
 ALLOWED_REPORT_EXTENSIONS = {".pdf", ".xlsx", ".csv"}
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
+ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".docx", ".doc", ".xlsx", ".csv", ".png", ".jpg", ".jpeg", ".txt", ".zip"}
 
 
 def validate_file_extension(filename: str, allowed_extensions: set[str]) -> bool:
