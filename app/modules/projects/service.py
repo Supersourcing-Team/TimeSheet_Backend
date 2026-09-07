@@ -1,12 +1,15 @@
 from typing import List, Optional
+from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, UploadFile, status
+from app.modules.projects.model import ProjectDocument
 from app.modules.projects.repository import ProjectRepository
-from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectDocumentResponse
 from app.modules.clients.repository import ClientRepository
 from app.modules.users.repository import UserRepository
 from app.modules.users.model import User
+from app.common.file_handler import save_upload_file, delete_file, ALLOWED_DOCUMENT_EXTENSIONS
 
 
 class ProjectService:
@@ -230,3 +233,41 @@ class ProjectService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
         
         await self.repository.soft_delete(project)
+
+    async def upload_document(self, project_id: int, file: UploadFile) -> ProjectDocumentResponse:
+        project = await self.repository.get_by_id(project_id)
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+        dest_dir = Path("uploads") / "projects" / str(project_id)
+        saved_path = await save_upload_file(
+            file,
+            dest_dir,
+            allowed_extensions=ALLOWED_DOCUMENT_EXTENSIONS,
+            max_size_mb=10.0,
+        )
+
+        file_size = saved_path.stat().st_size if saved_path.exists() else None
+        # Format web accessible path
+        web_path = f"/uploads/projects/{project_id}/{saved_path.name}"
+
+        doc = ProjectDocument(
+            project_id=project_id,
+            file_name=file.filename,
+            file_path=web_path,
+            file_size=file_size,
+            file_type=file.content_type,
+        )
+        saved_doc = await self.repository.add_document(doc)
+        return ProjectDocumentResponse.model_validate(saved_doc)
+
+    async def delete_document(self, project_id: int, document_id: int) -> None:
+        doc = await self.repository.get_document_by_id(document_id)
+        if not doc or doc.project_id != project_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+
+        # Delete local file if exists
+        rel_path = doc.file_path.lstrip("/")
+        delete_file(rel_path)
+
+        await self.repository.delete_document(doc)

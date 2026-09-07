@@ -25,7 +25,7 @@ class Project(Base):
     budget: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(20), default="Planning", nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="Milestone Planning", nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True, nullable=False, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
@@ -42,6 +42,9 @@ class Project(Base):
     )
     milestones: Mapped[List["Milestone"]] = relationship(
         "Milestone", back_populates="project", cascade="all, delete-orphan"
+    )
+    documents: Mapped[List["ProjectDocument"]] = relationship(
+        "ProjectDocument", back_populates="project", cascade="all, delete-orphan"
     )
 
     @property
@@ -66,10 +69,26 @@ class Project(Base):
                 "allocation_id": ta.id,
                 "name": getattr(ta, "tool", None).name if getattr(ta, "tool", None) else "Unknown",
                 "category": getattr(ta, "tool", None).category if getattr(ta, "tool", None) else "Unknown",
-                "monthly_cost": getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0,
+                "monthly_cost": getattr(ta, "monthly_cost", 0.0) if getattr(ta, "monthly_cost", None) is not None else (getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0),
+                "seats": getattr(ta, "seats", 1),
                 "allocation_date": str(ta.allocation_date) if getattr(ta, "allocation_date", None) else None,
                 "deallocation_date": str(ta.deallocation_date) if getattr(ta, "deallocation_date", None) else None,
                 "status": getattr(ta, "status", "Active")
             } 
             for ta in self.tool_allocations if ta.status.lower() == "active"
         ]
+
+
+
+class ProjectDocument(Base):
+    __tablename__ = "project_documents"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True)
+    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    file_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    file_size: Mapped[Optional[int]] = mapped_column(nullable=True)
+    file_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    uploaded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    project: Mapped["Project"] = relationship("Project", back_populates="documents")
