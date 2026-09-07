@@ -117,44 +117,49 @@ class FinancialEngine:
         tool_cost = 0.0
 
         if m_start and m_end_expected:
-            cost_end_date = milestone.actual_achievement_date.date() if milestone.actual_achievement_date else today
-            if m_start <= cost_end_date:
-                # 1. Timesheet Labor Cost
-                query = (
-                    select(
-                        Timesheet.user_id,
-                        func.coalesce(func.sum(Timesheet.billable_hours), 0.0).label("billable"),
-                        func.coalesce(func.sum(Timesheet.non_billable_hours), 0.0).label("non_billable"),
-                    )
-                    .join(ProjectAssignment, Timesheet.project_assignment_id == ProjectAssignment.id)
-                    .where(
-                        ProjectAssignment.project_id == milestone.project_id,
-                        Timesheet.timesheet_date >= m_start,
-                        Timesheet.timesheet_date <= cost_end_date,
-                    )
-                    .group_by(Timesheet.user_id)
+            if milestone.actual_achievement_date:
+                cost_end_date = milestone.actual_achievement_date.date()
+            else:
+                cost_end_date = m_end_expected
+                
+            # 1. Timesheet Labor Cost
+            query = (
+                select(
+                    Timesheet.user_id,
+                    func.coalesce(func.sum(Timesheet.billable_hours), 0.0).label("billable"),
+                    func.coalesce(func.sum(Timesheet.non_billable_hours), 0.0).label("non_billable"),
                 )
-                result = await self.db.execute(query)
-                user_hours = result.all()
-
-                if user_hours:
-                    user_ids = [row.user_id for row in user_hours]
-                    u_result = await self.db.execute(select(User).where(User.id.in_(user_ids)))
-                    users = {u.id: u for u in u_result.scalars().all()}
-
-                    for row in user_hours:
-                        billable_hours += float(row.billable)
-                        non_billable_hours += float(row.non_billable)
-                        user = users.get(row.user_id)
-                        if user and user.ctc:
-                            hourly_rate = await get_hourly_cost(user.ctc, self.db)
-                            m_actual_cost += float(row.billable) * hourly_rate
-
-                # 2. Tool Cost
-                tool_cost = await self.calculate_tool_cost_for_period(
-                    milestone.project_id, m_start, cost_end_date
+                .join(ProjectAssignment, Timesheet.project_assignment_id == ProjectAssignment.id)
+                .where(
+                    ProjectAssignment.project_id == milestone.project_id,
+                    Timesheet.timesheet_date >= m_start,
+                    Timesheet.timesheet_date <= cost_end_date,
+                    Timesheet.status == "submitted",
                 )
-                m_actual_cost += tool_cost
+                .group_by(Timesheet.user_id)
+            )
+            result = await self.db.execute(query)
+            user_hours = result.all()
+
+            if user_hours:
+                user_ids = [row.user_id for row in user_hours]
+                u_result = await self.db.execute(select(User).where(User.id.in_(user_ids)))
+                users = {u.id: u for u in u_result.scalars().all()}
+
+            if user_hours:
+                for row in user_hours:
+                    billable_hours += float(row.billable)
+                    non_billable_hours += float(row.non_billable)
+                    user = users.get(row.user_id)
+                    if user and user.ctc:
+                        hourly_rate = await get_hourly_cost(user.ctc, self.db)
+                        m_actual_cost += float(row.billable) * hourly_rate
+
+            # 2. Tool Cost
+            tool_cost = await self.calculate_tool_cost_for_period(
+                milestone.project_id, m_start, cost_end_date
+            )
+            m_actual_cost += tool_cost
 
         # Cost Variance & CPI
         m_cv = m_ev - m_actual_cost
@@ -227,7 +232,10 @@ class FinancialEngine:
                     func.coalesce(func.sum(Timesheet.non_billable_hours), 0.0).label("non_billable"),
                 )
                 .join(ProjectAssignment, Timesheet.project_assignment_id == ProjectAssignment.id)
-                .where(ProjectAssignment.project_id == project.id)
+                .where(
+                    ProjectAssignment.project_id == project.id,
+                    Timesheet.status == "submitted"
+                )
                 .group_by(Timesheet.user_id)
             )
             result = await self.db.execute(query)

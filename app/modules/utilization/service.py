@@ -152,6 +152,7 @@ class UtilizationService:
                 ProjectAssignment.project_id == project_id,
                 Timesheet.timesheet_date >= milestone_start,
                 Timesheet.timesheet_date <= milestone_end,
+                Timesheet.status == "submitted",
             )
             .group_by(Timesheet.user_id)
         )
@@ -219,6 +220,18 @@ class UtilizationService:
         total_tool_cost = 0.0
         total_budget = 0.0
         all_employee_ids = set()
+        
+        if not milestone_id:
+            if project_id:
+                if milestones and milestones[0].project:
+                    total_budget = float(milestones[0].project.budget or 0.0)
+            else:
+                unique_projects = set()
+                for m in milestones:
+                    if m.project and m.project.id not in unique_projects:
+                        total_budget += float(m.project.budget or 0.0)
+                        unique_projects.add(m.project.id)
+
         overall_completion_weighted = 0.0
         overall_weight = 0.0
 
@@ -236,7 +249,8 @@ class UtilizationService:
                 m_available = await get_available_hours(m_start, m_end, self.db)
                 total_available_hours += (m_available * assigned_members_count)
 
-                user_hours = await self._get_timesheet_hours_for_milestone(m.project_id, m_start, m_end)
+                calc_end_date = m.actual_achievement_date.date() if m.actual_achievement_date else m_end
+                user_hours = await self._get_timesheet_hours_for_milestone(m.project_id, m_start, calc_end_date)
                 all_employee_ids.update(user_hours.keys())
             
             total_billable_hours += fin_data["billable_hours"]
@@ -244,7 +258,8 @@ class UtilizationService:
             
             total_actual_cost += fin_data["ac"]
             total_tool_cost += fin_data["tool_cost"]
-            total_budget += fin_data["budget"]
+            if milestone_id:
+                total_budget += fin_data["budget"]
 
             comp_pct = m.completion_percentage or 0.0
             if m.status == "achieved":
@@ -311,8 +326,9 @@ class UtilizationService:
                 continue
 
             m_available = await get_available_hours(m_start, m_end, self.db)
+            calc_end_date = m.actual_achievement_date.date() if m.actual_achievement_date else m_end
             user_hours = await self._get_timesheet_hours_for_milestone(
-                m.project_id, m_start, m_end
+                m.project_id, m_start, calc_end_date
             )
 
             for uid, (billable, non_billable) in user_hours.items():
