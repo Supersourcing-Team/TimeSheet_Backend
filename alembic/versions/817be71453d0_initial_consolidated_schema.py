@@ -1,3 +1,4 @@
+
 """initial_consolidated_schema
 
 Revision ID: 817be71453d0
