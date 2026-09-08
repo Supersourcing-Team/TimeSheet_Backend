@@ -53,6 +53,14 @@ class ToolAllocationService:
         allocations = await self.repository.get_by_tool(tool_id, skip=skip, limit=limit)
         return [ToolAllocationResponse.model_validate(a) for a in allocations]
 
+    async def update_tool_allocation(self, allocation_id: int, allocation_in: ToolAllocationUpdate) -> ToolAllocationResponse:
+        allocation = await self.repository.get_by_id(allocation_id)
+        if not allocation:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tool allocation not found")
+
+        updated_allocation = await self.repository.update(allocation, allocation_in)
+        return ToolAllocationResponse.model_validate(updated_allocation)
+
     async def deallocate_tool(self, allocation_id: int) -> ToolAllocationResponse:
         allocation = await self.repository.get_by_id(allocation_id)
         if not allocation:
