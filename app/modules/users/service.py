@@ -50,13 +50,13 @@ class UserService:
         # 4. Validate status if provided
         user_status = UserValidator.validate_status(data.status or "Pending")
 
-
         new_user = User(
             email=data.email,
             first_name=data.first_name,
             last_name=data.last_name,
             employee_id=data.employee_id,
             role_id=data.role_id,
+            department_id=data.department_id,
             joining_date=data.joining_date,
             ctc=data.ctc,
             status=user_status,

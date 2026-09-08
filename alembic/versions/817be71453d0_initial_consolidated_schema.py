@@ -31,6 +31,19 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_clients_id'), 'clients', ['id'], unique=False)
+    op.create_table('departments',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.Column('code', sa.String(length=20), nullable=True),
+    sa.Column('description', sa.String(length=255), nullable=True),
+    sa.Column('is_active', sa.Boolean(), server_default='true', nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_departments_id'), 'departments', ['id'], unique=False)
+    op.create_index(op.f('ix_departments_name'), 'departments', ['name'], unique=True)
+    op.create_index(op.f('ix_departments_code'), 'departments', ['code'], unique=True)
     op.create_table('holidays',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('date', sa.Date(), nullable=False),
@@ -108,6 +121,7 @@ def upgrade() -> None:
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=False),
+    sa.Column('department_id', sa.Integer(), nullable=True),
     sa.Column('employee_id', sa.String(length=50), nullable=False),
     sa.Column('first_name', sa.String(length=100), nullable=False),
     sa.Column('last_name', sa.String(length=100), nullable=False),
@@ -118,6 +132,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('notifications_cleared_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['department_id'], ['departments.id'], ),
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -343,4 +358,8 @@ def downgrade() -> None:
     op.drop_table('holidays')
     op.drop_index(op.f('ix_clients_id'), table_name='clients')
     op.drop_table('clients')
+    op.drop_index(op.f('ix_departments_code'), table_name='departments')
+    op.drop_index(op.f('ix_departments_name'), table_name='departments')
+    op.drop_index(op.f('ix_departments_id'), table_name='departments')
+    op.drop_table('departments')
     # ### end Alembic commands ###

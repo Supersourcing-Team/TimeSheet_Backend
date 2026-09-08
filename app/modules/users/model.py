@@ -1,5 +1,6 @@
 from app.modules.leave_balances.model import LeaveBalance
 from app.modules.roles.model import Role
+from app.modules.departments.model import Department
 from app.modules.milestones.assignment_model import MilestoneAssignment
 from datetime import date, datetime
 from typing import List, Optional
@@ -15,6 +16,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
+    department_id: Mapped[Optional[int]] = mapped_column(ForeignKey("departments.id"), nullable=True)
     employee_id: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -31,6 +33,7 @@ class User(Base):
     )
 
     role: Mapped["Role"] = relationship("Role", back_populates="users")
+    department: Mapped[Optional["Department"]] = relationship("Department", back_populates="users")
     leave_balances: Mapped[List["LeaveBalance"]] = relationship(
         "LeaveBalance", back_populates="user"
     )
