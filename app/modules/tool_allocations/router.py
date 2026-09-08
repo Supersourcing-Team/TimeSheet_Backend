@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.permissions import require_roles
-from app.modules.tool_allocations.schema import ToolAllocationCreate
+from app.modules.tool_allocations.schema import ToolAllocationCreate, ToolAllocationUpdate
 from app.modules.tool_allocations.service import ToolAllocationService
 
 router = APIRouter()
@@ -31,6 +31,13 @@ async def get_tool_allocations(tool_id: int, skip: int = 0, limit: int = 100, db
     service = ToolAllocationService(db)
     allocations = await service.get_tool_allocations(tool_id, skip=skip, limit=limit)
     return success_response(data=[a.model_dump(mode="json") for a in allocations], message="Tool allocations retrieved successfully")
+
+
+@router.put("/{allocation_id}", response_model=dict, dependencies=[Depends(pm_only)])
+async def update_tool_allocation(allocation_id: int, allocation_in: ToolAllocationUpdate, db: AsyncSession = Depends(get_db)):
+    service = ToolAllocationService(db)
+    allocation = await service.update_tool_allocation(allocation_id, allocation_in)
+    return success_response(data=allocation.model_dump(mode="json"), message="Tool allocation updated successfully")
 
 
 @router.put("/{allocation_id}/deallocate", response_model=dict, dependencies=[Depends(pm_only)])
