@@ -85,6 +85,7 @@ class MilestoneUtilizationRow(BaseModel):
     actual_duration_days: int = 0
     schedule_variance_days: int = 0
     schedule_status: str = "pending"  # early | on_time | late | pending
+    cpi: float = 0.0                  # Cost Performance Index (EV / AC); surfaced from FinancialEngine
 
 
 class MilestoneUtilizationResponse(BaseModel):

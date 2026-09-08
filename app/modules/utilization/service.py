@@ -242,7 +242,17 @@ class UtilizationService:
             fin_data = await engine.calculate_milestone_financials(m, project_budget)
             
             if m_start and m_end:
-                assigned_members_count = sum(1 for a in m.assignments if a.is_active)
+                # Build a set of explicitly milestone-assigned member IDs.
+                # PMs are tracked via Project.project_manager_id, not MilestoneAssignment
+                # rows, so we add +1 for the PM only if they are not already present.
+                milestone_member_ids = {
+                    a.user.id for a in m.assignments if a.is_active and a.user
+                }
+                pm_id = m.project.project_manager_id if m.project else None
+                if pm_id and pm_id not in milestone_member_ids:
+                    assigned_members_count = len(milestone_member_ids) + 1
+                else:
+                    assigned_members_count = len(milestone_member_ids)
                 if assigned_members_count == 0:
                     assigned_members_count = 1
 
@@ -401,10 +411,19 @@ class UtilizationService:
             actual_duration = 0
             
             if m_start and m_end:
-                assigned_members_count = sum(1 for a in m.assignments if a.is_active)
+                # Same PM-inclusion logic as the Dashboard loop: add the PM's
+                # capacity slot only if they are not already in MilestoneAssignment.
+                milestone_member_ids = {
+                    a.user.id for a in m.assignments if a.is_active and a.user
+                }
+                pm_id = m.project.project_manager_id if m.project else None
+                if pm_id and pm_id not in milestone_member_ids:
+                    assigned_members_count = len(milestone_member_ids) + 1
+                else:
+                    assigned_members_count = len(milestone_member_ids)
                 if assigned_members_count == 0:
                     assigned_members_count = 1
-                    
+
                 planned_hours = await get_available_hours(m_start, m_end, self.db)
                 planned_hours *= assigned_members_count
                 planned_duration = await get_working_days(m_start, m_end, self.db)
