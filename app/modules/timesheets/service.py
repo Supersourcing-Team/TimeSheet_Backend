@@ -127,8 +127,12 @@ class TimesheetService:
         if not entry:
             raise NotFoundException(detail="Timesheet entry not found.")
 
-        is_admin = getattr(current_user.role, "name", None) == "Admin"
-        if entry.user_id != current_user.id and not is_admin:
+        role_name = getattr(current_user.role, "name", None)
+        # Admins and Project Managers can view any timesheet entry (PMs need
+        # this to look up entries returned after creation). Ownership check
+        # below still protects against cross-user access for all other roles.
+        is_privileged = role_name in ("Admin", "Project_Manager")
+        if entry.user_id != current_user.id and not is_privileged:
             raise ForbiddenException(detail="You do not have permission to view this timesheet entry.")
 
         return entry
