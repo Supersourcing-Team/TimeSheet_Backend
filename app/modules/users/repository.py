@@ -20,21 +20,27 @@ class UserRepository:
     @staticmethod
     async def get_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         result = await db.execute(
-            select(User).options(selectinload(User.role)).filter(User.id == user_id)
+            select(User)
+            .options(selectinload(User.role), selectinload(User.department))
+            .filter(User.id == user_id)
         )
         return result.scalar_one_or_none()
 
     @staticmethod
     async def get_by_email(db: AsyncSession, email: str) -> Optional[User]:
         result = await db.execute(
-            select(User).options(selectinload(User.role)).filter(User.email == email)
+            select(User)
+            .options(selectinload(User.role), selectinload(User.department))
+            .filter(User.email == email)
         )
         return result.scalar_one_or_none()
 
     @staticmethod
     async def get_by_employee_id(db: AsyncSession, employee_id: str) -> Optional[User]:
         result = await db.execute(
-            select(User).options(selectinload(User.role)).filter(User.employee_id == employee_id)
+            select(User)
+            .options(selectinload(User.role), selectinload(User.department))
+            .filter(User.employee_id == employee_id)
         )
         return result.scalar_one_or_none()
 
@@ -47,7 +53,7 @@ class UserRepository:
         status: Optional[str] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[User], int]:
-        query = select(User).options(selectinload(User.role))
+        query = select(User).options(selectinload(User.role), selectinload(User.department))
         count_query = select(func.count(User.id))
 
         if role_id is not None:
