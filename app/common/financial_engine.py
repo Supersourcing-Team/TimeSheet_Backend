@@ -26,76 +26,11 @@ class FinancialEngine:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def calculate_tool_cost_for_period(
-        self,
-        project_id: int,
-        start_date: date,
-        end_date: date,
-    ) -> float:
-        """
-        Calculates tool allocation cost overlapping with a given period.
-        """
-        query = (
-            select(ToolAllocation)
-            .options(selectinload(ToolAllocation.tool))
-            .where(
-                ToolAllocation.project_id == project_id,
-                ToolAllocation.status == "Active",
-                ToolAllocation.allocation_date <= end_date,
-            )
-        )
-        result = await self.db.execute(query)
-        allocations = result.scalars().all()
 
-        today = date.today()
-        total_tool_cost = 0.0
-
-        for ta in allocations:
-            if not ta.tool or ta.tool.cost_per_month <= 0:
-                continue
-
-            tool_start = max(ta.allocation_date, start_date)
-            tool_end_raw = ta.deallocation_date if ta.deallocation_date else today
-            tool_end = min(tool_end_raw, end_date)
-
-            if tool_end < tool_start:
-                continue
-
-            monthly_cost = ta.tool.cost_per_month
-            basis = getattr(ta, "allocation_basis", "working_day") or "working_day"
-
-            if basis == "calendar_day":
-                calendar_days = (tool_end - tool_start).days + 1
-                daily_rate = monthly_cost / 30.44
-                total_tool_cost += daily_rate * calendar_days
-
-            elif basis == "working_day":
-                working_days = await get_working_days(tool_start, tool_end, self.db)
-                cal = await _get_working_calendar(self.db)
-                wd_config = cal.working_days or {}
-                wd_per_week = sum(1 for d in _WEEKDAY_KEYS if wd_config.get(d, False))
-                wd_per_month = (wd_per_week * 52) / 12 if wd_per_week > 0 else 22
-                daily_rate = monthly_cost / wd_per_month
-                total_tool_cost += daily_rate * working_days
-
-            elif basis == "week":
-                calendar_days = (tool_end - tool_start).days + 1
-                weeks = max(1, calendar_days / 7)
-                weekly_rate = monthly_cost / 4.0
-                total_tool_cost += weekly_rate * weeks
-
-            elif basis == "month":
-                calendar_days = (tool_end - tool_start).days + 1
-                months = max(0.0, calendar_days / 30.44)
-                total_tool_cost += monthly_cost * months
-
-        return round(total_tool_cost, 2)
 
     async def calculate_tool_cost_for_milestone(
         self,
-        project_id: int,
-        milestone_start: date,
-        milestone_end: date,
+        milestone_id: int,
         milestone_hours_logged: float,
     ) -> float:
         """
@@ -111,25 +46,16 @@ class FinancialEngine:
             select(ToolAllocation)
             .options(selectinload(ToolAllocation.tool))
             .where(
-                ToolAllocation.project_id == project_id,
+                ToolAllocation.milestone_id == milestone_id,
                 ToolAllocation.status == "Active",
-                ToolAllocation.allocation_date <= milestone_end,
             )
         )
         result = await self.db.execute(query)
         allocations = result.scalars().all()
 
-        today = date.today()
         total_hourly_tool_rate = 0.0
 
         for ta in allocations:
-            tool_start = max(ta.allocation_date, milestone_start)
-            tool_end_raw = ta.deallocation_date if ta.deallocation_date else today
-            tool_end = min(tool_end_raw, milestone_end)
-
-            if tool_end < tool_start:
-                continue
-
             monthly_cost = getattr(ta, "monthly_cost", None)
             if monthly_cost is None or monthly_cost <= 0:
                 monthly_cost = ta.tool.cost_per_month if ta.tool else 0.0
@@ -207,10 +133,9 @@ class FinancialEngine:
                         hourly_rate = await get_hourly_cost(user.ctc, self.db)
                         m_actual_cost += float(row.billable) * hourly_rate
 
-            # 2. Tool Cost: Derived using [MONTHLY_TOOL_COST] / 22 / 8 * [MILESTONE_HOURS_LOGGED]
-            logged_hours = billable_hours if billable_hours > 0 else non_billable_hours
+            logged_hours = billable_hours + non_billable_hours
             tool_cost = await self.calculate_tool_cost_for_milestone(
-                milestone.project_id, m_start, cost_end_date, logged_hours
+                milestone.id, logged_hours
             )
             m_actual_cost += tool_cost
 
@@ -306,9 +231,7 @@ class FinancialEngine:
                         hourly_rate = await get_hourly_cost(user.ctc, self.db)
                         total_ac += float(row.billable) * hourly_rate
             
-            tool_cost = await self.calculate_tool_cost_for_milestone(
-                project.id, start_date, today, total_billable_hours
-            )
+            tool_cost = 0.0
             total_ac += tool_cost
             project_cv = -total_ac
             project_cpi = 0.0

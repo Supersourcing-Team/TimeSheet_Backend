@@ -8,6 +8,7 @@ from app.modules.projects.schema import ProjectCreate, ProjectUpdate
 
 from app.modules.project_assignments.model import ProjectAssignment
 from app.modules.tool_allocations.model import ToolAllocation
+from app.modules.milestones.model import Milestone
 
 class ProjectRepository:
     def __init__(self, db: AsyncSession):
@@ -20,8 +21,7 @@ class ProjectRepository:
                 selectinload(Project.client), 
                 selectinload(Project.project_manager),
                 selectinload(Project.assignments).selectinload(ProjectAssignment.user),
-                selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
-                selectinload(Project.milestones),
+                selectinload(Project.milestones).selectinload(Milestone.tool_allocations).selectinload(ToolAllocation.tool),
                 selectinload(Project.documents)
             )
             .where(Project.id == project_id)
@@ -35,8 +35,7 @@ class ProjectRepository:
                 selectinload(Project.client), 
                 selectinload(Project.project_manager),
                 selectinload(Project.assignments).selectinload(ProjectAssignment.user),
-                selectinload(Project.tool_allocations).selectinload(ToolAllocation.tool),
-                selectinload(Project.milestones),
+                selectinload(Project.milestones).selectinload(Milestone.tool_allocations).selectinload(ToolAllocation.tool),
                 selectinload(Project.documents)
             )
             .offset(skip).limit(limit)

@@ -19,11 +19,11 @@ async def allocate_tool(allocation_in: ToolAllocationCreate, db: AsyncSession = 
     return created_response(data=allocation.model_dump(mode="json"), message="Tool allocated successfully")
 
 
-@router.get("/project/{project_id}", response_model=dict, dependencies=[Depends(pm_and_am)])
-async def get_project_allocations(project_id: int, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+@router.get("/milestone/{milestone_id}", response_model=dict, dependencies=[Depends(pm_and_am)])
+async def get_milestone_allocations(milestone_id: int, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
     service = ToolAllocationService(db)
-    allocations = await service.get_project_allocations(project_id, skip=skip, limit=limit)
-    return success_response(data=[a.model_dump(mode="json") for a in allocations], message="Project tool allocations retrieved successfully")
+    allocations = await service.get_milestone_allocations(milestone_id, skip=skip, limit=limit)
+    return success_response(data=[a.model_dump(mode="json") for a in allocations], message="Milestone tool allocations retrieved successfully")
 
 
 @router.get("/tool/{tool_id}", response_model=dict, dependencies=[Depends(pm_and_am)])

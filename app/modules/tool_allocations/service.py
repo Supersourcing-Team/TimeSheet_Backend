@@ -5,7 +5,7 @@ from datetime import date
 
 from app.modules.tool_allocations.repository import ToolAllocationRepository
 from app.modules.tool_allocations.schema import ToolAllocationCreate, ToolAllocationUpdate, ToolAllocationResponse
-from app.modules.projects.repository import ProjectRepository
+from app.modules.milestones.repository import MilestoneRepository
 from app.modules.tools.repository import ToolRepository
 
 
@@ -13,14 +13,14 @@ class ToolAllocationService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = ToolAllocationRepository(db)
-        self.project_repo = ProjectRepository(db)
+        self.milestone_repo = MilestoneRepository(db)
         self.tool_repo = ToolRepository(db)
 
     async def allocate_tool(self, allocation_in: ToolAllocationCreate) -> ToolAllocationResponse:
-        # Check if project exists and is active
-        project = await self.project_repo.get_by_id(allocation_in.project_id)
-        if not project:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        # Check if milestone exists
+        milestone = await self.milestone_repo.get_by_id(allocation_in.milestone_id)
+        if not milestone:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Milestone not found")
 
         # Check if tool exists and is active
         tool = await self.tool_repo.get_by_id(allocation_in.tool_id)
@@ -28,20 +28,20 @@ class ToolAllocationService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tool not found or is inactive")
 
         # Check if already assigned
-        existing_allocation = await self.repository.get_allocation(allocation_in.project_id, allocation_in.tool_id)
+        existing_allocation = await self.repository.get_allocation(allocation_in.milestone_id, allocation_in.tool_id)
         if existing_allocation:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tool is already allocated to this project")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tool is already allocated to this milestone")
 
         allocation = await self.repository.create(allocation_in)
         return ToolAllocationResponse.model_validate(allocation)
 
-    async def get_project_allocations(self, project_id: int, skip: int = 0, limit: int = 100) -> List[ToolAllocationResponse]:
-        # Check if project exists
-        project = await self.project_repo.get_by_id(project_id)
-        if not project:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+    async def get_milestone_allocations(self, milestone_id: int, skip: int = 0, limit: int = 100) -> List[ToolAllocationResponse]:
+        # Check if milestone exists
+        milestone = await self.milestone_repo.get_by_id(milestone_id)
+        if not milestone:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Milestone not found")
             
-        allocations = await self.repository.get_by_project(project_id, skip=skip, limit=limit)
+        allocations = await self.repository.get_by_milestone(milestone_id, skip=skip, limit=limit)
         return [ToolAllocationResponse.model_validate(a) for a in allocations]
 
     async def get_tool_allocations(self, tool_id: int, skip: int = 0, limit: int = 100) -> List[ToolAllocationResponse]:

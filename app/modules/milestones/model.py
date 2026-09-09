@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from app.modules.projects.model import Project
     from app.modules.milestones.assignment_model import MilestoneAssignment
+    from app.modules.tool_allocations.model import ToolAllocation
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -34,4 +35,7 @@ class Milestone(Base):
     project: Mapped["Project"] = relationship("Project", back_populates="milestones")
     assignments: Mapped[list["MilestoneAssignment"]] = relationship(
         "MilestoneAssignment", back_populates="milestone", cascade="all, delete-orphan"
+    )
+    tool_allocations: Mapped[list["ToolAllocation"]] = relationship(
+        "ToolAllocation", back_populates="milestone", cascade="all, delete-orphan"
     )

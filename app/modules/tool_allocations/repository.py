@@ -18,12 +18,12 @@ class ToolAllocationRepository:
         )
         return result.scalars().first()
 
-    async def get_allocation(self, project_id: int, tool_id: int) -> Optional[ToolAllocation]:
+    async def get_allocation(self, milestone_id: int, tool_id: int) -> Optional[ToolAllocation]:
         result = await self.db.execute(
             select(ToolAllocation)
             .where(
                 and_(
-                    ToolAllocation.project_id == project_id,
+                    ToolAllocation.milestone_id == milestone_id,
                     ToolAllocation.tool_id == tool_id,
                     ToolAllocation.status == "Active"
                 )
@@ -31,10 +31,10 @@ class ToolAllocationRepository:
         )
         return result.scalars().first()
 
-    async def get_by_project(self, project_id: int, skip: int = 0, limit: int = 100) -> List[ToolAllocation]:
+    async def get_by_milestone(self, milestone_id: int, skip: int = 0, limit: int = 100) -> List[ToolAllocation]:
         result = await self.db.execute(
             select(ToolAllocation)
-            .where(ToolAllocation.project_id == project_id, ToolAllocation.status == "Active")
+            .where(ToolAllocation.milestone_id == milestone_id, ToolAllocation.status == "Active")
             .offset(skip).limit(limit)
         )
         return list(result.scalars().all())

@@ -5,7 +5,6 @@ if TYPE_CHECKING:
     from app.modules.clients.model import Client
     from app.modules.users.model import User
     from app.modules.project_assignments.model import ProjectAssignment
-    from app.modules.tool_allocations.model import ToolAllocation
     from app.modules.milestones.model import Milestone
 
 from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
@@ -37,9 +36,6 @@ class Project(Base):
     assignments: Mapped[List["ProjectAssignment"]] = relationship(
         "ProjectAssignment", back_populates="project"
     )
-    tool_allocations: Mapped[List["ToolAllocation"]] = relationship(
-        "ToolAllocation", back_populates="project"
-    )
     milestones: Mapped[List["Milestone"]] = relationship(
         "Milestone", back_populates="project", cascade="all, delete-orphan"
     )
@@ -63,20 +59,30 @@ class Project(Base):
 
     @property
     def tools(self) -> List[dict]:
-        return [
-            {
-                "id": ta.tool_id,
-                "allocation_id": ta.id,
-                "name": getattr(ta, "tool", None).name if getattr(ta, "tool", None) else "Unknown",
-                "category": getattr(ta, "tool", None).category if getattr(ta, "tool", None) else "Unknown",
-                "monthly_cost": getattr(ta, "monthly_cost", 0.0) if getattr(ta, "monthly_cost", None) is not None else (getattr(ta, "tool", None).cost_per_month if getattr(ta, "tool", None) else 0.0),
-                "seats": getattr(ta, "seats", 1),
-                "allocation_date": str(ta.allocation_date) if getattr(ta, "allocation_date", None) else None,
-                "deallocation_date": str(ta.deallocation_date) if getattr(ta, "deallocation_date", None) else None,
-                "status": getattr(ta, "status", "Active")
-            } 
-            for ta in self.tool_allocations if ta.status.lower() == "active"
-        ]
+        all_tools = []
+        for m in self.milestones:
+            for ta in getattr(m, "tool_allocations", []):
+                if getattr(ta, "status", "Active").lower() == "active":
+                    tool = getattr(ta, "tool", None)
+                    monthly_cost = getattr(ta, "monthly_cost", None)
+                    if monthly_cost is None:
+                        monthly_cost = getattr(tool, "cost_per_month", 0.0) if tool else 0.0
+                    
+                    all_tools.append({
+                        "id": ta.tool_id,
+                        "toolId": ta.tool_id,
+                        "allocationId": ta.id,
+                        "milestoneId": m.id,
+                        "milestoneName": m.name,
+                        "name": tool.name if tool else "Unknown",
+                        "category": tool.category if tool else "Unknown",
+                        "monthlyCost": monthly_cost,
+                        "seats": getattr(ta, "seats", 1),
+                        "allocationDate": str(ta.allocation_date) if getattr(ta, "allocation_date", None) else None,
+                        "deallocationDate": str(ta.deallocation_date) if getattr(ta, "deallocation_date", None) else None,
+                        "status": getattr(ta, "status", "Active")
+                    })
+        return all_tools
 
 
 
