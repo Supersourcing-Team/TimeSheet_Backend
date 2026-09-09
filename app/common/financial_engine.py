@@ -10,6 +10,7 @@ from app.common.working_days_calculator import (
     get_working_days,
     get_available_hours,
     get_hourly_cost,
+    get_tool_hourly_rate,
     _get_working_calendar,
     _WEEKDAY_KEYS
 )
@@ -90,6 +91,57 @@ class FinancialEngine:
 
         return round(total_tool_cost, 2)
 
+    async def calculate_tool_cost_for_milestone(
+        self,
+        project_id: int,
+        milestone_start: date,
+        milestone_end: date,
+        milestone_hours_logged: float,
+    ) -> float:
+        """
+        Calculates milestone tool cost using the standardized engineering economics hourly rate formula:
+        1. Hourly Tool Rate = [MONTHLY_TOOL_COST] / 22 working days / 8 hours
+                            = [MONTHLY_TOOL_COST] / 176 hours
+        2. Total Milestone Tool Cost = Hourly Tool Rate * [MILESTONE_HOURS_LOGGED]
+        """
+        if milestone_hours_logged <= 0:
+            return 0.0
+
+        query = (
+            select(ToolAllocation)
+            .options(selectinload(ToolAllocation.tool))
+            .where(
+                ToolAllocation.project_id == project_id,
+                ToolAllocation.status == "Active",
+                ToolAllocation.allocation_date <= milestone_end,
+            )
+        )
+        result = await self.db.execute(query)
+        allocations = result.scalars().all()
+
+        today = date.today()
+        total_hourly_tool_rate = 0.0
+
+        for ta in allocations:
+            tool_start = max(ta.allocation_date, milestone_start)
+            tool_end_raw = ta.deallocation_date if ta.deallocation_date else today
+            tool_end = min(tool_end_raw, milestone_end)
+
+            if tool_end < tool_start:
+                continue
+
+            monthly_cost = getattr(ta, "monthly_cost", None)
+            if monthly_cost is None or monthly_cost <= 0:
+                monthly_cost = ta.tool.cost_per_month if ta.tool else 0.0
+
+            if monthly_cost <= 0:
+                continue
+
+            hourly_rate = await get_tool_hourly_rate(monthly_cost, self.db)
+            total_hourly_tool_rate += hourly_rate
+
+        return round(total_hourly_tool_rate * milestone_hours_logged, 2)
+
     async def calculate_milestone_financials(
         self,
         milestone: Milestone,
@@ -155,9 +207,10 @@ class FinancialEngine:
                         hourly_rate = await get_hourly_cost(user.ctc, self.db)
                         m_actual_cost += float(row.billable) * hourly_rate
 
-            # 2. Tool Cost
-            tool_cost = await self.calculate_tool_cost_for_period(
-                milestone.project_id, m_start, cost_end_date
+            # 2. Tool Cost: Derived using [MONTHLY_TOOL_COST] / 22 / 8 * [MILESTONE_HOURS_LOGGED]
+            logged_hours = billable_hours if billable_hours > 0 else non_billable_hours
+            tool_cost = await self.calculate_tool_cost_for_milestone(
+                milestone.project_id, m_start, cost_end_date, logged_hours
             )
             m_actual_cost += tool_cost
 
@@ -222,7 +275,7 @@ class FinancialEngine:
         if not milestones:
             today = date.today()
             start_date = project.start_date or today
-            tool_cost = await self.calculate_tool_cost_for_period(project.id, start_date, today)
+            # tool_cost will be calculated after total_billable_hours is aggregated below
             
             # Labor Cost
             query = (
@@ -253,6 +306,9 @@ class FinancialEngine:
                         hourly_rate = await get_hourly_cost(user.ctc, self.db)
                         total_ac += float(row.billable) * hourly_rate
             
+            tool_cost = await self.calculate_tool_cost_for_milestone(
+                project.id, start_date, today, total_billable_hours
+            )
             total_ac += tool_cost
             project_cv = -total_ac
             project_cpi = 0.0

@@ -175,3 +175,30 @@ async def get_daily_cost(
     working_days_per_month = (working_days_per_week * 52) / 12
 
     return round((annual_ctc / 12.0) / working_days_per_month, 2)
+
+
+async def get_tool_hourly_rate(
+    monthly_tool_cost: float,
+    db: AsyncSession,
+) -> float:
+    """
+    Calculates hourly tool rate based on standardized engineering economics logic:
+    Hourly Tool Rate = [MONTHLY_TOOL_COST] / 22 working days / 8 hours
+                     = [MONTHLY_TOOL_COST] / 176 hours
+    
+    If working calendar config is defined, uses configured working days and daily hours.
+    Default baseline: 22 working days / month, 8 hours / day.
+    """
+    if not monthly_tool_cost or monthly_tool_cost <= 0:
+        return 0.0
+
+    calendar = await _get_working_calendar(db)
+    working_days_config = calendar.working_days or {}
+    hours_per_day = calendar.full_day_hours or 8.0
+
+    working_days_per_week = sum(1 for day in _WEEKDAY_KEYS if working_days_config.get(day, False))
+    working_days_per_month = (working_days_per_week * 52) / 12 if working_days_per_week > 0 else 22.0
+
+    hourly_rate = (monthly_tool_cost / working_days_per_month) / hours_per_day
+    return round(hourly_rate, 4)
+

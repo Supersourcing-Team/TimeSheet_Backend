@@ -55,71 +55,17 @@ class UtilizationService:
         project_id: int,
         milestone_start: date,
         milestone_end: date,
+        milestone_hours_logged: float = 0.0,
     ) -> float:
         """
-        Calculate total tool cost allocated to a milestone period.
-
-        Supports allocation bases: working_day, calendar_day, week, month.
+        Calculate total tool cost allocated to a milestone period using the standardized
+        hourly rate formula: ([MONTHLY_TOOL_COST] / 22 / 8) * [MILESTONE_HOURS_LOGGED].
         """
-        query = (
-            select(ToolAllocation)
-            .options(selectinload(ToolAllocation.tool))
-            .where(
-                ToolAllocation.project_id == project_id,
-                ToolAllocation.status == "Active",
-                ToolAllocation.allocation_date <= milestone_end,
-            )
+        from app.common.financial_engine import FinancialEngine
+        engine = FinancialEngine(self.db)
+        return await engine.calculate_tool_cost_for_milestone(
+            project_id, milestone_start, milestone_end, milestone_hours_logged
         )
-        result = await self.db.execute(query)
-        allocations = result.scalars().all()
-
-        today = date.today()
-        total_tool_cost = 0.0
-
-        for ta in allocations:
-            if not ta.tool or ta.tool.cost_per_month <= 0:
-                continue
-
-            # Determine effective overlap period
-            tool_start = max(ta.allocation_date, milestone_start)
-            tool_end_raw = ta.deallocation_date if ta.deallocation_date else today
-            tool_end = min(tool_end_raw, milestone_end)
-
-            if tool_end < tool_start:
-                continue  # No overlap
-
-            monthly_cost = ta.tool.cost_per_month
-            basis = getattr(ta, "allocation_basis", "working_day") or "working_day"
-
-            if basis == "calendar_day":
-                calendar_days = (tool_end - tool_start).days + 1
-                # Average calendar days per month ≈ 30.44
-                daily_rate = monthly_cost / 30.44
-                total_tool_cost += daily_rate * calendar_days
-
-            elif basis == "working_day":
-                working_days = await get_working_days(tool_start, tool_end, self.db)
-                # Working days per month from calendar config
-                from app.common.working_days_calculator import _get_working_calendar, _WEEKDAY_KEYS
-                cal = await _get_working_calendar(self.db)
-                wd_config = cal.working_days or {}
-                wd_per_week = sum(1 for d in _WEEKDAY_KEYS if wd_config.get(d, False))
-                wd_per_month = (wd_per_week * 52) / 12 if wd_per_week > 0 else 22
-                daily_rate = monthly_cost / wd_per_month
-                total_tool_cost += daily_rate * working_days
-
-            elif basis == "week":
-                calendar_days = (tool_end - tool_start).days + 1
-                weeks = max(1, calendar_days / 7)
-                weekly_rate = monthly_cost / 4.0
-                total_tool_cost += weekly_rate * weeks
-
-            elif basis == "month":
-                calendar_days = (tool_end - tool_start).days + 1
-                months = max(0.0, calendar_days / 30.44)
-                total_tool_cost += monthly_cost * months
-
-        return round(total_tool_cost, 2)
 
     # ──────────────────────────────────────────────────────────────
     # Auto-allocate timesheets to milestones by date overlap
