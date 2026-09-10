@@ -1,3 +1,4 @@
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,7 +17,16 @@ class Settings(BaseSettings):
     # Default admin account seeded into the database on first run.
     # Change this to your own work email before running seed_users.py.
     ADMIN_EMAIL: str = "admin@yourcompany.com"
-    FRONTEND_URLS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173", "http://127.0.0.1:5173"]
+
+    # Add your production Vercel URL here or set FRONTEND_URLS env var on Render.
+    # Format for env var (JSON array string):
+    #   FRONTEND_URLS=["https://your-app.vercel.app"]
+    FRONTEND_URLS: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
     # SMTP Email Settings
     SMTP_HOST: str = ""

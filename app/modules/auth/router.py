@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, Response, Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,14 +15,19 @@ from app.core.config import settings
 
 router = APIRouter()
 
+# In production (Vercel → Render cross-site), cookies MUST be Secure + SameSite=None.
+# Locally (same-origin via Vite proxy) SameSite=lax works without HTTPS.
+_IS_PRODUCTION = os.getenv("ENVIRONMENT", "development") == "production"
+_COOKIE_SAMESITE = "none" if _IS_PRODUCTION else "lax"
+
 
 def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,  # Set to True in production with HTTPS
-        samesite="lax",
+        secure=_IS_PRODUCTION,
+        samesite=_COOKIE_SAMESITE,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/",
     )
@@ -29,16 +35,28 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str):
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=_IS_PRODUCTION,
+        samesite=_COOKIE_SAMESITE,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         path="/",
     )
 
 
 def clear_auth_cookies(response: Response):
-    response.delete_cookie(key="access_token", httponly=True, samesite="lax", path="/")
-    response.delete_cookie(key="refresh_token", httponly=True, samesite="lax", path="/")
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        secure=_IS_PRODUCTION,
+        samesite=_COOKIE_SAMESITE,
+        path="/",
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,
+        secure=_IS_PRODUCTION,
+        samesite=_COOKIE_SAMESITE,
+        path="/",
+    )
 
 
 @router.post("/google/login", summary="Login using Google SSO")

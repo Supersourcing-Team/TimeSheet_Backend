@@ -1,0 +1,50 @@
+### Environment & Secrets
+.env
+.env.*
+!.env.example
+
+### Database files
+*.db
+*.sqlite
+*.sqlite3
+
+### Virtual environments
+venv/
+.venv/
+env/
+
+### Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+### Logs
+*.log
+logs/
+app.log
+
+### Test artifacts
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+### Git
+.git/
+.gitignore
+
+### IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+### Uploaded files (runtime data)
+uploads/
+
+### AI tooling
+.agents/
+.claude/
+.gemini/
