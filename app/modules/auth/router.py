@@ -17,7 +17,7 @@ router = APIRouter()
 
 # In production (Vercel → Render cross-site), cookies MUST be Secure + SameSite=None.
 # Locally (same-origin via Vite proxy) SameSite=lax works without HTTPS.
-_IS_PRODUCTION = os.getenv("ENVIRONMENT", "development") == "production"
+_IS_PRODUCTION = settings.ENVIRONMENT == "production"
 _COOKIE_SAMESITE = "none" if _IS_PRODUCTION else "lax"
 
 
