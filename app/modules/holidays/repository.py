@@ -13,7 +13,8 @@ class HolidayRepository:
     ) -> List[Holiday]:
         query = select(Holiday)
         if year:
-            query = query.where(extract("year", Holiday.date) == year)
+            query = query.where(extract("year", Holiday.date) == year) 
+        
         if month:
             query = query.where(extract("month", Holiday.date) == month)
         query = query.order_by(Holiday.date.asc())
