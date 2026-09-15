@@ -25,8 +25,10 @@ class TimesheetService:
         current_user: User,
         timesheet_in: TimesheetCreate,
     ) -> Timesheet:
-        # 1. Validate date is not in the future
+        # 1. Validate date is not in the future, not a weekend, and not a holiday
         TimesheetValidator.validate_not_future_date(timesheet_in.timesheet_date)
+        TimesheetValidator.validate_not_weekend(timesheet_in.timesheet_date)
+        await TimesheetValidator.validate_not_holiday(db, timesheet_in.timesheet_date)
 
         # 2. Validate project assignment
         await TimesheetValidator.validate_project_assignment(
@@ -157,6 +159,9 @@ class TimesheetService:
         target_assignment = update_data.get("project_assignment_id", entry.project_assignment_id)
 
         TimesheetValidator.validate_not_future_date(target_date)
+        if "timesheet_date" in update_data:
+            TimesheetValidator.validate_not_weekend(target_date)
+            await TimesheetValidator.validate_not_holiday(db, target_date)
 
 
         if "project_assignment_id" in update_data:
