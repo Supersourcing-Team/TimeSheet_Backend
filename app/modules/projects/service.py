@@ -114,9 +114,12 @@ class ProjectService:
                     actual_duration = max(1, (end_date_to_use - start_date_to_use).days)
 
                 m_resp = MilestoneResponse.model_validate(m)
-                m_resp.completion_percentage = m.completion_percentage or 0.0
                 if str(m.status).lower() == "achieved":
                     m_resp.completion_percentage = 100.0
+                elif str(m.status).lower() == "in_progress" and (not m.completion_percentage or m.completion_percentage == 0.0):
+                    m_resp.completion_percentage = 35.0
+                else:
+                    m_resp.completion_percentage = m.completion_percentage or 0.0
 
                 m_resp.planned_value = m_fin.get("pv", 0.0)
                 m_resp.earned_value = m_fin.get("ev", 0.0)

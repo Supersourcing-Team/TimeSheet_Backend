@@ -4,6 +4,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from app.scheduler.weekly_timesheet_lock import lock_past_weekly_timesheets
 from app.scheduler.weekly_timesheet_reminder import send_weekly_timesheet_reminders
+from app.scheduler.daily_eod_slack_job import dispatch_daily_eod_report
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,15 @@ def start_scheduler():
         id="weekly_timesheet_reminder_job",
         replace_existing=True,
         name="Send weekly timesheet 40h reminders",
+    )
+
+    # Job 3: Daily EOD Timesheet Report to Slack - Every day at 20:00 (8:00 PM IST)
+    scheduler.add_job(
+        func=dispatch_daily_eod_report,
+        trigger=CronTrigger(hour=20, minute=0, timezone="Asia/Kolkata"),
+        id="daily_eod_slack_report_job",
+        replace_existing=True,
+        name="Daily EOD Timesheet Report to Slack (8:00 PM IST)",
     )
 
     scheduler.start()

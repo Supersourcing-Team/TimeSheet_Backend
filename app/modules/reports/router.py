@@ -178,3 +178,99 @@ async def export_pnl_pdf(
         headers={"Content-Disposition": "attachment; filename=portfolio_pnl_summary.pdf"},
     )
 
+
+pm_only = require_roles("Project_Manager")
+
+
+@router.get(
+    "/daily-eod/preview",
+    response_model=dict,
+    dependencies=[Depends(pm_only)],
+    summary="Get preview of all employees' submitted EOD logs for a specific day",
+)
+async def get_daily_eod_preview(
+    date_val: Optional[date] = Query(None, alias="date", description="Target EOD date (defaults to today)"),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.eod_report_service import EodReportService
+    target_date = date_val or date.today()
+    entries = await EodReportService.get_daily_eod_entries(db, target_date)
+    total_b = sum(e["billable_hours"] for e in entries)
+    total_nb = sum(e["non_billable_hours"] for e in entries)
+    unique_employees = len(set(e["employee_id"] for e in entries))
+
+    return success_response(
+        data={
+            "date": str(target_date),
+            "total_submissions": len(entries),
+            "total_employees": unique_employees,
+            "total_billable_hours": round(total_b, 2),
+            "total_non_billable_hours": round(total_nb, 2),
+            "grand_total_hours": round(total_b + total_nb, 2),
+            "entries": entries,
+        },
+        message="Daily EOD report preview retrieved successfully",
+    )
+
+
+@router.get(
+    "/daily-eod/export",
+    dependencies=[Depends(pm_only)],
+    summary="Download consolidated daily EOD timesheet report for all employees (.xlsx or .csv)",
+)
+async def export_daily_eod(
+    date_val: Optional[date] = Query(None, alias="date", description="Target EOD date (defaults to today)"),
+    format_type: str = Query("xlsx", alias="format", description="Export format (xlsx or csv)"),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from fastapi import Response
+    from app.services.eod_report_service import EodReportService
+
+    target_date = date_val or date.today()
+    entries = await EodReportService.get_daily_eod_entries(db, target_date)
+
+    if format_type.lower() == "csv":
+        csv_content = EodReportService.generate_daily_eod_csv(entries, target_date)
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=daily_eod_report_{target_date.strftime('%Y%m%d')}.csv"},
+        )
+
+    # Default to formatted Excel (.xlsx)
+    xlsx_bytes = EodReportService.generate_daily_eod_excel(entries, target_date)
+    return Response(
+        content=xlsx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=daily_eod_report_{target_date.strftime('%Y%m%d')}.xlsx"},
+    )
+
+
+@router.post(
+    "/daily-eod/slack-notify",
+    response_model=dict,
+    dependencies=[Depends(pm_only)],
+    summary="Send daily EOD report and Excel file directly to configured Slack channel",
+)
+async def notify_slack_daily_eod(
+    date_val: Optional[date] = Query(None, alias="date", description="Target EOD date (defaults to today)"),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.services.eod_report_service import EodReportService
+    from fastapi import HTTPException
+
+    target_date = date_val or date.today()
+    result = await EodReportService.send_daily_eod_to_slack(db, target_date)
+    if not result.get("ok"):
+        raise HTTPException(status_code=400, detail=result.get("error", "Failed to send report to Slack"))
+
+    return success_response(
+        data=result,
+        message=result.get("message", "Daily EOD report sent to Slack successfully"),
+    )
+
+
+

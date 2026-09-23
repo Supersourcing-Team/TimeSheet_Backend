@@ -49,6 +49,13 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
 
+    # Slack Integration Settings
+    SLACK_BOT_TOKEN: str = ""
+    SLACK_ACCESS_TOKEN: str = ""
+    SLACK_REFRESH_TOKEN: str = ""
+    SLACK_WEBHOOK_URL: str = ""
+    SLACK_CHANNEL_ID: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
