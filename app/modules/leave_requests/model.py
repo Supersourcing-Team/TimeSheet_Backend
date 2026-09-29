@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -28,6 +28,13 @@ class LeaveRequest(Base):
     # HH:MM e.g. '16:00'
     partial_end_time: Mapped[Optional[str]] = mapped_column(String(5), nullable=True)
     # HH:MM e.g. '18:00'
+
+    # Keka Sync fields
+    keka_leave_request_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    synced_to_keka: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    last_sync_error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    last_synced_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

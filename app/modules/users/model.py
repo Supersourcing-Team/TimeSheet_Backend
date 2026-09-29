@@ -55,6 +55,9 @@ class User(Base):
         "MilestoneAssignment", back_populates="user"
     )
     timesheets: Mapped[List["Timesheet"]] = relationship("Timesheet", back_populates="user")
+    keka_mapping: Mapped[Optional["KekaEmployeeMapping"]] = relationship(
+        "KekaEmployeeMapping", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
 
     @property
     def daily_cost(self) -> float:

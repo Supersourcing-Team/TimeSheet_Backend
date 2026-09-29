@@ -82,6 +82,13 @@ class LeaveRequestResponse(BaseModel):
     half_day_period: Optional[str] = None
     partial_start_time: Optional[str] = None
     partial_end_time: Optional[str] = None
+
+    # Keka Sync fields
+    keka_leave_request_id: Optional[str] = None
+    synced_to_keka: bool = False
+    last_sync_error: Optional[str] = None
+    last_synced_at: Optional[datetime] = None
+
     created_at: datetime
     updated_at: datetime
 

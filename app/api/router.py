@@ -63,6 +63,9 @@ api_router.include_router(milestones_router, prefix="/milestones", tags=["Milest
 from app.modules.utilization.router import router as utilization_router
 api_router.include_router(utilization_router, prefix="/utilization", tags=["Employee Utilization"])
 
+from app.modules.keka.router import router as keka_router
+api_router.include_router(keka_router, prefix="/keka", tags=["Keka Integration"])
+
 
 
 

@@ -56,6 +56,15 @@ class Settings(BaseSettings):
     SLACK_WEBHOOK_URL: str = ""
     SLACK_CHANNEL_ID: str = ""
 
+    # Keka HR Integration Settings
+    KEKA_CLIENT_ID: str = ""
+    KEKA_CLIENT_SECRET: str = ""
+    KEKA_API_KEY: str = ""
+    KEKA_COMPANY_NAME: str = ""  # Subdomain: e.g. 'mycompany' for mycompany.keka.com
+    KEKA_ENVIRONMENT: str = "production"  # 'production' or 'sandbox'
+    KEKA_TOKEN_URL: str = ""  # Optional override, defaults according to KEKA_ENVIRONMENT
+    KEKA_DEFAULT_LEAVE_TYPE_ID: str = ""  # Default Keka leave type UUID if not mapped per type
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()

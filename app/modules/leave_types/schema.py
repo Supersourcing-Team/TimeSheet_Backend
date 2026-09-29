@@ -12,6 +12,7 @@ class LeaveTypeBase(BaseModel):
     requires_document: Optional[bool] = False
     description: Optional[str] = None
     is_active: bool = True
+    keka_leave_type_id: Optional[str] = None
 
 
 
@@ -28,6 +29,7 @@ class LeaveTypeUpdate(BaseModel):
     requires_document: Optional[bool] = None
     description: Optional[str] = None
     is_active: Optional[bool] = None
+    keka_leave_type_id: Optional[str] = None
 
 
 

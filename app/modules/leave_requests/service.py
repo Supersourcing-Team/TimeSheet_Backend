@@ -1,3 +1,4 @@
+import logging
 from datetime import date, timedelta
 from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +13,7 @@ from app.modules.leave_requests.validator import LeaveRequestValidator
 from app.modules.leave_types.repository import LeaveTypeRepository
 from app.services.email_service import send_leave_approved_email, send_leave_rejected_email
 
+logger = logging.getLogger(__name__)
 
 
 class LeaveRequestService:
@@ -46,7 +48,22 @@ class LeaveRequestService:
             reason=request_in.reason,
             status="Approved",
         )
-        return await LeaveRequestRepository.create(db, leave_request)
+        created_leave = await LeaveRequestRepository.create(db, leave_request)
+
+        # 4. Optional Keka Leave Sync (non-blocking, fails gracefully if unconfigured or unmapped)
+        try:
+            from app.modules.keka.leave_service import KekaLeaveService
+            from app.services.keka.keka_auth import KekaAuthManager
+            if KekaAuthManager.is_configured():
+                await KekaLeaveService.sync_leave_to_keka(db, created_leave)
+        except Exception as keka_err:
+            logger.warning(
+                "Keka leave sync skipped or encountered an error for leave ID %s: %s",
+                getattr(created_leave, "id", None),
+                keka_err,
+            )
+
+        return created_leave
 
     @staticmethod
     async def get_my_leave_requests(
@@ -321,6 +338,16 @@ class LeaveRequestService:
 
                 current += timedelta(days=1)
 
+            # Optional Keka Leave Sync for marked records
+            try:
+                from app.modules.keka.leave_service import KekaLeaveService
+                from app.services.keka.keka_auth import KekaAuthManager
+                if KekaAuthManager.is_configured():
+                    for rec in created_records:
+                        await KekaLeaveService.sync_leave_to_keka(db, rec)
+            except Exception as keka_err:
+                logger.warning("Keka leave sync encountered an issue in mark_leave_from_timesheet: %s", keka_err)
+
             return created_records
 
         # ---- Single Day Leaves ----
@@ -365,6 +392,15 @@ class LeaveRequestService:
             partial_end_time=request_in.partial_end_time,
         )
         saved = await LeaveRequestRepository.create(db, leave_record)
+
+        # Optional Keka Leave Sync for single-day record
+        try:
+            from app.modules.keka.leave_service import KekaLeaveService
+            from app.services.keka.keka_auth import KekaAuthManager
+            if KekaAuthManager.is_configured():
+                await KekaLeaveService.sync_leave_to_keka(db, saved)
+        except Exception as keka_err:
+            logger.warning("Keka leave sync encountered an issue for single-day leave ID %s: %s", getattr(saved, "id", None), keka_err)
 
         return [saved]
 

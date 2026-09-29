@@ -44,7 +44,7 @@ class LeaveTypeRepository:
     @staticmethod
     async def update(db: AsyncSession, leave_type: LeaveType, **data) -> LeaveType:
         for key, value in data.items():
-            if value is not None:
+            if hasattr(leave_type, key):
                 setattr(leave_type, key, value)
         await db.commit()
         await db.refresh(leave_type)

@@ -16,6 +16,7 @@ from app.modules.working_calendar.model import WorkingCalendar
 from app.modules.settings.model import SystemSettings
 from app.modules.milestones.model import Milestone
 from app.modules.milestones.assignment_model import MilestoneAssignment
+from app.modules.keka.model import KekaEmployeeMapping
 
 __all__ = [
     "Base",
@@ -36,4 +37,5 @@ __all__ = [
     "SystemSettings",
     "Milestone",
     "MilestoneAssignment",
+    "KekaEmployeeMapping",
 ]
