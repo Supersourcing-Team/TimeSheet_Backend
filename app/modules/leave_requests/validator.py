@@ -17,7 +17,23 @@ class LeaveRequestValidator:
 
 
     @staticmethod
+    def validate_current_year(start_date: date, end_date: Optional[date] = None) -> None:
+        """Ensures selected leave dates belong strictly to the current calendar year."""
+        current_year = date.today().year
+        if start_date.year != current_year:
+            raise BadRequestException(
+                detail=f"Leaves can only be marked for the current calendar year ({current_year}). "
+                       f"Requests for previous or future years ({start_date.year}) are not allowed."
+            )
+        if end_date and end_date.year != current_year:
+            raise BadRequestException(
+                detail=f"Leaves can only be marked for the current calendar year ({current_year}). "
+                       f"Requests for previous or future years ({end_date.year}) are not allowed."
+            )
+
+    @staticmethod
     async def calculate_working_days(db: AsyncSession, start_date: date, end_date: date) -> int:
+        LeaveRequestValidator.validate_current_year(start_date, end_date)
         if start_date > end_date:
             raise BadRequestException(detail="start_date must be less than or equal to end_date")
 

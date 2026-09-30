@@ -293,6 +293,7 @@ class LeaveRequestService:
         if duration == "multiple_days":
             if not request_in.start_date or not request_in.end_date:
                 raise BadRequestException(detail="start_date and end_date are required for multiple_days leave.")
+            LeaveRequestValidator.validate_current_year(request_in.start_date, request_in.end_date)
             if request_in.start_date > request_in.end_date:
                 raise BadRequestException(detail="start_date must be before end_date.")
 
@@ -327,6 +328,8 @@ class LeaveRequestService:
         leave_date = request_in.leave_date
         if not leave_date:
             raise BadRequestException(detail="leave_date is required for single-day leaves.")
+
+        LeaveRequestValidator.validate_current_year(leave_date)
 
         # Partial day extra validation
         if duration == "partial_day":
