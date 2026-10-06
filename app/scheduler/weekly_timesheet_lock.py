@@ -1,6 +1,6 @@
 import logging
 from datetime import date, timedelta
-from sqlalchemy import select, func, update
+from sqlalchemy import select, func
 from app.core.database import AsyncSessionLocal
 from app.modules.timesheets.model import Timesheet
 

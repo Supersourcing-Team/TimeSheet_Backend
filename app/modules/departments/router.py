@@ -1,4 +1,3 @@
-from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +7,6 @@ from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin
 from app.modules.departments.schema import (
     DepartmentCreate,
-    DepartmentResponse,
     DepartmentUpdate,
 )
 from app.modules.departments.service import DepartmentService

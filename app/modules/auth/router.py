@@ -1,4 +1,3 @@
-import os
 from fastapi import APIRouter, Depends, Response, Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

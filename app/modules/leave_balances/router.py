@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin, require_project_manager
 from app.modules.users.model import User
-from app.modules.leave_balances.schema import LeaveBalanceCreate, LeaveBalanceResponse, LeaveBalanceUpdate
+from app.modules.leave_balances.schema import LeaveBalanceCreate, LeaveBalanceUpdate
 from app.modules.leave_balances.service import LeaveBalanceService
 
 router = APIRouter()

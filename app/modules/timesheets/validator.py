@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import BadRequestException, ForbiddenException, NotFoundException
+from app.core.exceptions import BadRequestException, ForbiddenException
 from app.modules.projects.model import Project
 from app.modules.project_assignments.model import ProjectAssignment
 from app.modules.timesheets.repository import TimesheetRepository

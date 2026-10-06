@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
@@ -8,7 +7,7 @@ from app.common.responses import success_response, created_response
 
 pm_only = require_roles("Project_Manager")
 from app.modules.users.model import User
-from app.modules.milestones.schema import MilestoneCreate, MilestoneUpdate, MilestoneResponse
+from app.modules.milestones.schema import MilestoneCreate, MilestoneUpdate
 from app.modules.milestones.service import MilestoneService
 
 router = APIRouter()

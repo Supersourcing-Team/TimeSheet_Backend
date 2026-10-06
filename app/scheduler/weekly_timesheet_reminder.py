@@ -1,8 +1,6 @@
 import logging
 from datetime import date, timedelta
-from typing import List, Tuple
 from sqlalchemy import select, func
-from sqlalchemy.orm import selectinload
 
 from app.core.database import AsyncSessionLocal
 from app.modules.timesheets.model import Timesheet

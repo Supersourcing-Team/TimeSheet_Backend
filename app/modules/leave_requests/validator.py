@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import List, Optional, Set
+from typing import Optional, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import BadRequestException, ConflictException

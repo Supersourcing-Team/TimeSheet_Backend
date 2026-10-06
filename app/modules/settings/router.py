@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin
 from app.modules.users.model import User
-from app.modules.settings.schema import SystemSettingsSchema, SystemSettingsUpdate
+from app.modules.settings.schema import SystemSettingsUpdate
 from app.modules.settings.service import SystemSettingsService
 
 router = APIRouter()

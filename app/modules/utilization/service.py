@@ -12,7 +12,7 @@ Implements the full data flow:
 from datetime import date
 from typing import List, Optional, Dict, Tuple
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -23,11 +23,8 @@ from app.common.working_days_calculator import (
 )
 from app.modules.milestones.model import Milestone
 from app.modules.milestones.assignment_model import MilestoneAssignment
-from app.modules.projects.model import Project
 from app.modules.project_assignments.model import ProjectAssignment
 from app.modules.timesheets.model import Timesheet
-from app.modules.tool_allocations.model import ToolAllocation
-from app.modules.tools.model import Tool
 from app.modules.users.model import User
 from app.modules.utilization.schema import (
     CapacityKPI,

@@ -1,15 +1,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
-import httpx
 
 from app.main import app
 from app.modules.auth.jwt import create_access_token
-from app.modules.keka.schema import (
-    KekaAllEmployeesResponse,
-    KekaEmployeeResponse,
-    KekaPaginatedEmployeesResponse,
-)
+from app.modules.keka.schema import KekaEmployeeResponse
 from app.services.keka.keka_auth import KekaAuthManager
 from app.services.keka.keka_client import KekaAPIError, KekaClient
 

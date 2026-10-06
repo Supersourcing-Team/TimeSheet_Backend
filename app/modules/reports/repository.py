@@ -2,7 +2,6 @@ from datetime import date
 from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.modules.clients.model import Client
 from app.modules.leave_requests.model import LeaveRequest

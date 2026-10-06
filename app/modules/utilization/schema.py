@@ -2,8 +2,7 @@
 Utilization API — Response schemas for Employee Utilization & Project Cost Control.
 """
 
-from datetime import date
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel
 
 

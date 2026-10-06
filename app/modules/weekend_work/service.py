@@ -1,7 +1,10 @@
+import logging
 from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import BadRequestException, ConflictException, ForbiddenException, NotFoundException
+logger = logging.getLogger(__name__)
+
+from app.core.exceptions import ConflictException, ForbiddenException, NotFoundException
 from app.modules.users.model import User
 from app.modules.weekend_work.model import WeekendWorkRequest
 from app.modules.weekend_work.repository import WeekendWorkRepository
@@ -113,7 +116,18 @@ class WeekendWorkService:
             db, request, status="Approved", approver_id=pm_user.id
         )
 
-        # Automatically insert or update Timesheet record
+        try:
+            await WeekendWorkService.record_approved_timesheet(db, request)
+        except Exception as e:
+            logger.warning("Could not auto-record timesheet for weekend work %s: %s", request.id, e)
+
+        return approved_request
+
+    @classmethod
+    async def record_approved_timesheet(
+        cls, db: AsyncSession, request: WeekendWorkRequest
+    ):
+        """Automatically insert or update Timesheet record upon weekend work approval."""
         from sqlalchemy import and_, select
         from app.modules.timesheets.model import Timesheet
 
@@ -131,27 +145,31 @@ class WeekendWorkService:
         res = await db.execute(stmt)
         existing_timesheet = res.scalars().first()
 
+        b_hours = getattr(request, "billable_hours", 0.0) or 0.0
+        b_summary = getattr(request, "billable_work_summary", None) or getattr(request, "reason", None)
+        nb_hours = getattr(request, "non_billable_hours", 0.0) or 0.0
+        nb_summary = getattr(request, "non_billable_work_summary", None)
+
         if existing_timesheet:
-            existing_timesheet.billable_hours = request.billable_hours
-            existing_timesheet.billable_work_summary = request.billable_work_summary or request.reason
-            existing_timesheet.non_billable_hours = request.non_billable_hours
-            existing_timesheet.non_billable_work_summary = request.non_billable_work_summary
+            existing_timesheet.billable_hours = b_hours
+            existing_timesheet.billable_work_summary = b_summary
+            existing_timesheet.non_billable_hours = nb_hours
+            existing_timesheet.non_billable_work_summary = nb_summary
             existing_timesheet.status = "approved"
         else:
             new_timesheet = Timesheet(
                 user_id=user_id,
                 project_assignment_id=project_assignment_id,
                 timesheet_date=work_date,
-                billable_hours=request.billable_hours,
-                billable_work_summary=request.billable_work_summary or request.reason,
-                non_billable_hours=request.non_billable_hours,
-                non_billable_work_summary=request.non_billable_work_summary,
+                billable_hours=b_hours,
+                billable_work_summary=b_summary,
+                non_billable_hours=nb_hours,
+                non_billable_work_summary=nb_summary,
                 status="approved",
             )
             db.add(new_timesheet)
 
         await db.commit()
-        return approved_request
 
     @staticmethod
     async def reject_weekend_work(

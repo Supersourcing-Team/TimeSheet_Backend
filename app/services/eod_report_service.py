@@ -1,7 +1,7 @@
 import io
 import csv
 from datetime import date, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -11,19 +11,7 @@ from openpyxl.utils import get_column_letter
 
 from app.modules.timesheets.model import Timesheet
 from app.modules.users.model import User
-from app.modules.departments.model import Department
 from app.modules.project_assignments.model import ProjectAssignment
-from app.modules.projects.model import Project
-from app.modules.roles.model import Role
-from app.modules.leave_types.model import LeaveType
-from app.modules.leave_balances.model import LeaveBalance
-from app.modules.leave_requests.model import LeaveRequest
-from app.modules.milestones.model import Milestone
-from app.modules.milestones.assignment_model import MilestoneAssignment
-from app.modules.weekend_work.model import WeekendWorkRequest
-from app.modules.clients.model import Client
-from app.modules.tool_allocations.model import ToolAllocation
-from app.modules.tools.model import Tool
 
 
 class EodReportService:
@@ -304,11 +292,6 @@ class EodReportService:
         logger = logging.getLogger(__name__)
 
         entries = await EodReportService.get_daily_eod_entries(db, target_date)
-        total_employees = len(set(e["employee_id"] for e in entries))
-        total_b = sum(e["billable_hours"] for e in entries)
-        total_nb = sum(e["non_billable_hours"] for e in entries)
-        grand_tot = sum(e["total_hours"] for e in entries)
-
         date_str = target_date.strftime("%A, %B %d, %Y")
         short_date = target_date.strftime("%Y%m%d")
 
@@ -341,7 +324,7 @@ class EodReportService:
         if msg_result.get("ok"):
             return {
                 "ok": True,
-                "message": f"Daily EOD report notification posted to Slack.",
+                "message": "Daily EOD report notification posted to Slack.",
                 "details": msg_result,
             }
 

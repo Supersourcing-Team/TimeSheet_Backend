@@ -3,8 +3,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_active_user
-from app.modules.users.model import User
 
 
 api_router = APIRouter()

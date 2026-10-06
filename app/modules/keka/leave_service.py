@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.modules.keka.repository import KekaEmployeeMappingRepository
 from app.modules.leave_requests.model import LeaveRequest
-from app.services.keka.keka_auth import KekaAuthError, KekaAuthManager
+from app.services.keka.keka_auth import KekaAuthError
 from app.services.keka.keka_client import KekaAPIError, KekaClient
 
 logger = logging.getLogger(__name__)
@@ -187,3 +187,102 @@ class KekaLeaveService:
                 "error": err_msg,
                 "message": err_msg,
             }
+
+    @staticmethod
+    async def sync_all_unsynced_leaves(db: AsyncSession) -> Dict[str, Any]:
+        """
+        Finds all local approved leave requests that have not yet been synced to Keka,
+        and pushes them sequentially to ensure idempotency.
+        """
+        from app.modules.leave_requests.repository import LeaveRequestRepository
+
+        unsynced_records = await LeaveRequestRepository.get_unsynced_leaves(db)
+        results = []
+        synced_count = 0
+        failed_count = 0
+
+        for record in unsynced_records:
+            res = await KekaLeaveService.sync_leave_to_keka(db, record)
+            results.append(res)
+            if res.get("synced"):
+                synced_count += 1
+            else:
+                failed_count += 1
+
+        return {
+            "total_found": len(unsynced_records),
+            "synced_count": synced_count,
+            "failed_count": failed_count,
+            "details": results,
+        }
+
+    @staticmethod
+    async def sync_leave_statuses_from_keka(
+        db: AsyncSession,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Pulls leave requests from Keka and updates corresponding local LeaveRequest records'
+        status (Pending, Approved, Rejected, Cancelled) if matched by keka_leave_request_id.
+        """
+        from app.modules.leave_requests.repository import LeaveRequestRepository
+
+        raw_leaves = await KekaClient.get_all_pages(
+            KekaClient.get_leave_requests,
+            from_date=from_date,
+            to_date=to_date,
+        )
+
+        status_mapping = {
+            0: "Pending",
+            1: "Approved",
+            2: "Rejected",
+            3: "Cancelled",
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "cancelled": "Cancelled",
+            "canceled": "Cancelled",
+        }
+
+        updated_count = 0
+        matched_count = 0
+        details = []
+
+        for item in raw_leaves:
+            keka_req_id = str(item.get("id") or item.get("leaveRequestId") or "").strip()
+            if not keka_req_id:
+                continue
+
+            local_leave = await LeaveRequestRepository.get_by_keka_id(db, keka_req_id)
+            if not local_leave:
+                continue
+
+            matched_count += 1
+            raw_status = item.get("status")
+            new_status = status_mapping.get(raw_status)
+            if not new_status and isinstance(raw_status, str):
+                new_status = status_mapping.get(raw_status.lower(), raw_status.title())
+
+            if new_status and local_leave.status != new_status:
+                old_status = local_leave.status
+                local_leave.status = new_status
+                local_leave.last_synced_at = datetime.now(timezone.utc)
+                await db.commit()
+                await db.refresh(local_leave)
+                updated_count += 1
+                details.append({
+                    "local_leave_id": local_leave.id,
+                    "keka_leave_request_id": keka_req_id,
+                    "old_status": old_status,
+                    "new_status": new_status,
+                })
+
+        return {
+            "total_keka_records": len(raw_leaves),
+            "matched_local_records": matched_count,
+            "updated_count": updated_count,
+            "details": details,
+        }
+

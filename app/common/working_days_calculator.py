@@ -11,9 +11,8 @@ instead of hardcoded values (260, 22, 8, 30.44, etc.).
 """
 
 from datetime import date, timedelta
-from typing import List, Optional
 
-from sqlalchemy import select, extract
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.holidays.model import Holiday

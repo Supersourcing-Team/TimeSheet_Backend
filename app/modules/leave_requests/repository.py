@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Optional, Tuple
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -147,7 +148,6 @@ class LeaveRequestRepository:
         leave_date: "date",
     ) -> List[LeaveRequest]:
         """Return all Approved/Pending leave records for a user that cover a specific date."""
-        from datetime import date as date_type
         result = await db.execute(
             select(LeaveRequest)
             .options(
@@ -183,5 +183,35 @@ class LeaveRequestRepository:
             )
         )
         return list(result.scalars().all())
+
+    @staticmethod
+    async def get_unsynced_leaves(db: AsyncSession) -> List[LeaveRequest]:
+        """Return all approved local leave requests that have not yet been pushed to Keka."""
+        result = await db.execute(
+            select(LeaveRequest)
+            .options(
+                selectinload(LeaveRequest.user),
+                selectinload(LeaveRequest.leave_type),
+            )
+            .filter(
+                LeaveRequest.synced_to_keka == False,  # noqa: E712
+                LeaveRequest.status.in_(["Approved", "approved"]),
+            )
+        )
+        return list(result.scalars().all())
+
+    @staticmethod
+    async def get_by_keka_id(db: AsyncSession, keka_leave_id: str) -> Optional[LeaveRequest]:
+        """Lookup a local leave request by Keka's remote leave request GUID."""
+        result = await db.execute(
+            select(LeaveRequest)
+            .options(
+                selectinload(LeaveRequest.user),
+                selectinload(LeaveRequest.leave_type),
+            )
+            .filter(LeaveRequest.keka_leave_request_id == keka_leave_id)
+        )
+        return result.scalar_one_or_none()
+
 
 

@@ -231,3 +231,153 @@ class KekaLeaveSyncActionResponse(BaseModel):
     message: str
 
     model_config = ConfigDict(extra="ignore")
+
+
+# =============================================================================
+# CATEGORY 1 – HR CORE & EMPLOYEE LIFECYCLE SCHEMAS
+# =============================================================================
+
+
+class KekaEmployeeCreateRequest(BaseModel):
+    """Schema for creating a new employee in Keka (POST /hris/employees)."""
+
+    employeeNumber: Optional[str] = None
+    displayName: Optional[str] = None
+    firstName: Optional[str] = None
+    middleName: Optional[str] = None
+    lastName: Optional[str] = None
+    email: Optional[str] = None
+    mobileNumber: Optional[str] = None
+    gender: Optional[int] = None  # 0=Female, 1=Male, 2=Other, 3=Unknown
+    dateOfBirth: Optional[str] = None
+    dateJoined: Optional[str] = None
+    department: Optional[str] = None
+    businessUnit: Optional[str] = None
+    jobTitle: Optional[str] = None
+    secondaryJobTitle: Optional[str] = None
+    location: Optional[str] = None
+    legalEntity: Optional[str] = None
+    nationality: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class KekaJobDetailsUpdateRequest(BaseModel):
+    """Schema for updating employee job details (PUT /hris/employees/jobdetails)."""
+
+    employeeId: Optional[str] = None
+    user_id: Optional[int] = None
+    employeeNumber: Optional[str] = None
+    location: Optional[str] = None
+    businessUnit: Optional[str] = None
+    department: Optional[str] = None
+    jobTitle: Optional[str] = None
+    secondaryJobTitle: Optional[str] = None
+    reportsToEmail: Optional[str] = None
+    reportingManager: Optional[str] = None
+    dottedLineManager: Optional[str] = None
+    attendanceNumber: Optional[str] = None
+    timeType: Optional[int] = None  # 0=FullTime, 1=PartTime, etc.
+    attendanceCaptureScheme: Optional[str] = None
+    expensePolicy: Optional[str] = None
+    noticePeriod: Optional[str] = None
+    holidayList: Optional[str] = None
+    costCenter: Optional[str] = None
+    leavePlan: Optional[str] = None
+    payBand: Optional[str] = None
+    payGrade: Optional[str] = None
+    shiftPolicy: Optional[str] = None
+    weeklyOffPolicy: Optional[str] = None
+    attendancePenalisationPolicy: Optional[str] = None
+    customFields: Optional[Dict[str, Any]] = None
+    workerType: Optional[int] = None  # 0=Permanent, 1=Contract, etc.
+    contingentTypeId: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_manager(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if data.get("reportsToEmail") and not data.get("reportingManager"):
+                data["reportingManager"] = data["reportsToEmail"]
+        return data
+
+
+class KekaEmployeeExitRequest(BaseModel):
+    """Schema for employee exit / deactivation (POST /hris/employees/{id}/exitrequest)."""
+
+    exitType: Optional[int] = 0  # 0=Resignation, 1=Termination, etc.
+    exitReason: Optional[str] = None
+    resignationDate: Optional[str] = None
+    lastWorkingDate: Optional[str] = None
+    isOkToRehire: Optional[bool] = True
+    comments: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+# =============================================================================
+# CATEGORY 5 – ATTENDANCE TIME ENTRY SCHEMA
+# =============================================================================
+
+
+class KekaAddressSchema(BaseModel):
+    """Address schema for attendance location."""
+
+    addressLine1: Optional[str] = None
+    addressLine2: Optional[str] = None
+    countryCode: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    zip: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class KekaAttendanceTimeEntryCreate(BaseModel):
+    """Schema for recording employee attendance time entry (POST /attendance/employee/{id}/timeentry)."""
+
+    timestamp: str  # ISO 8601 date-time string
+    employeeIdentifier: Optional[str] = None
+    user_id: Optional[int] = None
+    note: Optional[str] = None
+    punchStatus: int = 0  # 0=In, 1=Out
+    attendanceLogSource: Optional[int] = 0
+    manualClockinType: Optional[int] = 0
+    premiseName: Optional[str] = None
+    locationAddress: Optional[KekaAddressSchema] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+# =============================================================================
+# CATEGORY 12 & 13 – WORK FROM HOME & ON DUTY SCHEMAS
+# =============================================================================
+
+
+class KekaWFHCreateRequest(BaseModel):
+    """Schema for submitting Work From Home request (POST /time/wfh)."""
+
+    employeeId: str
+    fromDate: str
+    toDate: str
+    fromSession: int = 0  # 0=Session 1, 1=Session 2
+    toSession: int = 1    # 0=Session 1, 1=Session 2
+    note: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class KekaODCreateRequest(BaseModel):
+    """Schema for submitting On Duty request (POST /time/od)."""
+
+    employeeId: str
+    fromDate: str
+    toDate: str
+    fromSession: int = 0  # 0=Session 1, 1=Session 2
+    toSession: int = 1    # 0=Session 1, 1=Session 2
+    note: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+

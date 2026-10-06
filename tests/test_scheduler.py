@@ -1,9 +1,7 @@
 import pytest
 from unittest.mock import patch, AsyncMock, MagicMock
-from datetime import date
-
 from app.scheduler.weekly_timesheet_lock import lock_past_weekly_timesheets
-from app.scheduler.weekly_timesheet_reminder import send_weekly_timesheet_reminders, get_user_logged_hours_for_range
+from app.scheduler.weekly_timesheet_reminder import send_weekly_timesheet_reminders
 from app.services.email_service import (
     send_email,
     send_leave_approved_email,

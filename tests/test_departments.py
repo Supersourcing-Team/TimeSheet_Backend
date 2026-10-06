@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
-from app.modules.departments.model import Department
-from app.modules.departments.schema import DepartmentCreate, DepartmentUpdate
+from unittest.mock import patch, AsyncMock
+from app.modules.departments.schema import DepartmentCreate
 from app.modules.departments.service import DepartmentService
 
 

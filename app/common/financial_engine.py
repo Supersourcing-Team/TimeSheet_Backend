@@ -1,18 +1,12 @@
-import logging
-from datetime import date
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Dict, Any
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.common.working_days_calculator import (
-    get_working_days,
-    get_available_hours,
     get_hourly_cost,
     get_tool_hourly_rate,
-    _get_working_calendar,
-    _WEEKDAY_KEYS
 )
 from app.modules.milestones.model import Milestone
 from app.modules.projects.model import Project
@@ -76,7 +70,6 @@ class FinancialEngine:
         """
         Calculates AC, EV, PV, CV, CPI, EAC, and ETC for a milestone using Timesheet data.
         """
-        today = date.today()
         m_start = milestone.start_date
         m_end_expected = milestone.expected_completion_date
 
@@ -198,8 +191,6 @@ class FinancialEngine:
 
         # Fallback if no milestones but project has timesheets/tools
         if not milestones:
-            today = date.today()
-            start_date = project.start_date or today
             # tool_cost will be calculated after total_billable_hours is aggregated below
             
             # Labor Cost

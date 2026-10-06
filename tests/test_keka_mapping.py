@@ -7,11 +7,7 @@ from app.main import app
 from app.modules.auth.jwt import create_access_token
 from app.modules.keka.model import KekaEmployeeMapping
 from app.modules.keka.repository import KekaEmployeeMappingRepository
-from app.modules.keka.schema import (
-    KekaEmployeeMappingListResponse,
-    KekaEmployeeMappingResponse,
-    KekaMappingPreviewResponse,
-)
+from app.modules.keka.schema import KekaEmployeeMappingResponse
 from app.modules.keka.service import KekaEmployeeMappingService
 from app.modules.roles.model import Role
 from app.modules.users.model import User

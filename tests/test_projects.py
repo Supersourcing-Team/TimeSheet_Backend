@@ -44,6 +44,22 @@ class MockProject:
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
 
+    def model_dump(self, mode="json"):
+        return {
+            "id": self.id,
+            "client_id": self.client_id,
+            "project_manager_id": self.project_manager_id,
+            "project_name": self.project_name,
+            "budget": self.budget,
+            "description": self.description,
+            "status": self.status,
+            "is_active": self.is_active,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+        }
+
 
 def test_create_project_pm_success():
     payload = {
@@ -61,6 +77,7 @@ def test_create_project_pm_success():
          patch("app.modules.users.repository.UserRepository.get_by_id", return_value=PM_USER), \
          patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project), \
          patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project), \
+         patch("app.modules.projects.service.ProjectService.compute_financials_for_projects", new_callable=AsyncMock, return_value=[MockProject(budget=None)]), \
          patch("app.modules.project_assignments.repository.ProjectAssignmentRepository.get_any_assignment", return_value=True):
 
         response = client.post("/api/v1/projects/", json=payload, headers=pm_auth_headers())
@@ -124,6 +141,7 @@ def test_am_create_and_view_budget_success():
          patch("app.modules.users.repository.UserRepository.get_by_id", return_value=PM_USER), \
          patch("app.modules.projects.service.ProjectRepository.create", return_value=created_project), \
          patch("app.modules.projects.service.ProjectRepository.get_by_id", return_value=created_project), \
+         patch("app.modules.projects.service.ProjectService.compute_financials_for_projects", new_callable=AsyncMock, return_value=[created_project]), \
          patch("app.modules.project_assignments.repository.ProjectAssignmentRepository.get_any_assignment", return_value=True):
 
         response = client.post("/api/v1/projects/", json=payload, headers=am_auth_headers())

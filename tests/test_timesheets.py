@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 import pytest
 
@@ -62,6 +62,37 @@ EMPLOYEE_USER = MockUser(id=1, role_name="Employee")
 def employee_headers():
     token = create_access_token(data={"sub": "1"})
     return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture(autouse=True)
+def override_database():
+    from app.core.database import get_db
+    from unittest.mock import AsyncMock
+
+    class MockScalars:
+        def all(self):
+            return []
+        def first(self):
+            return None
+
+    class MockResult:
+        def scalars(self):
+            return MockScalars()
+        def scalar_one_or_none(self):
+            return None
+        def scalar(self):
+            return 0
+
+    mock_db = AsyncMock()
+    mock_db.execute.return_value = MockResult()
+
+    async def _get_db():
+        yield mock_db
+
+    app.dependency_overrides[get_db] = _get_db
+    with patch("app.modules.holidays.repository.HolidayRepository.get_by_date", return_value=None), \
+         patch("app.modules.leave_requests.repository.LeaveRequestRepository.get_approved_leaves_for_date", return_value=[]):
+        yield
+    app.dependency_overrides.pop(get_db, None)
 
 def test_billable_only():
     payload = {
@@ -223,12 +254,14 @@ def test_pm_cannot_update_timesheet():
     payload = {
         "billable_hours": 4.0,
     }
-    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER):
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER), \
+         patch("app.modules.timesheets.repository.TimesheetRepository.get_by_id", return_value=MockTimesheet(id=1, user_id=1)):
         response = client.put("/api/v1/timesheets/1", json=payload, headers=pm_headers())
         assert response.status_code == 403
 
 def test_pm_cannot_delete_timesheet():
-    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER):
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=PM_USER), \
+         patch("app.modules.timesheets.repository.TimesheetRepository.get_by_id", return_value=MockTimesheet(id=1, user_id=1)):
         response = client.delete("/api/v1/timesheets/1", headers=pm_headers())
         assert response.status_code == 403
 

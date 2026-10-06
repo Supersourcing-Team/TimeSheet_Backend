@@ -1,4 +1,4 @@
-from datetime import date, datetime
+import datetime as dt
 
 from sqlalchemy import Date, DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -10,9 +10,9 @@ class Holiday(Base):
     __tablename__ = "holidays"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    date: Mapped[dt.date] = mapped_column(Date, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     type: Mapped[str] = mapped_column(String(50), nullable=False, default="National")
     description: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_mandatory: Mapped[bool] = mapped_column(default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

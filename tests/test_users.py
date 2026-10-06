@@ -1,9 +1,7 @@
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.modules.users.model import User
-from app.modules.roles.model import Role
 from app.modules.auth.jwt import create_access_token
 
 

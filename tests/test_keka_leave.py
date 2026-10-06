@@ -5,13 +5,8 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.modules.auth.jwt import create_access_token
-from app.modules.keka.leave_service import KekaLeaveService, KekaMappingNotFoundError
-from app.modules.keka.model import KekaEmployeeMapping
+from app.modules.keka.leave_service import KekaLeaveService
 from app.modules.keka.repository import KekaEmployeeMappingRepository
-from app.modules.keka.schema import (
-    KekaLeaveSyncActionResponse,
-    KekaLeaveSyncStatusResponse,
-)
 from app.modules.leave_requests.model import LeaveRequest
 from app.modules.leave_requests.repository import LeaveRequestRepository
 from app.modules.leave_types.model import LeaveType

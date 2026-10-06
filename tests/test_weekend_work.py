@@ -46,6 +46,10 @@ class MockWeekendWorkRequest:
         self.work_date = date(2026, 8, 15)  # Saturday
         self.planned_hours = planned_hours
         self.reason = "Urgent project deployment"
+        self.billable_hours = planned_hours
+        self.non_billable_hours = 0.0
+        self.billable_work_summary = None
+        self.non_billable_work_summary = None
         self.status = status
         self.approved_by = None
         self.approved_at = None

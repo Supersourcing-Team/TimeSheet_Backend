@@ -17,11 +17,6 @@ from app.dependencies.permissions import require_roles
 from app.common.responses import success_response
 from app.modules.users.model import User
 from app.modules.utilization.service import UtilizationService
-from app.modules.utilization.schema import (
-    UtilizationDashboardResponse,
-    EmployeeUtilizationResponse,
-    MilestoneUtilizationResponse,
-)
 
 ac_or_admin = require_roles("Account_Manager", "Admin")
 

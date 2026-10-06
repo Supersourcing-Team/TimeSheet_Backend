@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,7 +5,7 @@ from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_roles
-from app.modules.projects.schema import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.modules.projects.schema import ProjectCreate, ProjectUpdate
 from app.modules.projects.service import ProjectService
 
 

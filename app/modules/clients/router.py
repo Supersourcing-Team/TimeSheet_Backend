@@ -1,11 +1,10 @@
-from typing import List
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.permissions import require_roles
-from app.modules.clients.schema import ClientCreate, ClientUpdate, ClientResponse
+from app.modules.clients.schema import ClientCreate, ClientUpdate
 from app.modules.clients.service import ClientService
 
 

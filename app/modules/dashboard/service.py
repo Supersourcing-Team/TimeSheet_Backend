@@ -1,8 +1,7 @@
 from datetime import date, timedelta
-from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, extract, func
+from sqlalchemy import select, func
 
 from app.modules.users.model import User
 from app.modules.dashboard.schema import (
@@ -15,7 +14,6 @@ from app.modules.dashboard.schema import (
     AdminOverviewWidget,
 )
 from app.modules.holidays.model import Holiday
-from app.modules.holidays.repository import HolidayRepository
 from app.modules.leave_balances.repository import LeaveBalanceRepository
 from app.modules.leave_requests.repository import LeaveRequestRepository
 from app.modules.project_assignments.repository import ProjectAssignmentRepository

@@ -1,5 +1,5 @@
 from datetime import date
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +10,6 @@ from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_admin
 from app.modules.users.model import User
 from app.modules.leave_requests.schema import (
-    LeaveCheckDateResponse,
     LeaveMarkFromTimesheetRequest,
     LeaveRequestResponse,
     LeaveRequestReview,

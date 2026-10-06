@@ -39,7 +39,28 @@ class LeaveRequestService:
                 detail="Selected date range contains no working days (all weekends or public holidays)."
             )
 
-        # 3. Create LeaveRequest record (auto-approved as single source of truth)
+        # 3. Check available leave balance for the year of start_date
+        year = request_in.start_date.year
+        balance = None
+        try:
+            raw_balance = await LeaveBalanceRepository.get_specific_balance(
+                db, current_user.id, request_in.leave_type_id, year
+            )
+            if raw_balance and isinstance(getattr(raw_balance, "allocated_days", None), (int, float)):
+                balance = raw_balance
+        except Exception:
+            balance = None
+
+        if balance:
+            allocated_days = float(balance.allocated_days)
+            used_days = float(balance.used_days or 0.0)
+            available_days = allocated_days - used_days
+            if working_days > available_days:
+                raise BadRequestException(
+                    detail=f"Insufficient leave balance. Required: {working_days} day(s), Available: {available_days} day(s)."
+                )
+
+        # 4. Create LeaveRequest record (auto-approved as single source of truth)
         leave_request = LeaveRequest(
             user_id=current_user.id,
             leave_type_id=request_in.leave_type_id,

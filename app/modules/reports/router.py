@@ -8,7 +8,6 @@ from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_roles
 from app.modules.users.model import User
-from app.modules.reports.schema import LeaveReportSummary, TimesheetReportSummary
 from app.modules.reports.service import ReportService
 
 router = APIRouter()

@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +6,7 @@ from app.core.database import get_db
 from app.dependencies.permissions import require_roles
 from app.dependencies.auth import get_current_active_user
 from app.modules.users.model import User
-from app.modules.project_assignments.schema import ProjectAssignmentCreate, ProjectAssignmentResponse
+from app.modules.project_assignments.schema import ProjectAssignmentCreate
 from app.modules.project_assignments.service import ProjectAssignmentService
 
 router = APIRouter()
