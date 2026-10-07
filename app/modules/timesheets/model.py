@@ -1,11 +1,14 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Date, DateTime, Float, ForeignKey, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from sqlalchemy import UniqueConstraint
+
+if TYPE_CHECKING:
+    from app.modules.project_assignments.model import ProjectAssignment
+    from app.modules.users.model import User
 
 
 class Timesheet(Base):
