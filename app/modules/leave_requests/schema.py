@@ -25,6 +25,8 @@ class LeaveRequestSubmit(BaseModel):
     start_date: date
     end_date: date
     reason: str = Field(..., min_length=3, description="Reason for leave request")
+    leave_duration_type: Optional[str] = "full_day"
+    half_day_period: Optional[str] = None
 
 
 class LeaveRequestReview(BaseModel):

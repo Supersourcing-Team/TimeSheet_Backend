@@ -43,14 +43,14 @@ class MockLeaveBalance:
 
 
 class MockLeaveRequest:
-    def __init__(self, id=1, user_id=2, leave_type_id=1, status="Pending"):
+    def __init__(self, id=1, user_id=2, leave_type_id=1, status="Pending", **kwargs):
         from datetime import datetime
         self.id = id
         self.user_id = user_id
         self.leave_type_id = leave_type_id
-        self.start_date = date(2026, 8, 17)  # Monday
-        self.end_date = date(2026, 8, 19)    # Wednesday (3 working days)
-        self.reason = "Vacation"
+        self.start_date = kwargs.get("start_date", date(2026, 8, 17))
+        self.end_date = kwargs.get("end_date", date(2026, 8, 19))
+        self.reason = kwargs.get("reason", "Vacation")
         self.status = status
         self.managers_user_id = None
         self.rejection_reason = None
@@ -59,6 +59,8 @@ class MockLeaveRequest:
         self.user = EMPLOYEE_USER
         self.leave_type = MockLeaveType()
         self.manager = None
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 ADMIN_USER = MockUser(id=1, role_name="Admin")
@@ -168,3 +170,88 @@ def test_reject_leave_request_success():
         data = response.json()
         assert data["success"] is True
         assert data["data"]["status"] == "Rejected"
+
+
+# ---------------------------------------------------------------------------
+# Additional Lifecycle & Balance Accounting Tests for Bug #2
+# ---------------------------------------------------------------------------
+
+def test_approve_already_approved_leave_request_conflict():
+    """Attempting to approve a leave that is already Approved returns 409 Conflict."""
+    already_approved = MockLeaveRequest(id=1, user_id=2, status="Approved")
+
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=ADMIN_USER), \
+         patch("app.modules.leave_requests.service.LeaveRequestRepository.get_by_id", return_value=already_approved):
+
+        response = client.put("/api/v1/leave-requests/1/approve", headers=admin_headers())
+        assert response.status_code == 409
+        assert "Cannot approve leave request with status 'Approved'" in response.json()["message"]
+
+
+def test_reject_already_approved_leave_request_conflict():
+    """Attempting to reject a leave that is already Approved returns 409 Conflict."""
+    already_approved = MockLeaveRequest(id=1, user_id=2, status="Approved")
+
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=ADMIN_USER), \
+         patch("app.modules.leave_requests.service.LeaveRequestRepository.get_by_id", return_value=already_approved):
+
+        response = client.put(
+            "/api/v1/leave-requests/1/reject",
+            json={"rejection_reason": "Changed mind"},
+            headers=admin_headers(),
+        )
+        assert response.status_code == 409
+        assert "Cannot reject leave request with status 'Approved'" in response.json()["message"]
+
+
+def test_cancel_pending_leave_request_no_balance_change():
+    """Cancelling a Pending leave request sets status to Cancelled without refunding balance."""
+    req = MockLeaveRequest(id=1, user_id=2, status="Pending")
+    cancelled_req = MockLeaveRequest(id=1, user_id=2, status="Cancelled")
+
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER), \
+         patch("app.modules.leave_requests.service.LeaveRequestRepository.get_by_id", return_value=req), \
+         patch("app.modules.leave_requests.service.LeaveRequestRepository.update_status", return_value=cancelled_req):
+
+        response = client.delete("/api/v1/leave-requests/1/cancel", headers=employee_headers())
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["data"]["status"] == "Cancelled"
+
+
+def test_cancel_already_cancelled_leave_conflict():
+    """Cancelling an already cancelled leave raises 409 Conflict."""
+    req = MockLeaveRequest(id=1, user_id=2, status="Cancelled")
+
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER), \
+         patch("app.modules.leave_requests.service.LeaveRequestRepository.get_by_id", return_value=req):
+
+        response = client.delete("/api/v1/leave-requests/1/cancel", headers=employee_headers())
+        assert response.status_code == 409
+        assert "Leave request is already cancelled" in response.json()["message"]
+
+
+def test_mark_leave_from_timesheet_remains_auto_approved():
+    """The separate mark-leave-from-timesheet endpoint creates auto-Approved records."""
+    payload = {
+        "leave_date": "2026-08-17",
+        "leave_duration_type": "full_day",
+        "leave_type_id": 1,
+        "reason": "Doctor visit",
+    }
+    leave_type = MockLeaveType()
+    created_rec = MockLeaveRequest(id=50, user_id=2, status="Approved", start_date=date(2026, 8, 17), end_date=date(2026, 8, 17))
+
+    with patch("app.dependencies.auth.AuthRepository.get_user_by_id", return_value=EMPLOYEE_USER), \
+         patch("app.modules.leave_types.repository.LeaveTypeRepository.get_by_id", return_value=leave_type), \
+         patch("app.modules.leave_requests.validator.LeaveRequestValidator.validate_no_duplicate_leave"), \
+         patch("app.modules.leave_requests.validator.LeaveRequestValidator.validate_no_timesheet_conflict"), \
+         patch("app.modules.leave_requests.service.LeaveRequestRepository.create", return_value=created_rec):
+
+        response = client.post("/api/v1/leave-requests/mark-from-timesheet", json=payload, headers=employee_headers())
+        assert response.status_code == 201
+        data = response.json()
+        assert data["success"] is True
+        assert len(data["data"]) == 1
+        assert data["data"][0]["status"] == "Approved"

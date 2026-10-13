@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ForbiddenException, NotFoundException
+from app.core.exceptions import BadRequestException, ConflictException, ForbiddenException, NotFoundException
 from app.modules.timesheets.model import Timesheet
 from app.modules.users.model import User
 from app.modules.timesheets.repository import TimesheetRepository
@@ -27,7 +27,9 @@ class TimesheetService:
     ) -> Timesheet:
         # 1. Validate date is not in the future, not a weekend, and not a holiday
         TimesheetValidator.validate_not_future_date(timesheet_in.timesheet_date)
-        TimesheetValidator.validate_not_weekend(timesheet_in.timesheet_date)
+        await TimesheetValidator.validate_not_weekend(
+            db, current_user.id, timesheet_in.project_assignment_id, timesheet_in.timesheet_date
+        )
         await TimesheetValidator.validate_not_holiday(db, timesheet_in.timesheet_date)
 
         # 2. Validate project assignment
@@ -78,6 +80,97 @@ class TimesheetService:
             non_billable_work_summary=timesheet_in.non_billable_work_summary,
         )
         return await TimesheetRepository.create(db, timesheet)
+
+    @staticmethod
+    async def create_timesheets_batch(
+        db: AsyncSession,
+        current_user: User,
+        batch_in: List[TimesheetCreate],
+    ) -> List[Timesheet]:
+        """
+        Atomically process and persist a batch of timesheet entries.
+        Uses a nested savepoint / transaction block: if any row fails validation or persistence,
+        all partial database writes are rolled back.
+        """
+        if not batch_in:
+            return []
+
+        # Validate duplicate combinations within the batch itself
+        seen_keys = set()
+        for item in batch_in:
+            key = (item.project_assignment_id, item.timesheet_date)
+            if key in seen_keys:
+                raise BadRequestException(
+                    detail=f"Duplicate entry in batch for assignment {item.project_assignment_id} on {item.timesheet_date}."
+                )
+            seen_keys.add(key)
+
+        created_or_updated: List[Timesheet] = []
+        try:
+            async with db.begin_nested():
+                for item in batch_in:
+                    # Validate date
+                    TimesheetValidator.validate_not_future_date(item.timesheet_date)
+                    await TimesheetValidator.validate_not_weekend(
+                        db, current_user.id, item.project_assignment_id, item.timesheet_date
+                    )
+                    await TimesheetValidator.validate_not_holiday(db, item.timesheet_date)
+                    await TimesheetValidator.validate_project_assignment(
+                        db, current_user.id, item.project_assignment_id
+                    )
+
+                    existing = await TimesheetRepository.get_by_user_project_date(
+                        db, current_user.id, item.project_assignment_id, item.timesheet_date
+                    )
+
+                    target_total_hours = item.billable_hours + item.non_billable_hours
+                    await TimesheetValidator.validate_daily_hours(
+                        db,
+                        current_user.id,
+                        item.timesheet_date,
+                        target_total_hours,
+                        exclude_id=existing.id if existing else None,
+                    )
+                    await TimesheetValidator.validate_no_leave_conflict(
+                        db,
+                        current_user.id,
+                        item.timesheet_date,
+                        target_total_hours,
+                    )
+
+                    if existing:
+                        update_data = {
+                            "billable_hours": item.billable_hours,
+                            "billable_work_summary": item.billable_work_summary,
+                            "non_billable_hours": item.non_billable_hours,
+                            "non_billable_work_summary": item.non_billable_work_summary,
+                        }
+                        for field, value in update_data.items():
+                            if value is not None:
+                                setattr(existing, field, value)
+                        db.add(existing)
+                        created_or_updated.append(existing)
+                    else:
+                        ts = Timesheet(
+                            user_id=current_user.id,
+                            project_assignment_id=item.project_assignment_id,
+                            timesheet_date=item.timesheet_date,
+                            billable_hours=item.billable_hours,
+                            billable_work_summary=item.billable_work_summary,
+                            non_billable_hours=item.non_billable_hours,
+                            non_billable_work_summary=item.non_billable_work_summary,
+                        )
+                        db.add(ts)
+                        created_or_updated.append(ts)
+
+                await db.flush()
+            await db.commit()
+            for obj in created_or_updated:
+                await db.refresh(obj)
+            return created_or_updated
+        except Exception:
+            await db.rollback()
+            raise
 
 
     @staticmethod
@@ -150,8 +243,14 @@ class TimesheetService:
         if not entry:
             raise NotFoundException(detail="Timesheet entry not found.")
 
-        if entry.user_id != current_user.id:
+        role_name = getattr(current_user.role, "name", None) or getattr(current_user, "role", "")
+        is_admin = role_name in ("Admin", "admin")
+
+        if entry.user_id != current_user.id and not is_admin:
             raise ForbiddenException(detail="You can only update your own timesheet entries.")
+
+        if entry.status == "approved" and not is_admin:
+            raise BadRequestException(detail="Approved timesheet entries cannot be modified.")
 
         update_data = timesheet_in.model_dump(exclude_unset=True)
 
@@ -159,8 +258,11 @@ class TimesheetService:
         target_assignment = update_data.get("project_assignment_id", entry.project_assignment_id)
 
         TimesheetValidator.validate_not_future_date(target_date)
+        if "timesheet_date" in update_data or "project_assignment_id" in update_data:
+            await TimesheetValidator.validate_not_weekend(
+                db, current_user.id, target_assignment, target_date
+            )
         if "timesheet_date" in update_data:
-            TimesheetValidator.validate_not_weekend(target_date)
             await TimesheetValidator.validate_not_holiday(db, target_date)
 
 
@@ -200,10 +302,76 @@ class TimesheetService:
         if not entry:
             raise NotFoundException(detail="Timesheet entry not found.")
 
-        if entry.user_id != current_user.id:
+        role_name = getattr(current_user.role, "name", None) or getattr(current_user, "role", "")
+        is_admin = role_name in ("Admin", "admin")
+
+        if entry.user_id != current_user.id and not is_admin:
             raise ForbiddenException(detail="You can only delete your own timesheet entries.")
 
+        if entry.status == "approved" and not is_admin:
+            raise BadRequestException(detail="Approved timesheet entries cannot be deleted.")
+
         await TimesheetRepository.delete(db, entry)
+
+    @staticmethod
+    async def approve_timesheet(
+        db: AsyncSession,
+        timesheet_id: int,
+        reviewer_user: User,
+    ) -> Timesheet:
+        entry = await TimesheetRepository.get_by_id(db, timesheet_id)
+        if not entry:
+            raise NotFoundException(detail="Timesheet entry not found.")
+
+        # Check authorization: Admin or assigned PM for the timesheet's project
+        role_name = getattr(reviewer_user.role, "name", None) or getattr(reviewer_user, "role", "")
+        is_admin = role_name in ("Admin", "admin")
+
+        project_pm_id = None
+        if entry.project_assignment and getattr(entry.project_assignment, "project", None):
+            project_pm_id = getattr(entry.project_assignment.project, "project_manager_id", None)
+
+        if not is_admin and project_pm_id != reviewer_user.id:
+            raise ForbiddenException(
+                detail="Only the Project Manager assigned to this project or an Admin can approve this timesheet."
+            )
+
+        if entry.status not in ("submitted", "pending"):
+            raise ConflictException(
+                detail=f"Cannot approve timesheet with status '{entry.status}'."
+            )
+
+        return await TimesheetRepository.update(db, entry, {"status": "approved"})
+
+    @staticmethod
+    async def reject_timesheet(
+        db: AsyncSession,
+        timesheet_id: int,
+        reviewer_user: User,
+    ) -> Timesheet:
+        entry = await TimesheetRepository.get_by_id(db, timesheet_id)
+        if not entry:
+            raise NotFoundException(detail="Timesheet entry not found.")
+
+        # Check authorization: Admin or assigned PM for the timesheet's project
+        role_name = getattr(reviewer_user.role, "name", None) or getattr(reviewer_user, "role", "")
+        is_admin = role_name in ("Admin", "admin")
+
+        project_pm_id = None
+        if entry.project_assignment and getattr(entry.project_assignment, "project", None):
+            project_pm_id = getattr(entry.project_assignment.project, "project_manager_id", None)
+
+        if not is_admin and project_pm_id != reviewer_user.id:
+            raise ForbiddenException(
+                detail="Only the Project Manager assigned to this project or an Admin can reject this timesheet."
+            )
+
+        if entry.status not in ("submitted", "pending"):
+            raise ConflictException(
+                detail=f"Cannot reject timesheet with status '{entry.status}'."
+            )
+
+        return await TimesheetRepository.update(db, entry, {"status": "rejected"})
 
     @staticmethod
     async def get_weekly_summary(

@@ -19,12 +19,31 @@ class TimesheetValidator:
             raise BadRequestException(detail="Cannot log timesheets for future dates.")
 
     @staticmethod
-    def validate_not_weekend(timesheet_date: date) -> None:
+    async def validate_not_weekend(
+        db: AsyncSession,
+        user_id: int,
+        project_assignment_id: int,
+        timesheet_date: date,
+    ) -> None:
         if timesheet_date.weekday() in (5, 6):
-            raise BadRequestException(
-                detail="Direct timesheet submission is not allowed for weekends. "
-                       "Please submit a Weekend Work Request under the Weekend Work tab."
+            from app.modules.weekend_work.model import WeekendWorkRequest
+            stmt = (
+                select(WeekendWorkRequest)
+                .join(ProjectAssignment, WeekendWorkRequest.project_assignment_id == ProjectAssignment.id)
+                .where(
+                    ProjectAssignment.user_id == user_id,
+                    WeekendWorkRequest.project_assignment_id == project_assignment_id,
+                    WeekendWorkRequest.work_date == timesheet_date,
+                    WeekendWorkRequest.status == "Approved",
+                )
             )
+            result = await db.execute(stmt)
+            approved_request = result.scalars().first()
+            if not approved_request:
+                raise BadRequestException(
+                    detail="Direct timesheet submission is not allowed for weekends. "
+                           "Please submit a Weekend Work Request under the Weekend Work tab."
+                )
 
     @staticmethod
     async def validate_not_holiday(db: AsyncSession, timesheet_date: date) -> None:

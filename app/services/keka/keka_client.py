@@ -29,7 +29,20 @@ class KekaClient:
     @classmethod
     def get_base_url(cls) -> str:
         """Constructs Keka API base URL based on company subdomain and environment."""
-        company = (os.getenv("KEKA_COMPANY_NAME") or settings.KEKA_COMPANY_NAME or "").strip()
+        from pathlib import Path
+        from dotenv import dotenv_values
+        env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+        env_vals = dotenv_values(env_path) if env_path.exists() else {}
+
+        company = (
+            os.getenv("KEKA_COMPANY_NAME")
+            or os.getenv("KEKA_COMPANY")
+            or env_vals.get("KEKA_COMPANY_NAME")
+            or env_vals.get("KEKA_COMPANY")
+            or settings.KEKA_COMPANY_NAME
+            or getattr(settings, "KEKA_COMPANY", "")
+            or ""
+        ).strip()
         if not company:
             raise KekaAPIError("KEKA_COMPANY_NAME is not configured in settings or environment.", status_code=500)
 

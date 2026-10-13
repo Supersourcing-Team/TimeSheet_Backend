@@ -37,11 +37,23 @@ class KekaAuthManager:
 
     @classmethod
     def get_credentials(cls) -> dict:
-        """Retrieves and validates Keka credentials from environment / settings."""
-        client_id = os.getenv("KEKA_CLIENT_ID") or settings.KEKA_CLIENT_ID
-        client_secret = os.getenv("KEKA_CLIENT_SECRET") or settings.KEKA_CLIENT_SECRET
-        api_key = os.getenv("KEKA_API_KEY") or settings.KEKA_API_KEY
-        company_name = os.getenv("KEKA_COMPANY_NAME") or settings.KEKA_COMPANY_NAME
+        """Retrieves and validates Keka credentials from environment / settings / .env file."""
+        from pathlib import Path
+        from dotenv import dotenv_values
+        env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+        env_vals = dotenv_values(env_path) if env_path.exists() else {}
+
+        client_id = os.getenv("KEKA_CLIENT_ID") or env_vals.get("KEKA_CLIENT_ID") or settings.KEKA_CLIENT_ID
+        client_secret = os.getenv("KEKA_CLIENT_SECRET") or env_vals.get("KEKA_CLIENT_SECRET") or settings.KEKA_CLIENT_SECRET
+        api_key = os.getenv("KEKA_API_KEY") or env_vals.get("KEKA_API_KEY") or settings.KEKA_API_KEY
+        company_name = (
+            os.getenv("KEKA_COMPANY_NAME")
+            or os.getenv("KEKA_COMPANY")
+            or env_vals.get("KEKA_COMPANY_NAME")
+            or env_vals.get("KEKA_COMPANY")
+            or settings.KEKA_COMPANY_NAME
+            or getattr(settings, "KEKA_COMPANY", "")
+        )
 
         return {
             "client_id": (client_id or "").strip(),

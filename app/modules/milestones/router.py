@@ -5,7 +5,7 @@ from app.dependencies.auth import get_current_active_user
 from app.dependencies.permissions import require_roles
 from app.common.responses import success_response, created_response
 
-pm_only = require_roles("Project_Manager")
+pm_or_admin = require_roles("Project_Manager", "Admin")
 from app.modules.users.model import User
 from app.modules.milestones.schema import MilestoneCreate, MilestoneUpdate
 from app.modules.milestones.service import MilestoneService
@@ -13,7 +13,7 @@ from app.modules.milestones.service import MilestoneService
 router = APIRouter()
 
 
-@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
+@router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_or_admin)])
 async def create_milestone(
     milestone_in: MilestoneCreate,
     current_user: User = Depends(get_current_active_user),
@@ -46,7 +46,7 @@ async def get_milestone(
     return success_response(data=milestone.model_dump(mode="json"), message="Milestone retrieved successfully")
 
 
-@router.put("/{milestone_id}", response_model=dict, dependencies=[Depends(pm_only)])
+@router.put("/{milestone_id}", response_model=dict, dependencies=[Depends(pm_or_admin)])
 async def update_milestone(
     milestone_id: int,
     milestone_in: MilestoneUpdate,
@@ -58,7 +58,7 @@ async def update_milestone(
     return success_response(data=milestone.model_dump(mode="json"), message="Milestone updated successfully")
 
 
-@router.delete("/{milestone_id}", response_model=dict, dependencies=[Depends(pm_only)])
+@router.delete("/{milestone_id}", response_model=dict, dependencies=[Depends(pm_or_admin)])
 async def delete_milestone(
     milestone_id: int,
     current_user: User = Depends(get_current_active_user),

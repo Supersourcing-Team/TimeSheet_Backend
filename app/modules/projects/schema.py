@@ -83,5 +83,7 @@ class ProjectResponse(BaseModel):
     health: Optional[str] = None
     milestones: list[MilestoneResponse] = Field(default_factory=list)
     completion_percentage: float = 0.0
+    has_missing_ctc: bool = False
+    missing_ctc_user_ids: list[int] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)

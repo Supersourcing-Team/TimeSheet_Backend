@@ -1255,13 +1255,17 @@ async def create_keka_od_request(
 )
 async def sync_keka_employees(
     update_existing: bool = Query(True, description="Update existing users' details"),
-    create_missing: bool = Query(False, description="Create new users if not found in local system"),
+    create_missing: bool = Query(True, description="Create new users if not found in local system"),
+    keka_employee_id: Optional[str] = Query(None, description="Optional Keka Employee UUID to sync single employee"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_admin),
 ):
     try:
         summary = await KekaService.sync_employees_from_keka(
-            db, update_existing=update_existing, create_missing=create_missing
+            db,
+            update_existing=update_existing,
+            create_missing=create_missing,
+            keka_employee_id=keka_employee_id,
         )
         return success_response(data=summary, message="Employee synchronization completed")
     except Exception as err:

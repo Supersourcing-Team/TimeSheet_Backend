@@ -27,6 +27,15 @@ class TimesheetCreate(BaseModel):
             raise ValueError("Cannot log timesheets for future dates.")
         return v
 
+    @field_validator("billable_work_summary", "non_billable_work_summary")
+    @classmethod
+    def validate_summary_length(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            stripped = v.strip()
+            if stripped and len(stripped) < 3:
+                raise ValueError("Work summary description must be at least 3 characters.")
+        return v
+
 
 class TimesheetUpdate(BaseModel):
     project_assignment_id: Optional[int] = None
@@ -41,6 +50,15 @@ class TimesheetUpdate(BaseModel):
     def validate_timesheet_date(cls, v: Optional[date]) -> Optional[date]:
         if v is not None and v > date.today():
             raise ValueError("Cannot log timesheets for future dates.")
+        return v
+
+    @field_validator("billable_work_summary", "non_billable_work_summary")
+    @classmethod
+    def validate_summary_length(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            stripped = v.strip()
+            if stripped and len(stripped) < 3:
+                raise ValueError("Work summary description must be at least 3 characters.")
         return v
 
 

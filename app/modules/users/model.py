@@ -56,7 +56,7 @@ class User(Base):
     )
     timesheets: Mapped[List["Timesheet"]] = relationship("Timesheet", back_populates="user")
     keka_mapping: Mapped[Optional["KekaEmployeeMapping"]] = relationship(
-        "KekaEmployeeMapping", back_populates="user", uselist=False, cascade="all, delete-orphan"
+        "KekaEmployeeMapping", back_populates="user", uselist=False, cascade="all, delete-orphan", lazy="selectin"
     )
 
     @property
@@ -64,3 +64,11 @@ class User(Base):
         if self.ctc:
             return self.ctc / 260.0
         return 0.0
+
+    @property
+    def is_keka_synced(self) -> bool:
+        return self.keka_mapping is not None
+
+    @property
+    def keka_employee_id(self) -> Optional[str]:
+        return self.keka_mapping.keka_employee_id if self.keka_mapping else None

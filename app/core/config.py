@@ -1,6 +1,12 @@
+from pathlib import Path
 from typing import List
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
+
+_ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
+if _ENV_FILE.exists():
+    load_dotenv(_ENV_FILE)
 
 
 class Settings(BaseSettings):
@@ -61,10 +67,18 @@ class Settings(BaseSettings):
     KEKA_CLIENT_SECRET: str = ""
     KEKA_API_KEY: str = ""
     KEKA_COMPANY_NAME: str = ""  # Subdomain: e.g. 'mycompany' for mycompany.keka.com
+    KEKA_COMPANY: str = ""
     KEKA_ENVIRONMENT: str = "production"  # 'production' or 'sandbox'
     KEKA_TOKEN_URL: str = ""  # Optional override, defaults according to KEKA_ENVIRONMENT
     KEKA_DEFAULT_LEAVE_TYPE_ID: str = ""  # Default Keka leave type UUID if not mapped per type
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    @field_validator("KEKA_COMPANY_NAME", mode="before")
+    @classmethod
+    def resolve_keka_company(cls, v: str | None) -> str:
+        import os
+        return v or os.getenv("KEKA_COMPANY") or ""
+
+
+    model_config = SettingsConfigDict(env_file=_ENV_FILE, env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()

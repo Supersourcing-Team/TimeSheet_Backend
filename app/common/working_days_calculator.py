@@ -121,28 +121,36 @@ async def get_working_days_in_month(
     return await get_working_days(first_day, last_day, db)
 
 
+DEFAULT_HOURLY_RATE = 500.0  # Safe fallback hourly rate when employee CTC is missing/zero
+
+
 async def get_hourly_cost(
     annual_ctc: float,
     db: AsyncSession,
+    fallback_hourly_rate: float = DEFAULT_HOURLY_RATE,
 ) -> float:
     """
     Hourly Cost = Annual CTC / 12 / Working Days per Month / Hours per Day
 
-    Working days per month is derived from the WorkingCalendar config
-    by counting how many weekdays are marked as working (e.g. Mon-Fri = 5)
-    and multiplying by ~4.33 weeks/month.
+    If annual_ctc is missing or <= 0, applies fallback_hourly_rate (default 500.0)
+    to prevent labor cost from evaluating to 0 and skewing project financials.
     """
     if not annual_ctc or annual_ctc <= 0:
-        return 0.0
+        return fallback_hourly_rate
 
     calendar = await _get_working_calendar(db)
-    working_days_config = calendar.working_days or {}
-    hours_per_day = calendar.full_day_hours or 8.0
+    working_days_config = getattr(calendar, "working_days", None)
+    if not isinstance(working_days_config, dict):
+        working_days_config = {}
+
+    hours_per_day = getattr(calendar, "full_day_hours", 8.0)
+    if not isinstance(hours_per_day, (int, float)):
+        hours_per_day = 8.0
 
     # Count configured working days per week
     working_days_per_week = sum(1 for day in _WEEKDAY_KEYS if working_days_config.get(day, False))
     if working_days_per_week == 0:
-        return 0.0
+        return fallback_hourly_rate
 
     # Average working days per month ≈ working_days_per_week × 52 / 12
     working_days_per_month = (working_days_per_week * 52) / 12  # e.g. 5 × 52/12 ≈ 21.67
@@ -179,11 +187,12 @@ async def get_daily_cost(
 async def get_tool_hourly_rate(
     monthly_tool_cost: float,
     db: AsyncSession,
+    allocation_basis: str = "working_day",
 ) -> float:
     """
-    Calculates hourly tool rate based on standardized engineering economics logic:
-    Hourly Tool Rate = [MONTHLY_TOOL_COST] / 22 working days / 8 hours
-                     = [MONTHLY_TOOL_COST] / 176 hours
+    Calculates hourly tool rate based on the allocation basis:
+    - 'working_day': [MONTHLY_TOOL_COST] / working_days_per_month / hours_per_day
+    - 'week': [MONTHLY_TOOL_COST] / (52/12 * weekly_working_hours)
     
     If working calendar config is defined, uses configured working days and daily hours.
     Default baseline: 22 working days / month, 8 hours / day.
@@ -192,12 +201,26 @@ async def get_tool_hourly_rate(
         return 0.0
 
     calendar = await _get_working_calendar(db)
-    working_days_config = calendar.working_days or {}
-    hours_per_day = calendar.full_day_hours or 8.0
+    working_days_config = getattr(calendar, "working_days", None)
+    if not isinstance(working_days_config, dict):
+        working_days_config = {}
+
+    hours_per_day = getattr(calendar, "full_day_hours", 8.0)
+    if not isinstance(hours_per_day, (int, float)):
+        hours_per_day = 8.0
 
     working_days_per_week = sum(1 for day in _WEEKDAY_KEYS if working_days_config.get(day, False))
-    working_days_per_month = (working_days_per_week * 52) / 12 if working_days_per_week > 0 else 22.0
+    if working_days_per_week == 0:
+        working_days_per_week = 5
 
-    hourly_rate = (monthly_tool_cost / working_days_per_month) / hours_per_day
+    if allocation_basis == "week":
+        weekly_working_hours = working_days_per_week * hours_per_day
+        monthly_working_hours = (52.0 / 12.0) * weekly_working_hours
+        hourly_rate = monthly_tool_cost / monthly_working_hours if monthly_working_hours > 0 else 0.0
+    else:
+        working_days_per_month = (working_days_per_week * 52) / 12 if working_days_per_week > 0 else 22.0
+        hourly_rate = (monthly_tool_cost / working_days_per_month) / hours_per_day
+
     return round(hourly_rate, 4)
+
 

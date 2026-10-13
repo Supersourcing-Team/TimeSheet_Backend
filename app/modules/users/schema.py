@@ -49,6 +49,8 @@ class UserResponse(BaseModel):
     updated_at: datetime
     role: RoleResponse
     department: Optional[DepartmentResponse] = None
+    is_keka_synced: bool = False
+    keka_employee_id: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

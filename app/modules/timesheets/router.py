@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,6 +31,20 @@ async def create_timesheet(
     return created_response(
         data=resp.model_dump(mode="json"),
         message="Timesheet entry created successfully",
+    )
+
+
+@router.post("/batch", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Atomically create multiple timesheets")
+async def create_timesheets_batch(
+    timesheets_in: List[TimesheetCreate],
+    current_user: User = Depends(require_roles("Employee", "Project_Manager", "Admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    entries = await TimesheetService.create_timesheets_batch(db, current_user, timesheets_in)
+    items = [TimesheetResponse.model_validate(e).model_dump(mode="json") for e in entries]
+    return created_response(
+        data=items,
+        message="Timesheet entries created successfully",
     )
 
 
@@ -155,4 +169,32 @@ async def delete_timesheet(
     return success_response(
         data=None,
         message="Timesheet entry deleted successfully",
+    )
+
+
+@router.put("/{timesheet_id}/approve", response_model=dict, summary="Approve a timesheet entry (PM/Admin)")
+async def approve_timesheet(
+    timesheet_id: int,
+    current_user: User = Depends(require_roles("Project_Manager", "Admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    entry = await TimesheetService.approve_timesheet(db, timesheet_id, current_user)
+    resp = TimesheetResponse.model_validate(entry)
+    return success_response(
+        data=resp.model_dump(mode="json"),
+        message="Timesheet entry approved successfully",
+    )
+
+
+@router.put("/{timesheet_id}/reject", response_model=dict, summary="Reject a timesheet entry (PM/Admin)")
+async def reject_timesheet(
+    timesheet_id: int,
+    current_user: User = Depends(require_roles("Project_Manager", "Admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    entry = await TimesheetService.reject_timesheet(db, timesheet_id, current_user)
+    resp = TimesheetResponse.model_validate(entry)
+    return success_response(
+        data=resp.model_dump(mode="json"),
+        message="Timesheet entry rejected successfully",
     )

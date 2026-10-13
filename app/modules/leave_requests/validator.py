@@ -17,21 +17,42 @@ class LeaveRequestValidator:
 
 
     @staticmethod
-    async def calculate_working_days(db: AsyncSession, start_date: date, end_date: date) -> int:
+    def validate_leave_dates(start_date: date, end_date: date) -> None:
+        """
+        Validate leave request date boundaries:
+        - start_date must not be greater than end_date (start_date <= end_date).
+        - POLICY NOTE (Bug #50): Retroactive leave cutoffs (e.g. 30/60 days) and advance
+          notice period thresholds remain explicitly UNRESOLVED pending organizational
+          stakeholder policy definition. We do not invent an arbitrary limit or notice period.
+        """
         if start_date > end_date:
             raise BadRequestException(detail="start_date must be less than or equal to end_date")
 
+    @staticmethod
+    async def calculate_working_days(
+        db: AsyncSession,
+        start_date: date,
+        end_date: date,
+        leave_duration_type: Optional[str] = None,
+    ) -> float:
+        LeaveRequestValidator.validate_leave_dates(start_date, end_date)
+        if leave_duration_type == "half_day":
+            if start_date != end_date:
+                raise BadRequestException(detail="Half-day leave cannot span multiple dates.")
+            holiday_dates = await LeaveRequestValidator.get_holiday_dates(db, start_date, end_date)
+            if start_date.weekday() in (5, 6) or start_date in holiday_dates:
+                return 0.0
+            return 0.5
+
         holiday_dates = await LeaveRequestValidator.get_holiday_dates(db, start_date, end_date)
-        
         working_days = 0
         current = start_date
         while current <= end_date:
-            # 5 is Saturday, 6 is Sunday
             if current.weekday() not in (5, 6) and current not in holiday_dates:
                 working_days += 1
             current += timedelta(days=1)
 
-        return working_days
+        return float(working_days)
 
     # -------------------------------------------------------------------------
     # Inline Mark-Leave validators

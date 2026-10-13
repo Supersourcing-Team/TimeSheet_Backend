@@ -186,6 +186,8 @@ class KekaMappingPreviewItem(BaseModel):
     keka_email: Optional[str] = None
     keka_department: Optional[str] = None
     keka_job_title: Optional[str] = None
+    date_of_joining: Optional[str] = None
+    employment_status: Optional[str] = None
     status: str  # 'mapped', 'local_match', 'unmapped', 'conflict'
     matched_local_user_id: Optional[int] = None
     matched_local_user_email: Optional[str] = None
