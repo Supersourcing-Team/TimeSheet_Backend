@@ -95,12 +95,31 @@ class KekaEmployeeMappingService:
             keka_name = emp.get("displayName") or f"{first_name} {last_name}".strip() or None
 
             raw_dept = emp.get("department")
+            dept_name = None
             if isinstance(raw_dept, dict):
                 dept_name = raw_dept.get("name") or raw_dept.get("title")
+            elif isinstance(raw_dept, str) and raw_dept:
+                dept_name = raw_dept
+            elif emp.get("departmentName"):
+                dept_name = emp.get("departmentName")
             else:
-                dept_name = raw_dept or emp.get("departmentName")
+                for g in emp.get("groups", []):
+                    if isinstance(g, dict) and g.get("groupType") == 2:
+                        dept_name = g.get("title") or g.get("name")
+                        break
 
-            job_title = emp.get("jobTitle") or emp.get("designation")
+            raw_job = emp.get("jobTitle") or emp.get("designation")
+            if isinstance(raw_job, dict):
+                job_title = raw_job.get("title") or raw_job.get("name")
+            else:
+                job_title = raw_job
+
+            raw_join = emp.get("joiningDate") or emp.get("dateOfJoining") or emp.get("hireDate")
+            date_of_joining = str(raw_join)[:10] if raw_join else None
+
+            raw_status = emp.get("employmentStatus")
+            status_map = {0: "Working", 1: "Relieved", 2: "Notice Period", 3: "Probation"}
+            employment_status = status_map.get(raw_status, str(raw_status) if raw_status is not None else "Active")
 
             item: Dict[str, Any] = {
                 "keka_employee_id": keka_id,
@@ -109,6 +128,8 @@ class KekaEmployeeMappingService:
                 "keka_email": keka_email or None,
                 "keka_department": dept_name or None,
                 "keka_job_title": job_title or None,
+                "date_of_joining": date_of_joining,
+                "employment_status": employment_status,
                 "status": "unmapped",
                 "matched_local_user_id": None,
                 "matched_local_user_email": None,
@@ -349,6 +370,7 @@ class KekaEmployeeMappingService:
         db: AsyncSession,
         update_existing: bool = True,
         create_missing: bool = False,
+        keka_employee_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Deep business flow integration: Synchronizes Keka employee records into local database.
@@ -366,6 +388,8 @@ class KekaEmployeeMappingService:
         # 1. Fetch all Keka employees
         keka_data = await KekaClient.get_all_employees()
         keka_employees = keka_data.get("data", []) or []
+        if keka_employee_id:
+            keka_employees = [e for e in keka_employees if str(e.get("id") or "").strip() == keka_employee_id.strip()]
 
         # 2. Fetch local entities
         users_res = await db.execute(
@@ -434,12 +458,27 @@ class KekaEmployeeMappingService:
             dept_name_str = ""
             if isinstance(raw_dept, dict):
                 dept_name_str = (raw_dept.get("name") or raw_dept.get("title") or "").strip().lower()
-            elif isinstance(raw_dept, str):
+            elif isinstance(raw_dept, str) and raw_dept:
                 dept_name_str = raw_dept.strip().lower()
             elif emp.get("departmentName"):
                 dept_name_str = str(emp.get("departmentName")).strip().lower()
+            else:
+                for g in emp.get("groups", []):
+                    if isinstance(g, dict) and g.get("groupType") == 2:
+                        dept_name_str = (g.get("title") or g.get("name") or "").strip().lower()
+                        break
 
             matched_dept = dept_by_name.get(dept_name_str) if dept_name_str else None
+            if not matched_dept and dept_name_str:
+                new_dept = Department(
+                    name=dept_name_str.title(),
+                    code=dept_name_str[:6].upper(),
+                    is_active=True
+                )
+                db.add(new_dept)
+                await db.flush()
+                dept_by_name[dept_name_str] = new_dept
+                matched_dept = new_dept
 
             # Check if already mapped
             existing_map = mapping_by_keka_id.get(k_id)

@@ -173,6 +173,8 @@ class ProjectService:
             
             resp.revenue = project_ev
             resp.profit = fin_data["cv"]
+            resp.has_missing_ctc = fin_data.get("has_missing_ctc", False)
+            resp.missing_ctc_user_ids = fin_data.get("missing_ctc_user_ids", [])
 
             if not can_view_budget:
                 resp.budget = None
@@ -191,9 +193,13 @@ class ProjectService:
     async def create_project(self, project_in: ProjectCreate, current_user: Optional[User] = None) -> ProjectResponse:
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         
-        # Only AC Manager can enter or modify project budget
-        is_ac_manager = current_user and current_user.role and current_user.role.name == "Account_Manager"
-        if not is_ac_manager:
+        # Account Manager and Admin can enter or modify project budget
+        can_manage_budget = (
+            current_user
+            and current_user.role
+            and current_user.role.name in ["Account_Manager", "Admin"]
+        )
+        if not can_manage_budget:
             project_in.budget = None
 
         project = await self.repository.create(project_in)
@@ -221,10 +227,14 @@ class ProjectService:
         
         await self._validate_client_and_pm(project_in.client_id, project_in.project_manager_id)
         
-        # Only AC Manager can modify project budget
-        is_ac_manager = current_user and current_user.role and current_user.role.name == "Account_Manager"
-        if not is_ac_manager:
-            project_in.budget = None
+        # Account Manager and Admin can modify project budget; other roles preserve existing budget
+        can_manage_budget = (
+            current_user
+            and current_user.role
+            and current_user.role.name in ["Account_Manager", "Admin"]
+        )
+        if not can_manage_budget:
+            project_in.budget = project.budget
 
         updated_project = await self.repository.update(project, project_in)
         financials = await self.compute_financials_for_projects(self.db, [updated_project], current_user=current_user)

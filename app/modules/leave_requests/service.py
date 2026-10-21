@@ -32,14 +32,13 @@ class LeaveRequestService:
 
         # 2. Validate dates & calculate required working days
         working_days = await LeaveRequestValidator.calculate_working_days(
-            db, request_in.start_date, request_in.end_date
+            db, request_in.start_date, request_in.end_date, request_in.leave_duration_type
         )
         if working_days <= 0:
             raise BadRequestException(
                 detail="Selected date range contains no working days (all weekends or public holidays)."
             )
 
-        # 3. Check available leave balance for the year of start_date
         year = request_in.start_date.year
         balance = None
         try:
@@ -60,14 +59,15 @@ class LeaveRequestService:
                     detail=f"Insufficient leave balance. Required: {working_days} day(s), Available: {available_days} day(s)."
                 )
 
-        # 4. Create LeaveRequest record (auto-approved as single source of truth)
         leave_request = LeaveRequest(
             user_id=current_user.id,
             leave_type_id=request_in.leave_type_id,
             start_date=request_in.start_date,
             end_date=request_in.end_date,
             reason=request_in.reason,
-            status="Approved",
+            status="Pending",
+            leave_duration_type=request_in.leave_duration_type or "full_day",
+            half_day_period=request_in.half_day_period,
         )
         created_leave = await LeaveRequestRepository.create(db, leave_request)
 
@@ -162,30 +162,31 @@ class LeaveRequestService:
                 detail=f"Cannot approve leave request with status '{leave_request.status}'."
             )
 
-        # Calculate working days to deduct
         working_days = await LeaveRequestValidator.calculate_working_days(
-            db, leave_request.start_date, leave_request.end_date
+            db, leave_request.start_date, leave_request.end_date, getattr(leave_request, "leave_duration_type", None)
         )
 
-        year = leave_request.start_date.year
-        balance = await LeaveBalanceRepository.get_specific_balance(
-            db, leave_request.user_id, leave_request.leave_type_id, year
-        )
-        if not balance:
-            leave_type = await LeaveTypeRepository.get_by_id(db, leave_request.leave_type_id)
-            alloc = float(leave_type.days_per_year) if (leave_type and leave_type.days_per_year is not None) else 0.0
-            balance = await LeaveBalanceRepository.create(
-                db,
-                user_id=leave_request.user_id,
-                leave_type_id=leave_request.leave_type_id,
-                year=year,
-                allocated_days=alloc,
+        from app.modules.keka.repository import KekaEmployeeMappingRepository
+        mapping = await KekaEmployeeMappingRepository.get_by_local_user_id(db, leave_request.user_id)
+        is_keka_mapped = bool(mapping and mapping.keka_employee_id)
+
+        if not is_keka_mapped:
+            year = leave_request.start_date.year
+            balance = await LeaveBalanceRepository.get_specific_balance(
+                db, leave_request.user_id, leave_request.leave_type_id, year
             )
-
-
-        # Deduct used days
-        balance.used_days += working_days
-        await db.commit()
+            if not balance:
+                leave_type = await LeaveTypeRepository.get_by_id(db, leave_request.leave_type_id)
+                alloc = float(leave_type.days_per_year) if (leave_type and leave_type.days_per_year is not None) else 0.0
+                balance = await LeaveBalanceRepository.create(
+                    db,
+                    user_id=leave_request.user_id,
+                    leave_type_id=leave_request.leave_type_id,
+                    year=year,
+                    allocated_days=alloc,
+                )
+            balance.used_days += working_days
+            await db.commit()
 
 
         # Update leave request status to Approved
@@ -270,18 +271,21 @@ class LeaveRequestService:
         if leave_request.status == "Cancelled":
             raise ConflictException(detail="Leave request is already cancelled.")
 
-        # If it was Approved, refund the balance
         if leave_request.status == "Approved":
-            working_days = await LeaveRequestValidator.calculate_working_days(
-                db, leave_request.start_date, leave_request.end_date
-            )
-            year = leave_request.start_date.year
-            balance = await LeaveBalanceRepository.get_specific_balance(
-                db, leave_request.user_id, leave_request.leave_type_id, year
-            )
-            if balance:
-                balance.used_days = max(0, balance.used_days - working_days)
-                await db.commit()
+            from app.modules.keka.repository import KekaEmployeeMappingRepository
+            mapping = await KekaEmployeeMappingRepository.get_by_local_user_id(db, leave_request.user_id)
+            is_keka_mapped = bool(mapping and mapping.keka_employee_id)
+            if not is_keka_mapped:
+                working_days = await LeaveRequestValidator.calculate_working_days(
+                    db, leave_request.start_date, leave_request.end_date, getattr(leave_request, "leave_duration_type", None)
+                )
+                year = leave_request.start_date.year
+                balance = await LeaveBalanceRepository.get_specific_balance(
+                    db, leave_request.user_id, leave_request.leave_type_id, year
+                )
+                if balance:
+                    balance.used_days = max(0.0, balance.used_days - working_days)
+                    await db.commit()
 
         return await LeaveRequestRepository.update_status(
             db, leave_request, status="Cancelled"

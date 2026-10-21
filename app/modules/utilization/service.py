@@ -95,7 +95,7 @@ class UtilizationService:
                 ProjectAssignment.project_id == project_id,
                 Timesheet.timesheet_date >= milestone_start,
                 Timesheet.timesheet_date <= milestone_end,
-                Timesheet.status == "submitted",
+                Timesheet.status.in_(["submitted", "approved"]),
             )
             .group_by(Timesheet.user_id)
         )

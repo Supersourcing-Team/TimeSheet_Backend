@@ -21,7 +21,7 @@ class UserRepository:
     async def get_by_id(db: AsyncSession, user_id: int) -> Optional[User]:
         result = await db.execute(
             select(User)
-            .options(selectinload(User.role), selectinload(User.department))
+            .options(selectinload(User.role), selectinload(User.department), selectinload(User.keka_mapping))
             .filter(User.id == user_id)
         )
         return result.scalar_one_or_none()
@@ -30,7 +30,7 @@ class UserRepository:
     async def get_by_email(db: AsyncSession, email: str) -> Optional[User]:
         result = await db.execute(
             select(User)
-            .options(selectinload(User.role), selectinload(User.department))
+            .options(selectinload(User.role), selectinload(User.department), selectinload(User.keka_mapping))
             .filter(User.email == email)
         )
         return result.scalar_one_or_none()
@@ -39,7 +39,7 @@ class UserRepository:
     async def get_by_employee_id(db: AsyncSession, employee_id: str) -> Optional[User]:
         result = await db.execute(
             select(User)
-            .options(selectinload(User.role), selectinload(User.department))
+            .options(selectinload(User.role), selectinload(User.department), selectinload(User.keka_mapping))
             .filter(User.employee_id == employee_id)
         )
         return result.scalar_one_or_none()
@@ -53,7 +53,11 @@ class UserRepository:
         status: Optional[str] = None,
         search: Optional[str] = None,
     ) -> Tuple[List[User], int]:
-        query = select(User).options(selectinload(User.role), selectinload(User.department))
+        query = select(User).options(
+            selectinload(User.role),
+            selectinload(User.department),
+            selectinload(User.keka_mapping),
+        )
         count_query = select(func.count(User.id))
 
         if role_id is not None:

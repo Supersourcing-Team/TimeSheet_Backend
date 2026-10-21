@@ -14,14 +14,15 @@ class MilestoneService:
         self.project_repo = ProjectRepository(db)
 
     async def _check_pm_authorization(self, project_id: int, current_user: User):
-        if current_user.role.name != "Project_Manager":
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only PMs can manage milestones.")
+        user_role = getattr(current_user.role, "name", None) or getattr(current_user, "role", "")
+        if user_role not in ("Project_Manager", "Admin"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only PMs and Admins can manage milestones.")
         
         project = await self.project_repo.get_by_id(project_id)
         if not project:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found.")
             
-        if project.project_manager_id != current_user.id:
+        if user_role != "Admin" and project.project_manager_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only manage milestones for your own projects.")
         
         return project
