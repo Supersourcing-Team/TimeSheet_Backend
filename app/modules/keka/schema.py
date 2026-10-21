@@ -258,6 +258,8 @@ class KekaEmployeeCreateRequest(BaseModel):
     location: Optional[str] = None
     legalEntity: Optional[str] = None
     nationality: Optional[str] = None
+    role_id: Optional[int] = None
+    ctc: Optional[float] = None
 
     model_config = ConfigDict(extra="ignore")
 

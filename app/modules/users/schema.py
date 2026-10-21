@@ -16,6 +16,17 @@ class UserCreate(BaseModel):
     joining_date: Optional[date] = None
     ctc: Optional[float] = Field(None, ge=0.0)
     status: Optional[str] = "Pending"
+    middle_name: Optional[str] = Field(None, max_length=100)
+    display_name: Optional[str] = Field(None, max_length=150)
+    mobile_number: Optional[str] = Field(None, max_length=25)
+    job_title: Optional[str] = Field(None, max_length=150)
+    secondary_job_title: Optional[str] = Field(None, max_length=150)
+    business_unit: Optional[str] = Field(None, max_length=150)
+    gender: Optional[str] = Field(None, max_length=20)
+    date_of_birth: Optional[date] = None
+    nationality: Optional[str] = Field(None, max_length=100)
+    location: Optional[str] = Field(None, max_length=150)
+    legal_entity: Optional[str] = Field(None, max_length=150)
 
 
 class UserUpdate(BaseModel):
@@ -28,6 +39,17 @@ class UserUpdate(BaseModel):
     joining_date: Optional[date] = None
     ctc: Optional[float] = Field(None, ge=0.0)
     status: Optional[str] = None
+    middle_name: Optional[str] = Field(None, max_length=100)
+    display_name: Optional[str] = Field(None, max_length=150)
+    mobile_number: Optional[str] = Field(None, max_length=25)
+    job_title: Optional[str] = Field(None, max_length=150)
+    secondary_job_title: Optional[str] = Field(None, max_length=150)
+    business_unit: Optional[str] = Field(None, max_length=150)
+    gender: Optional[str] = Field(None, max_length=20)
+    date_of_birth: Optional[date] = None
+    nationality: Optional[str] = Field(None, max_length=100)
+    location: Optional[str] = Field(None, max_length=150)
+    legal_entity: Optional[str] = Field(None, max_length=150)
 
 
 class UserStatusUpdate(BaseModel):
@@ -45,6 +67,17 @@ class UserResponse(BaseModel):
     joining_date: Optional[date] = None
     ctc: Optional[float] = None
     status: str
+    middle_name: Optional[str] = None
+    display_name: Optional[str] = None
+    mobile_number: Optional[str] = None
+    job_title: Optional[str] = None
+    secondary_job_title: Optional[str] = None
+    business_unit: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[date] = None
+    nationality: Optional[str] = None
+    location: Optional[str] = None
+    legal_entity: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     role: RoleResponse

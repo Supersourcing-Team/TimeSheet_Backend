@@ -752,8 +752,8 @@ class KekaEmployeeMappingService:
         from app.modules.departments.model import Department
         from app.modules.roles.model import Role
 
-        # 1. Format payload for Keka
-        keka_payload = payload.model_dump(exclude_unset=True)
+        # 1. Format payload for Keka (excluding local-only fields)
+        keka_payload = payload.model_dump(exclude_unset=True, exclude={"role_id", "ctc"})
 
         # 2. Call Keka API
         keka_res = await KekaClient.create_employee(keka_payload)
@@ -803,6 +803,18 @@ class KekaEmployeeMappingService:
                 except Exception:
                     parsed_joining_date = date.today()
 
+            # Parse date of birth
+            parsed_dob = None
+            if payload.dateOfBirth:
+                try:
+                    parsed_dob = datetime.fromisoformat(payload.dateOfBirth.replace("Z", "+00:00")).date()
+                except Exception:
+                    parsed_dob = None
+
+            # Resolve gender string
+            gender_map = {1: "Male", 2: "Female", 3: "Other"}
+            resolved_gender = gender_map.get(payload.gender) if payload.gender in gender_map else None
+
             if local_user:
                 # Update existing user
                 if payload.firstName:
@@ -813,12 +825,40 @@ class KekaEmployeeMappingService:
                     local_user.department_id = matched_dept.id
                 if parsed_joining_date:
                     local_user.joining_date = parsed_joining_date
+                if payload.middleName:
+                    local_user.middle_name = payload.middleName
+                if payload.displayName:
+                    local_user.display_name = payload.displayName
+                if payload.mobileNumber:
+                    local_user.mobile_number = payload.mobileNumber
+                if payload.jobTitle:
+                    local_user.job_title = payload.jobTitle
+                if payload.secondaryJobTitle:
+                    local_user.secondary_job_title = payload.secondaryJobTitle
+                if payload.businessUnit:
+                    local_user.business_unit = payload.businessUnit
+                if resolved_gender:
+                    local_user.gender = resolved_gender
+                if parsed_dob:
+                    local_user.date_of_birth = parsed_dob
+                if payload.nationality:
+                    local_user.nationality = payload.nationality
+                if payload.location:
+                    local_user.location = payload.location
+                if payload.legalEntity:
+                    local_user.legal_entity = payload.legalEntity
+                if payload.ctc is not None:
+                    local_user.ctc = payload.ctc
+                if payload.role_id:
+                    local_user.role_id = payload.role_id
                 local_user.status = "Active"
             else:
-                # Get default role
-                r_res = await db.execute(select(Role).where(Role.name == "Employee"))
-                role_obj = r_res.scalar_one_or_none()
-                role_id = role_obj.id if role_obj else 2
+                # Get role
+                role_id = payload.role_id
+                if not role_id:
+                    r_res = await db.execute(select(Role).where(Role.name == "Employee"))
+                    role_obj = r_res.scalar_one_or_none()
+                    role_id = role_obj.id if role_obj else 2
 
                 assigned_emp_id = emp_number or f"EMP-{keka_emp_id[:8]}"
                 local_user = User(
@@ -830,6 +870,18 @@ class KekaEmployeeMappingService:
                     department_id=matched_dept.id if matched_dept else None,
                     joining_date=parsed_joining_date or date.today(),
                     status="Active",
+                    middle_name=payload.middleName,
+                    display_name=payload.displayName,
+                    mobile_number=payload.mobileNumber,
+                    job_title=payload.jobTitle,
+                    secondary_job_title=payload.secondaryJobTitle,
+                    business_unit=payload.businessUnit,
+                    gender=resolved_gender,
+                    date_of_birth=parsed_dob,
+                    nationality=payload.nationality,
+                    location=payload.location,
+                    legal_entity=payload.legalEntity,
+                    ctc=payload.ctc,
                 )
                 db.add(local_user)
                 await db.flush()

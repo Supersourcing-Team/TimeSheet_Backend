@@ -60,6 +60,17 @@ class UserService:
             joining_date=data.joining_date,
             ctc=data.ctc,
             status=user_status,
+            middle_name=data.middle_name,
+            display_name=data.display_name,
+            mobile_number=data.mobile_number,
+            job_title=data.job_title,
+            secondary_job_title=data.secondary_job_title,
+            business_unit=data.business_unit,
+            gender=data.gender,
+            date_of_birth=data.date_of_birth,
+            nationality=data.nationality,
+            location=data.location,
+            legal_entity=data.legal_entity,
         )
 
         created_user = await UserRepository.create(db, new_user)
