@@ -8,15 +8,22 @@ from app.modules.users.model import User
 
 class RoleChecker:
     def __init__(self, allowed_roles: List[str]):
-        self.allowed_roles = allowed_roles
+        roles = []
+        for r in allowed_roles:
+            if isinstance(r, (list, tuple)):
+                roles.extend(r)
+            else:
+                roles.append(r)
+        self.allowed_roles = roles
 
     def __call__(self, current_user: User = Depends(get_current_active_user)) -> User:
-        if not current_user.role or current_user.role.name not in self.allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Operation not permitted. Required role: {', '.join(self.allowed_roles)}",
-            )
-        return current_user
+        user_role = current_user.role.name if current_user.role else ""
+        if user_role.lower() == "admin" or user_role in self.allowed_roles:
+            return current_user
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Operation not permitted. Required role: {', '.join(self.allowed_roles)}",
+        )
 
 
 def require_roles(*roles: str) -> Callable:

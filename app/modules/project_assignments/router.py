@@ -52,8 +52,8 @@ async def get_user_assignments(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
 ):
-    # Rule: Employees can only see their own assignments. PMs can see any.
-    if current_user.role.name != "Project_Manager" and current_user.id != user_id:
+    # Rule: Employees can only see their own assignments. PMs and Admins can see any.
+    if current_user.role.name not in ["Project_Manager", "Admin"] and current_user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only view your own assignments")
 
     service = ProjectAssignmentService(db)

@@ -28,14 +28,14 @@ class ProjectService:
             pm = await UserRepository.get_by_id(self.db, pm_id)
             if not pm:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project_manager_id: User does not exist or is inactive.")
-            if not pm.role or pm.role.name != "Project_Manager":
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project_manager_id: User must have the 'Project_Manager' role.")
+            if not pm.role or pm.role.name not in ["Project_Manager", "Admin"]:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid project_manager_id: User must have the 'Project_Manager' or 'Admin' role.")
 
     @staticmethod
     def _is_pm(user: Optional[User]) -> bool:
         if not user or not user.role:
             return False
-        return user.role.name == "Project_Manager"
+        return user.role.name in ["Project_Manager", "Admin"]
 
     async def get_project_by_id(self, project_id: int, current_user: Optional[User] = None) -> ProjectResponse:
         project = await self.repository.get_by_id(project_id)

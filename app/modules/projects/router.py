@@ -12,7 +12,7 @@ from app.modules.projects.service import ProjectService
 from app.modules.users.model import User
 
 router = APIRouter()
-pm_only = require_roles("Project_Manager")
+pm_only = require_roles("Project_Manager", "Admin")
 project_manage_roles = require_roles("Project_Manager", "Account_Manager", "Admin")
 
 

@@ -8,8 +8,8 @@ from app.modules.tool_allocations.schema import ToolAllocationCreate, ToolAlloca
 from app.modules.tool_allocations.service import ToolAllocationService
 
 router = APIRouter()
-pm_only = require_roles("Project_Manager")
-pm_and_am = require_roles(["Project_Manager", "Account_Manager"])
+pm_only = require_roles("Project_Manager", "Admin")
+pm_and_am = require_roles("Project_Manager", "Account_Manager", "Admin")
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
