@@ -62,3 +62,11 @@ class Timesheet(Base):
     @property
     def milestone_name(self) -> Optional[str]:
         return self.milestone.name if self.milestone else None
+
+    @property
+    def hours(self) -> float:
+        return (self.billable_hours or 0.0) + (self.non_billable_hours or 0.0)
+
+    @property
+    def is_billable(self) -> bool:
+        return (self.billable_hours or 0.0) > 0.0
