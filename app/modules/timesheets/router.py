@@ -59,6 +59,7 @@ async def get_my_timesheets(
         dump["user_name"] = e.user_name
         dump["user_avatar"] = e.user_avatar
         dump["project_name"] = e.project_name
+        dump["milestone_name"] = e.milestone_name
         items.append(dump)
     paginated_data = create_pagination_data(items=items, total=total, page=page, limit=limit)
     return success_response(
@@ -92,6 +93,7 @@ async def get_managed_timesheets(
         dump["user_name"] = e.user_name
         dump["user_avatar"] = e.user_avatar
         dump["project_name"] = e.project_name
+        dump["milestone_name"] = e.milestone_name
         items.append(dump)
     paginated_data = create_pagination_data(items=items, total=total, page=page, limit=limit)
     return success_response(

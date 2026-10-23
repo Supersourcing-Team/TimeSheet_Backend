@@ -22,8 +22,11 @@ class TimesheetRepository:
     async def get_by_id(db: AsyncSession, timesheet_id: int) -> Optional[Timesheet]:
         result = await db.execute(
             select(Timesheet)
-            .options(selectinload(Timesheet.user),
-            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project))
+            .options(
+                selectinload(Timesheet.user),
+                selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project),
+                selectinload(Timesheet.milestone),
+            )
             .filter(Timesheet.id == timesheet_id)
         )
         return result.scalar_one_or_none()
@@ -59,7 +62,8 @@ class TimesheetRepository:
     ) -> Tuple[List[Timesheet], int]:
         query = select(Timesheet).options(
             selectinload(Timesheet.user),
-            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project)
+            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project),
+            selectinload(Timesheet.milestone),
         ).filter(Timesheet.user_id == user_id)
 
         count_query = select(func.count(Timesheet.id)).filter(Timesheet.user_id == user_id)
@@ -108,7 +112,8 @@ class TimesheetRepository:
 
         query = base_query.options(
             selectinload(Timesheet.user),
-            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project)
+            selectinload(Timesheet.project_assignment).selectinload(ProjectAssignment.project),
+            selectinload(Timesheet.milestone),
         )
         count_query = select(func.count(Timesheet.id)).select_from(base_query.subquery())
 

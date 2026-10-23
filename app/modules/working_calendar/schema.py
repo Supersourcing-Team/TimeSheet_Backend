@@ -8,6 +8,7 @@ class WorkingCalendarBase(BaseModel):
     partial_day_max_hours: float
     working_days: Dict[str, bool]
     time_zone: str
+    timesheet_lock_hours: int = 24
 
 class WorkingCalendarCreate(WorkingCalendarBase):
     pass
@@ -19,6 +20,7 @@ class WorkingCalendarUpdate(BaseModel):
     partial_day_max_hours: Optional[float] = None
     working_days: Optional[Dict[str, bool]] = None
     time_zone: Optional[str] = None
+    timesheet_lock_hours: Optional[int] = None
 
 class WorkingCalendarResponse(WorkingCalendarBase):
     id: int
