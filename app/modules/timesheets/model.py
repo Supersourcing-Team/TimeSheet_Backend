@@ -53,3 +53,11 @@ class Timesheet(Base):
         if self.project_assignment and getattr(self.project_assignment, "project", None):
             return self.project_assignment.project.project_name
         return "Unknown"
+
+    @property
+    def hours(self) -> float:
+        return float((self.billable_hours or 0.0) + (self.non_billable_hours or 0.0))
+
+    @property
+    def total_hours(self) -> float:
+        return float((self.billable_hours or 0.0) + (self.non_billable_hours or 0.0))

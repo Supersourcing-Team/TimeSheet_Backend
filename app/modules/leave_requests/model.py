@@ -47,3 +47,9 @@ class LeaveRequest(Base):
     manager: Mapped[Optional["User"]] = relationship(
         "User", foreign_keys=[managers_user_id], back_populates="managed_leave_requests"
     )
+
+    @property
+    def total_days(self) -> float:
+        if self.start_date and self.end_date:
+            return float((self.end_date - self.start_date).days + 1)
+        return 1.0

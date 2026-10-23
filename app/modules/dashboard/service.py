@@ -35,9 +35,9 @@ class DashboardService:
             db, user_id=current_user.id, start_date=start_of_week, end_date=end_of_week
         )
         
-        total_logged = sum(entry.hours for entry in timesheet_entries)
-        billable_logged = sum(entry.hours for entry in timesheet_entries if entry.is_billable)
-        non_billable_logged = total_logged - billable_logged
+        billable_logged = sum(float(entry.billable_hours or 0.0) for entry in timesheet_entries)
+        non_billable_logged = sum(float(entry.non_billable_hours or 0.0) for entry in timesheet_entries)
+        total_logged = billable_logged + non_billable_logged
         target_weekly_hours = 40.0
         
         timesheet_widget = TimesheetSummaryWidget(
@@ -57,8 +57,8 @@ class DashboardService:
             res = await db.execute(select(Project).where(Project.id == assignments[0].project_id))
             proj = res.scalar_one_or_none()
             if proj:
-                primary_project_name = proj.name
-                primary_project_code = proj.project_code
+                primary_project_name = proj.project_name
+                primary_project_code = getattr(proj, "project_code", None)
                 
         project_widget = ProjectSummaryWidget(
             active_projects_count=active_projects,
@@ -112,7 +112,7 @@ class DashboardService:
                     type=type_name,
                     start_date=req.start_date,
                     end_date=req.end_date,
-                    days_count=req.total_days,
+                    days_count=float((req.end_date - req.start_date).days + 1) if (req.start_date and req.end_date) else 1.0,
                     status=req.status
                 )
             )
@@ -131,7 +131,21 @@ class DashboardService:
             
         # 6. Role Overview (Manager/Admin stats)
         role_overview = None
-        role_name = current_user.role.name if current_user.role else ""
+        admin_overview = None
+        role_name = ""
+        try:
+            if current_user.role:
+                role_name = current_user.role.name
+        except Exception:
+            role_name = ""
+
+        if not role_name and getattr(current_user, "role_id", None):
+            from app.modules.roles.model import Role
+            r_res = await db.execute(select(Role).where(Role.id == current_user.role_id))
+            r_obj = r_res.scalar_one_or_none()
+            if r_obj:
+                role_name = r_obj.name
+
         if role_name in ["Admin", "Project_Manager", "Account_Manager"]:
             role_overview = {
                 "role": role_name,

@@ -44,6 +44,10 @@ class Project(Base):
     )
 
     @property
+    def name(self) -> str:
+        return self.project_name
+
+    @property
     def client_name(self) -> str:
         return self.client.name if self.client else "Unknown"
 
