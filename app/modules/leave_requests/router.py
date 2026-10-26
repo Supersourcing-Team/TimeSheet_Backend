@@ -7,7 +7,7 @@ from app.common.pagination import create_pagination_data
 from app.common.responses import created_response, success_response
 from app.core.database import get_db
 from app.dependencies.auth import get_current_active_user
-from app.dependencies.permissions import require_admin
+from app.dependencies.permissions import require_admin, require_project_manager
 from app.modules.users.model import User
 from app.modules.leave_requests.schema import (
     LeaveCheckDateResponse,
@@ -82,12 +82,12 @@ async def get_my_leave_requests(
     )
 
 
-@router.get("", response_model=dict, dependencies=[Depends(require_admin)], summary="List all leave requests (Admin)")
+@router.get("", response_model=dict, dependencies=[Depends(require_project_manager)], summary="List all leave requests (Admin/PM)")
 async def list_all_leave_requests(
     status_filter: Optional[str] = Query(None, alias="status"),
     user_id: Optional[int] = Query(None),
     page: int = Query(1, ge=1),
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = Query(100, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
 ):
     requests, total = await LeaveRequestService.list_all_leave_requests(

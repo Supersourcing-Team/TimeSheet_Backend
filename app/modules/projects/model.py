@@ -17,7 +17,7 @@ class Project(Base):
     __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"), nullable=False)
+    client_id: Mapped[Optional[int]] = mapped_column(ForeignKey("clients.id"), nullable=True)
     project_manager_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     project_name: Mapped[str] = mapped_column(String(150), unique=True, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -31,7 +31,7 @@ class Project(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    client: Mapped["Client"] = relationship("Client", back_populates="projects")
+    client: Mapped[Optional["Client"]] = relationship("Client", back_populates="projects")
     project_manager: Mapped["User"] = relationship("User", back_populates="managed_projects")
     assignments: Mapped[List["ProjectAssignment"]] = relationship(
         "ProjectAssignment", back_populates="project"
@@ -44,8 +44,8 @@ class Project(Base):
     )
 
     @property
-    def client_name(self) -> str:
-        return self.client.name if self.client else "Unknown"
+    def client_name(self) -> Optional[str]:
+        return self.client.name if self.client else None
 
     @property
     def project_manager_name(self) -> str:
