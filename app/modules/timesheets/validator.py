@@ -88,6 +88,9 @@ class TimesheetValidator:
         if not project or user_id not in project.assigned_user_ids:
             raise ForbiddenException(detail="User is not assigned to this project.")
 
+        if not project.is_active:
+            raise BadRequestException(detail="Cannot log timesheets for an inactive project.")
+
         if getattr(assignment, "assignment_status", "Active") != "Active" or not assignment.is_active:
             raise ForbiddenException(detail="Project assignment is not active.")
 

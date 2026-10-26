@@ -28,8 +28,8 @@ class ProjectRepository:
         )
         return result.scalars().first()
 
-    async def get_all(self, skip: int = 0, limit: int = 100) -> List[Project]:
-        result = await self.db.execute(
+    async def get_all(self, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None) -> List[Project]:
+        query = (
             select(Project)
             .options(
                 selectinload(Project.client), 
@@ -38,8 +38,10 @@ class ProjectRepository:
                 selectinload(Project.milestones).selectinload(Milestone.tool_allocations).selectinload(ToolAllocation.tool),
                 selectinload(Project.documents)
             )
-            .offset(skip).limit(limit)
         )
+        if is_active is not None:
+            query = query.where(Project.is_active == is_active)
+        result = await self.db.execute(query.offset(skip).limit(limit))
         return list(result.scalars().all())
 
     async def create(self, project_in: ProjectCreate) -> Project:

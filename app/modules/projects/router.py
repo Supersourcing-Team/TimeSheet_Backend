@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from typing import List, Optional
+from fastapi import APIRouter, Depends, File, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.common.responses import created_response, success_response
@@ -32,11 +32,12 @@ async def create_project(
 async def get_projects(
     skip: int = 0, 
     limit: int = 100, 
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
     current_user: User = Depends(get_current_active_user), 
     db: AsyncSession = Depends(get_db)
 ):
     service = ProjectService(db)
-    projects = await service.get_all_projects(skip=skip, limit=limit, current_user=current_user)
+    projects = await service.get_all_projects(skip=skip, limit=limit, is_active=is_active, current_user=current_user)
     return success_response(data=[p.model_dump(mode="json") for p in projects], message="Projects retrieved successfully")
 
 
