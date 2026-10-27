@@ -29,6 +29,10 @@ class LeaveRequestService:
             raise BadRequestException(detail="Invalid or inactive leave type.")
 
         # 2. Validate dates & calculate required working days
+        is_admin = getattr(current_user.role, "name", None) == "Admin"
+        if not is_admin:
+            LeaveRequestValidator.validate_not_past_date(request_in.start_date)
+
         working_days = await LeaveRequestValidator.calculate_working_days(
             db, request_in.start_date, request_in.end_date
         )
@@ -294,6 +298,9 @@ class LeaveRequestService:
             if not request_in.start_date or not request_in.end_date:
                 raise BadRequestException(detail="start_date and end_date are required for multiple_days leave.")
             LeaveRequestValidator.validate_current_year(request_in.start_date, request_in.end_date)
+            is_admin = getattr(current_user.role, "name", None) == "Admin"
+            if not is_admin:
+                LeaveRequestValidator.validate_not_past_date(request_in.start_date)
             if request_in.start_date > request_in.end_date:
                 raise BadRequestException(detail="start_date must be before end_date.")
 
@@ -330,6 +337,9 @@ class LeaveRequestService:
             raise BadRequestException(detail="leave_date is required for single-day leaves.")
 
         LeaveRequestValidator.validate_current_year(leave_date)
+        is_admin = getattr(current_user.role, "name", None) == "Admin"
+        if not is_admin:
+            LeaveRequestValidator.validate_not_past_date(leave_date)
 
         # Partial day extra validation
         if duration == "partial_day":
