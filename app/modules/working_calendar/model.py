@@ -23,3 +23,4 @@ class WorkingCalendar(Base):
         nullable=False,
     )
     time_zone = Column(String, default="UTC", nullable=False)
+    timesheet_lock_hours = Column(Integer, default=24, nullable=False)

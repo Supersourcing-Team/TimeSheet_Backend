@@ -37,9 +37,9 @@ class DashboardService:
             db, user_id=current_user.id, start_date=start_of_week, end_date=end_of_week
         )
         
-        total_logged = sum(entry.hours for entry in timesheet_entries)
-        billable_logged = sum(entry.hours for entry in timesheet_entries if entry.is_billable)
-        non_billable_logged = total_logged - billable_logged
+        billable_logged = sum((entry.billable_hours or 0.0) for entry in timesheet_entries)
+        non_billable_logged = sum((entry.non_billable_hours or 0.0) for entry in timesheet_entries)
+        total_logged = billable_logged + non_billable_logged
         target_weekly_hours = 40.0
         
         timesheet_widget = TimesheetSummaryWidget(
@@ -59,8 +59,8 @@ class DashboardService:
             res = await db.execute(select(Project).where(Project.id == assignments[0].project_id))
             proj = res.scalar_one_or_none()
             if proj:
-                primary_project_name = proj.name
-                primary_project_code = proj.project_code
+                primary_project_name = getattr(proj, "project_name", getattr(proj, "name", None))
+                primary_project_code = getattr(proj, "project_code", f"PRJ-{proj.id}")
                 
         project_widget = ProjectSummaryWidget(
             active_projects_count=active_projects,

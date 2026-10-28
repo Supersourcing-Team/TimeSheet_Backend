@@ -7,12 +7,15 @@ from app.core.database import get_db
 from app.dependencies.permissions import require_roles
 from app.dependencies.auth import get_current_active_user
 from app.modules.users.model import User
-from app.modules.project_assignments.schema import ProjectAssignmentCreate, ProjectAssignmentResponse
+from app.modules.project_assignments.schema import (
+    BatchProjectAssignmentCreate,
+    ProjectAssignmentCreate,
+    ProjectAssignmentResponse,
+)
 from app.modules.project_assignments.service import ProjectAssignmentService
 
 router = APIRouter()
 pm_only = require_roles("Project_Manager", "Account_Manager", "Admin")
-
 
 
 @router.post("", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
@@ -20,6 +23,13 @@ async def assign_user(assignment_in: ProjectAssignmentCreate, db: AsyncSession =
     service = ProjectAssignmentService(db)
     assignment = await service.assign_user_to_project(assignment_in)
     return created_response(data=assignment.model_dump(mode="json"), message="User assigned to project successfully")
+
+
+@router.post("/batch", response_model=dict, status_code=status.HTTP_201_CREATED, dependencies=[Depends(pm_only)])
+async def batch_assign_users(batch_in: BatchProjectAssignmentCreate, db: AsyncSession = Depends(get_db)):
+    service = ProjectAssignmentService(db)
+    result = await service.batch_assign_users_to_projects(batch_in)
+    return created_response(data=result.model_dump(mode="json"), message=result.message)
 
 
 @router.get("/project/{project_id}", response_model=dict, dependencies=[Depends(pm_only)])

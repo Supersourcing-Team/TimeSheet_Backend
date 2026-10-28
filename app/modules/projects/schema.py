@@ -5,7 +5,7 @@ from app.modules.milestones.schema import MilestoneResponse
 
 
 class ProjectCreate(BaseModel):
-    client_id: int = Field(..., ge=1)
+    client_id: Optional[int] = Field(None, ge=1)
     project_manager_id: int = Field(..., ge=1)
     project_name: str = Field(..., min_length=1, max_length=150)
     description: Optional[str] = None
@@ -52,7 +52,7 @@ class ProjectDocumentResponse(BaseModel):
 
 class ProjectResponse(BaseModel):
     id: int
-    client_id: int
+    client_id: Optional[int] = None
     project_manager_id: int
     project_name: str
     description: Optional[str] = None

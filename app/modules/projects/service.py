@@ -44,8 +44,8 @@ class ProjectService:
         financials = await self.compute_financials_for_projects(self.db, [project], current_user=current_user)
         return financials[0]
 
-    async def get_all_projects(self, skip: int = 0, limit: int = 100, current_user: Optional[User] = None) -> List[ProjectResponse]:
-        projects = await self.repository.get_all(skip=skip, limit=limit)
+    async def get_all_projects(self, skip: int = 0, limit: int = 100, is_active: Optional[bool] = None, current_user: Optional[User] = None) -> List[ProjectResponse]:
+        projects = await self.repository.get_all(skip=skip, limit=limit, is_active=is_active)
         return await self.compute_financials_for_projects(self.db, projects, current_user=current_user)
 
     @staticmethod

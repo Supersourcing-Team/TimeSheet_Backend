@@ -46,7 +46,7 @@ class ReportRepository:
             .join(User, Timesheet.user_id == User.id)
             .join(ProjectAssignment, Timesheet.project_assignment_id == ProjectAssignment.id)
             .join(Project, ProjectAssignment.project_id == Project.id)
-            .join(Client, Project.client_id == Client.id)
+            .outerjoin(Client, Project.client_id == Client.id)
         )
 
         if start_date:

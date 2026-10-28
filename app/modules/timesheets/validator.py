@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import date, timedelta
+import math
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,12 +12,45 @@ from app.modules.timesheets.repository import TimesheetRepository
 
 
 class TimesheetValidator:
-    """Validates timesheet date rules, hour limits (max 24h/day), and project assignment ownership."""
+    """Validates timesheet date rules, hour limits (max 24h/day), project assignment ownership, and milestone."""
 
     @staticmethod
     def validate_not_future_date(timesheet_date: date) -> None:
         if timesheet_date > date.today():
             raise BadRequestException(detail="Cannot log timesheets for future dates.")
+
+    @staticmethod
+    async def validate_submission_window(db: AsyncSession, timesheet_date: date) -> None:
+        today = date.today()
+        if timesheet_date > today:
+            raise BadRequestException(detail="Cannot log timesheets for future dates.")
+
+        from app.modules.working_calendar.service import WorkingCalendarService
+        config = await WorkingCalendarService.get_config(db)
+        lock_hours = getattr(config, "timesheet_lock_hours", 24) or 24
+
+        allowed_days = max(1, math.ceil(lock_hours / 24))
+        earliest_date = today - timedelta(days=allowed_days)
+
+        if timesheet_date < earliest_date:
+            raise BadRequestException(
+                detail=f"Timesheet submission is locked for date {timesheet_date}. "
+                       f"Per company policy, submissions are restricted within {lock_hours} hours."
+            )
+
+    @staticmethod
+    async def validate_milestone(
+        db: AsyncSession,
+        project_id: int,
+        milestone_id: Optional[int],
+    ) -> None:
+        if not milestone_id:
+            return
+        from app.modules.milestones.model import Milestone
+        result = await db.execute(select(Milestone).filter(Milestone.id == milestone_id))
+        milestone = result.scalar_one_or_none()
+        if not milestone or milestone.project_id != project_id:
+            raise BadRequestException(detail="Selected milestone does not belong to this project.")
 
     @staticmethod
     def validate_not_weekend(timesheet_date: date) -> None:
@@ -53,6 +87,9 @@ class TimesheetValidator:
         project = assignment.project
         if not project or user_id not in project.assigned_user_ids:
             raise ForbiddenException(detail="User is not assigned to this project.")
+
+        if not project.is_active:
+            raise BadRequestException(detail="Cannot log timesheets for an inactive project.")
 
         if getattr(assignment, "assignment_status", "Active") != "Active" or not assignment.is_active:
             raise ForbiddenException(detail="Project assignment is not active.")

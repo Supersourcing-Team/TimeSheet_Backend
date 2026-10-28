@@ -32,6 +32,16 @@ class LeaveRequestValidator:
             )
 
     @staticmethod
+    def validate_not_past_date(start_date: date) -> None:
+        """Ensures leave date is today or in the future; employees cannot mark leaves for previous dates."""
+        today = date.today()
+        if start_date < today:
+            raise BadRequestException(
+                detail=f"Leaves cannot be marked for previous dates ({start_date}). "
+                       f"Please select today ({today}) or a future date."
+            )
+
+    @staticmethod
     async def calculate_working_days(db: AsyncSession, start_date: date, end_date: date) -> int:
         LeaveRequestValidator.validate_current_year(start_date, end_date)
         if start_date > end_date:

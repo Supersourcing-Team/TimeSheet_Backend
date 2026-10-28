@@ -25,15 +25,19 @@ class TimesheetService:
         current_user: User,
         timesheet_in: TimesheetCreate,
     ) -> Timesheet:
-        # 1. Validate date is not in the future, not a weekend, and not a holiday
-        TimesheetValidator.validate_not_future_date(timesheet_in.timesheet_date)
+        # 1. Validate date submission window (enforcing admin lock hours), not a weekend, and not a holiday
+        await TimesheetValidator.validate_submission_window(db, timesheet_in.timesheet_date)
         TimesheetValidator.validate_not_weekend(timesheet_in.timesheet_date)
         await TimesheetValidator.validate_not_holiday(db, timesheet_in.timesheet_date)
 
-        # 2. Validate project assignment
-        await TimesheetValidator.validate_project_assignment(
+        # 2. Validate project assignment & milestone
+        assignment = await TimesheetValidator.validate_project_assignment(
             db, current_user.id, timesheet_in.project_assignment_id
         )
+        if timesheet_in.milestone_id and assignment:
+            await TimesheetValidator.validate_milestone(
+                db, assignment.project_id, timesheet_in.milestone_id
+            )
 
         existing = await TimesheetRepository.get_by_user_project_date(
             db, current_user.id, timesheet_in.project_assignment_id, timesheet_in.timesheet_date
@@ -64,13 +68,15 @@ class TimesheetService:
                 "billable_work_summary": timesheet_in.billable_work_summary,
                 "non_billable_hours": timesheet_in.non_billable_hours,
                 "non_billable_work_summary": timesheet_in.non_billable_work_summary,
+                "milestone_id": timesheet_in.milestone_id,
             }
             return await TimesheetRepository.update(db, existing, update_data)
 
-        # 4. Create timesheet entry
+        # 5. Create timesheet entry
         timesheet = Timesheet(
             user_id=current_user.id,
             project_assignment_id=timesheet_in.project_assignment_id,
+            milestone_id=timesheet_in.milestone_id,
             timesheet_date=timesheet_in.timesheet_date,
             billable_hours=timesheet_in.billable_hours,
             billable_work_summary=timesheet_in.billable_work_summary,
@@ -158,16 +164,25 @@ class TimesheetService:
         target_date = update_data.get("timesheet_date", entry.timesheet_date)
         target_assignment = update_data.get("project_assignment_id", entry.project_assignment_id)
 
-        TimesheetValidator.validate_not_future_date(target_date)
         if "timesheet_date" in update_data:
+            await TimesheetValidator.validate_submission_window(db, target_date)
             TimesheetValidator.validate_not_weekend(target_date)
             await TimesheetValidator.validate_not_holiday(db, target_date)
 
-
-        if "project_assignment_id" in update_data:
-            await TimesheetValidator.validate_project_assignment(
+        target_project_id = None
+        if "project_assignment_id" in update_data or "milestone_id" in update_data:
+            assignment = await TimesheetValidator.validate_project_assignment(
                 db, current_user.id, target_assignment
             )
+            target_project_id = assignment.project_id
+
+        if "milestone_id" in update_data and update_data["milestone_id"]:
+            if target_project_id is None:
+                assignment = await TimesheetValidator.validate_project_assignment(
+                    db, current_user.id, target_assignment
+                )
+                target_project_id = assignment.project_id
+            await TimesheetValidator.validate_milestone(db, target_project_id, update_data["milestone_id"])
 
         if any(k in update_data for k in ["billable_hours", "non_billable_hours", "timesheet_date"]):
             b_hours = update_data.get("billable_hours", entry.billable_hours)

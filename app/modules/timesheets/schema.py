@@ -14,6 +14,7 @@ class ProjectAssignmentMinimal(BaseModel):
 
 class TimesheetCreate(BaseModel):
     project_assignment_id: int
+    milestone_id: Optional[int] = Field(None, description="Milestone ID worked on")
     timesheet_date: date
     billable_hours: float = Field(0.0, ge=0, le=24.0, description="Billable hours worked")
     billable_work_summary: Optional[str] = Field(None, description="Summary of billable work")
@@ -30,6 +31,7 @@ class TimesheetCreate(BaseModel):
 
 class TimesheetUpdate(BaseModel):
     project_assignment_id: Optional[int] = None
+    milestone_id: Optional[int] = None
     timesheet_date: Optional[date] = None
     billable_hours: Optional[float] = Field(None, ge=0, le=24.0)
     billable_work_summary: Optional[str] = None
@@ -48,6 +50,7 @@ class TimesheetResponse(BaseModel):
     id: int
     user_id: int
     project_assignment_id: int
+    milestone_id: Optional[int] = None
     timesheet_date: date
     billable_hours: float
     billable_work_summary: Optional[str] = None
@@ -60,6 +63,7 @@ class TimesheetResponse(BaseModel):
     user_name: Optional[str] = None
     user_avatar: Optional[str] = None
     project_name: Optional[str] = None
+    milestone_name: Optional[str] = None
 
     project_assignment: Optional[ProjectAssignmentMinimal] = None
 
