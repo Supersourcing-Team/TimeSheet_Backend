@@ -45,44 +45,56 @@ class Project(Base):
 
     @property
     def client_name(self) -> Optional[str]:
-        return self.client.name if self.client else None
+        try:
+            return self.client.name if self.client else None
+        except Exception:
+            return None
 
     @property
     def project_manager_name(self) -> str:
-        if self.project_manager:
-            return f"{self.project_manager.first_name} {self.project_manager.last_name}"
-        return "Unknown"
+        try:
+            if self.project_manager:
+                return f"{self.project_manager.first_name} {self.project_manager.last_name}"
+            return "Unknown"
+        except Exception:
+            return "Unknown"
 
     @property
     def assigned_user_ids(self) -> List[int]:
-        return [a.user_id for a in self.assignments if a.is_active]
+        try:
+            return [a.user_id for a in self.assignments if getattr(a, 'is_active', True)]
+        except Exception:
+            return []
 
     @property
     def tools(self) -> List[dict]:
-        all_tools = []
-        for m in self.milestones:
-            for ta in getattr(m, "tool_allocations", []):
-                if getattr(ta, "status", "Active").lower() == "active":
-                    tool = getattr(ta, "tool", None)
-                    monthly_cost = getattr(ta, "monthly_cost", None)
-                    if monthly_cost is None:
-                        monthly_cost = getattr(tool, "cost_per_month", 0.0) if tool else 0.0
-                    
-                    all_tools.append({
-                        "id": ta.tool_id,
-                        "toolId": ta.tool_id,
-                        "allocationId": ta.id,
-                        "milestoneId": m.id,
-                        "milestoneName": m.name,
-                        "name": tool.name if tool else "Unknown",
-                        "category": tool.category if tool else "Unknown",
-                        "monthlyCost": monthly_cost,
-                        "seats": getattr(ta, "seats", 1),
-                        "allocationDate": str(ta.allocation_date) if getattr(ta, "allocation_date", None) else None,
-                        "deallocationDate": str(ta.deallocation_date) if getattr(ta, "deallocation_date", None) else None,
-                        "status": getattr(ta, "status", "Active")
-                    })
-        return all_tools
+        try:
+            all_tools = []
+            for m in getattr(self, "milestones", []):
+                for ta in getattr(m, "tool_allocations", []):
+                    if getattr(ta, "status", "Active").lower() == "active":
+                        tool = getattr(ta, "tool", None)
+                        monthly_cost = getattr(ta, "monthly_cost", None)
+                        if monthly_cost is None:
+                            monthly_cost = getattr(tool, "cost_per_month", 0.0) if tool else 0.0
+                        
+                        all_tools.append({
+                            "id": ta.tool_id,
+                            "toolId": ta.tool_id,
+                            "allocationId": ta.id,
+                            "milestoneId": m.id,
+                            "milestoneName": getattr(m, 'name', ''),
+                            "name": tool.name if tool else "Unknown",
+                            "category": getattr(tool, 'category', 'Unknown') if tool else "Unknown",
+                            "monthlyCost": monthly_cost,
+                            "seats": getattr(ta, "seats", 1),
+                            "allocationDate": str(ta.allocation_date) if getattr(ta, "allocation_date", None) else None,
+                            "deallocationDate": str(ta.deallocation_date) if getattr(ta, "deallocation_date", None) else None,
+                            "status": getattr(ta, "status", "Active")
+                        })
+            return all_tools
+        except Exception:
+            return []
 
 
 

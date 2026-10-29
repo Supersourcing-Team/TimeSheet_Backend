@@ -18,10 +18,9 @@ class ProjectRepository:
         result = await self.db.execute(
             select(Project)
             .options(
-                selectinload(Project.client), 
                 selectinload(Project.project_manager),
-                selectinload(Project.assignments).selectinload(ProjectAssignment.user),
-                selectinload(Project.milestones).selectinload(Milestone.tool_allocations).selectinload(ToolAllocation.tool),
+                selectinload(Project.assignments),
+                selectinload(Project.milestones),
                 selectinload(Project.documents)
             )
             .where(Project.id == project_id)
@@ -32,10 +31,9 @@ class ProjectRepository:
         query = (
             select(Project)
             .options(
-                selectinload(Project.client), 
                 selectinload(Project.project_manager),
-                selectinload(Project.assignments).selectinload(ProjectAssignment.user),
-                selectinload(Project.milestones).selectinload(Milestone.tool_allocations).selectinload(ToolAllocation.tool),
+                selectinload(Project.assignments),
+                selectinload(Project.milestones),
                 selectinload(Project.documents)
             )
         )

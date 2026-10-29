@@ -18,9 +18,13 @@ class Settings(BaseSettings):
         v = os.getenv("DATABASE_URL", v)
         if isinstance(v, str):
             if v.startswith("postgres://"):
-                return v.replace("postgres://", "postgresql+asyncpg://", 1)
-            if v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
-                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+                v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
+                v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            # Asyncpg expects ssl= rather than sslmode= (common with Neon DB URLs)
+            if "sslmode=" in v:
+                v = v.replace("sslmode=", "ssl=")
+            return v
         return v or "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/timesheet_db"
 
     SECRET_KEY: str = "super_secret_key_change_me_in_production"

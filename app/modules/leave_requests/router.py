@@ -145,6 +145,7 @@ async def cancel_leave_request(
 
 
 @router.get("/upcoming", response_model=dict, summary="Get upcoming team leaves (PM/Admin)")
+@router.get("/upcoming-team", response_model=dict, summary="Get upcoming team leaves (PM/Admin)")
 async def get_upcoming_leaves(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),

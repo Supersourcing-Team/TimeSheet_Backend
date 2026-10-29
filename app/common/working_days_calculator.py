@@ -25,12 +25,23 @@ _WEEKDAY_KEYS = [
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
 ]
 
+import time
+_CALENDAR_CACHE = None
+_CALENDAR_CACHE_TIME = 0.0
+
 
 async def _get_working_calendar(db: AsyncSession) -> WorkingCalendar:
     """Fetch the company's working calendar config, or return sensible defaults."""
+    global _CALENDAR_CACHE, _CALENDAR_CACHE_TIME
+    now = time.time()
+    if _CALENDAR_CACHE and (now - _CALENDAR_CACHE_TIME < 60):
+        return _CALENDAR_CACHE
+
     result = await db.execute(select(WorkingCalendar).limit(1))
     config = result.scalars().first()
     if config:
+        _CALENDAR_CACHE = config
+        _CALENDAR_CACHE_TIME = now
         return config
 
     # Fallback defaults if no config row exists
